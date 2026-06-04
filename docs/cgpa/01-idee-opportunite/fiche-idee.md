@@ -7,7 +7,7 @@
 | Date | 2026-06-03 |
 | Phase | 01 — Idée & opportunité |
 | Gate visé | Gate 0 |
-| Statut | En revue — v3 (modèle Bailleur/Gestionnaire/Affectation) |
+| Statut | ✅ Validé — Gate 0 Go (v3, modèle Bailleur/Gestionnaire/Affectation) |
 
 ---
 
@@ -184,9 +184,9 @@ Affectation {
 
 ## 13. Décision Gate 0
 
-- **Décision recommandée :** ☑ **Go** · ☐ Go sous réserve · ☐ No Go
-- **Justification :** Score 15/20, problème/valeur explicites, modèle relationnel stabilisé, entité pivot `Affectation` posée, risques identifiés, hypothèses testables. Le modèle bailleur-centré multi-gestionnaires est la différenciation principale vs tableur.
-- **Actions avant Phase 02 — Expression du besoin :**
+- **Décision (consignée par le porteur) :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
+- **Justification :** Score 15/20 (« Solide », ≥ 14), problème/valeur explicites, modèle relationnel stabilisé, entité pivot `Affectation` posée, risques identifiés, hypothèses testables. Le modèle bailleur-centré multi-gestionnaires est la différenciation principale vs tableur. Tous les critères du Gate 0 sont satisfaits.
+- **Actions à porter en Phase 02 — Expression du besoin :**
   1. **Cadrer le périmètre MVP** : quittances PDF et mandat de gestion — in ou out ?
   2. **Modéliser les honoraires** : % du loyer, forfait fixe, ou les deux ?
   3. **Poser le modèle RBAC complet** : matrice Bailleur / Gestionnaire / Bien / Affectation.
