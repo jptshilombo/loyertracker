@@ -1,0 +1,41 @@
+# ===== Secrets & environnement =====
+.env
+.env.local
+.env.*.local
+infra/nginx/certs/*.pem
+infra/nginx/certs/*.key
+infra/nginx/certs/*.crt
+*.jks
+*.p12
+*.pfx
+
+# ===== Backend (Java / Maven) =====
+backend/target/
+*.class
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+*.log
+hs_err_pid*
+
+# ===== Frontend (Angular / Node) =====
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+npm-debug.log*
+
+# ===== Docker =====
+**/postgres-data/
+**/keycloak-data/
+
+# ===== IDE / OS =====
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ===== Build & rapports =====
+**/*.tmp
+**/build/
+reports/
