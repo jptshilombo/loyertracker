@@ -203,7 +203,7 @@ Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, b
 
 **EF-33 — génération des loyers attendus (ADR-04) :** le batch quotidien parcourt les baux `ACTIF` ; pour le **mois courant**, il fait un upsert idempotent d'un `Paiement` attendu = `loyer_CC` si absent, en appliquant les bornes Annexe A.3 (1er loyer = mois **suivant** le début ; dernier = mois du terme ; pas de prorata). Idempotence garantie par `uq_paiement_periode`. Mutualisé avec le balayage d'alertes.
 
-> ⚠️ **Point à reconfirmer (Challenger) :** la règle « 1er loyer = mois suivant le début » (Annexe A.3) fait **perdre le mois d'entrée** dans le suivi — contre-intuitif pour un bail démarrant le 1er. Parti pris MVP assumé, **à confirmer** explicitement par le décideur (n'altère pas l'architecture, seulement la borne de génération).
+> ✅ **Point tranché (décideur, 2026-06-04) :** loyer **à terme échu** — le locataire paie le mois consommé. La règle « 1er loyer = mois suivant le début » (Annexe A.3) n'est donc pas une perte du mois d'entrée mais la mécanique normale du paiement à terme échu. Borne de génération EF-33 **confirmée** ; aucun prorata.
 
 **EF-51 — déclenchement des honoraires (ADR-05) :** clé idempotente `(affectation_id, periode)`. `POURCENTAGE` : recalcul = `% × loyer_encaissé_du_mois` à chaque pointage **tant que** `statut ≠ PAYE` (un paiement partiel fait évoluer l'assiette). `FORFAIT` : montant fixe posé par le batch de fin de mois. Les deux chemins (pointage / batch) **convergent vers le même upsert** ; le montant se **fige dès `→ PAYE`** (validation BAILLEUR, EF-52).
 
@@ -243,7 +243,7 @@ Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, b
 - **Décision recommandée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
 - **Autorisation de coder :** ☑ **Oui (si Go)** — Gate 4 est le **dernier verrou** ; son passage en Go lève le verrou de codage (Gates 1→4 tous Go).
 - **Réserves / points de vigilance :**
-  1. Reconfirmer le parti pris Annexe A.3 (« perte du mois d'entrée ») avant implémentation d'EF-33.
+  1. ✅ *Résolu* — loyer à terme échu confirmé par le décideur (cf. §7, EF-33).
   2. Outiller la CI/CD + suite de tests d'autorisation dès le 1er lot de dev (Phases 06–07).
 - **Date & responsable :** 2026-06-04 — jptshilombo@gmail.com (décideur Gate 4).
 
