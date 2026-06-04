@@ -174,12 +174,16 @@ volumes:
 - `restart: unless-stopped` sur tous les services
 - Pas de mount de code source
 
-### Critère de validation (US-01)
-- [ ] `docker compose up` : 4 services `healthy` en < 2 min
-- [ ] `https://localhost/api/actuator/health` → `{"status":"UP"}`
-- [ ] `https://localhost/auth` → page Keycloak
-- [ ] `https://localhost/` → SPA (placeholder Angular build)
-- [ ] Keycloak et PostgreSQL **non accessibles** directement depuis l'hôte (0.0.0.0:5432 et 0.0.0.0:8080 non ouverts)
+### Critère de validation (US-01) — étape 02 (commit à suivre)
+- [x] `docker compose config` valide (syntaxe + interpolation des variables) ; 4 services déclarés
+- [x] `nginx -t` : configuration valide (testée en conteneur)
+- [x] **postgres** démarre et atteint l'état `healthy` (healthcheck `pg_isready` réel)
+- [x] **Nginx sert le placeholder SPA en HTTPS** (`curl -k https://…/` → page LoyerTracker) avec en-têtes de sécurité (HSTS, nosniff, X-Frame-Options DENY, CSP, Referrer-Policy)
+- [x] **Redirection HTTP → HTTPS** (301) vérifiée
+- [ ] *Bring-up complet 4 services `healthy`* → finalisé en fin d'**étape 04** (image `api`) + **étape 03** (realm Keycloak), dépendances non encore présentes
+- [ ] `https://localhost/api/actuator/health` → `{"status":"UP"}` → **étape 04**
+- [ ] `https://localhost/auth` → page Keycloak → **étape 03**
+- [x] Conception : Keycloak/PostgreSQL **non publiés** sur l'hôte (réseau interne `loyertracker-net`, seuls 80/443 exposés par Nginx)
 
 ---
 
