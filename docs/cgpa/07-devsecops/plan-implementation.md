@@ -117,10 +117,11 @@ ci: ...
 
 Règle : **merge via PR** sur `develop` ; `develop → main` sur validation de sprint.
 
-### Critère de validation
-- [ ] Répertoires `backend/`, `frontend/`, `infra/` créés avec fichiers `.gitkeep`
-- [ ] `.gitignore` couvrant : `.env`, `*.class`, `target/`, `node_modules/`, `dist/`, `certs/` (sauf `.example`)
-- [ ] `CONTRIBUTING.md` minimal (conventions de commits, stratégie de branches)
+### Critère de validation ✅ (étape 01 terminée — commit `4dffc65`)
+- [x] Répertoires `backend/`, `frontend/`, `infra/` créés avec fichiers `.gitkeep`
+- [x] `.gitignore` couvrant : `.env`, `*.class`, `target/`, `node_modules/`, `dist/`, `certs/` (sauf `.gitkeep`) — vérifié via `git check-ignore`
+- [x] `CONTRIBUTING.md` minimal (conventions de commits, stratégie de branches, DoD)
+- [x] `README.md` projet mis à jour (état des gates, stack, démarrage)
 
 ---
 
