@@ -7,7 +7,7 @@
 | Date | 2026-06-04 |
 | Phase | 04 — Cahier des charges |
 | Gate visé | Gate 3 (verrou de codage) |
-| Statut | En revue |
+| Statut | ✅ Validé — Gate 3 Go |
 | Prérequis | EB v1.1 (Gate 1 Go) + Faisabilité (Gate 2 Go) |
 
 ---
@@ -62,6 +62,8 @@ LoyerTracker est une application web de **gestion locative bailleur-centrée ave
 | EF-11 | Enregistrement d'un bail | ED un bien existant · Q le bailleur (ou le gestionnaire affecté actif) enregistre un bail (locataire, loyer CC, dates début/fin, dépôt de garantie) · A le bail est persisté et lié au bien. | Must | BF-11 |
 | EF-12 | Unicité du bail actif par bien | ED un bien avec un bail actif · Q on tente d'enregistrer un second bail actif sur ce bien · A l'opération est rejetée (contrainte d'unicité). | Must | BF-12 |
 | EF-13 | Historique des baux d'un bien | ED un bien ayant eu plusieurs baux · Q le bailleur consulte le bien · A la liste chronologique des baux (actifs et clos) est affichée. | Should | BF-13 |
+
+> **Précision de modélisation (raffinement EB Annexe A) :** EF-12 et EF-13 impliquent un attribut **`Bail.statut` ∈ {`ACTIF`, `CLOS`}** (non explicité dans l'EB Annexe A). Cet attribut conditionne l'index unique partiel d'EF-12. À intégrer au modèle de données du DAT (Phase 05). Un bail passe à `CLOS` à son terme ou lors de la création du bail suivant sur le même bien.
 
 ### 3.3 Module Affectation & rotation
 
@@ -243,7 +245,7 @@ LoyerTracker est une application web de **gestion locative bailleur-centrée ave
 
 ## 9. Décision Gate 3
 
-- **Décision recommandée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
+- **Décision actée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go — *validée par le décideur le 2026-06-04.*
 - **Justification :** exigences fonctionnelles détaillées et priorisées, non fonctionnelles spécifiées (sécurité/perf/dispo/RGPD), critère d'acceptation présent pour chaque exigence clé, interfaces/intégrations spécifiées, matrice de traçabilité complète, score 17/20 (≥ 14).
 - **Réserves / points portés en Phase 05 (Architecture) :**
   1. Concrétiser les 3 conditions du Gate 2 (ADR cloisonnement, ADR Keycloak vs autorisation fine, RGPD by design).
