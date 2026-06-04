@@ -7,7 +7,7 @@
 | Date | 2026-06-04 |
 | Phase | 06 — Planification Agile |
 | Gate visé | Gate 5 |
-| Statut | En revue |
+| Statut | ✅ Validé — Gate 5 Go |
 | Prérequis | Gate 4 Go — verrou de codage levé |
 
 > **Base :** CDC (33 EF + 12 ENF, jalons J1→J5) + DAT (8 ADR, MLD, API). Estimation en **points de complexité relative** (suite Fibonacci 1-2-3-5-8). Équipe : **dev solo**. Vélocité cible : ~20 pts/sprint (2 semaines).
@@ -197,7 +197,7 @@ Toute user story est **Terminée** uniquement si **tous** les critères suivants
 
 ## 8. Décision Gate 5
 
-- **Décision recommandée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
+- **Décision actée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go — *validée par le décideur le 2026-06-04.*
 - **Réserves :** néant bloquant. Ordonnancement des sprints S04–S06 ajustable selon la vélocité réelle.
 - **Date & responsable :** 2026-06-04 — jptshilombo@gmail.com.
 
