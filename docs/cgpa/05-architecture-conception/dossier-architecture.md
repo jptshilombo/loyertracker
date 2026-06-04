@@ -104,7 +104,8 @@ Bailleur (1) ───< (N) Bien (1) ───< (N) Bail
 | `Affectation` | `statut` | `ACTIVE` \| `REVOQUEE` \| `EXPIREE` | EF-20/22 |
 | `Affectation` | `type_honoraires`, `montant_honoraires` | `POURCENTAGE` \| `FORFAIT` | EF-50 |
 | `Paiement` | `statut` | `RECU` \| `PARTIEL` \| `EN_RETARD` \| `IMPAYE` | EF-30 |
-| `Paiement` | `periode` | `YYYY-MM` | EF-33 |
+| `Paiement` | `periode` | `YYYY-MM` — **mois consommé** (≥ mois de début du bail) | EF-33 |
+| `Paiement` | **`date_exigibilite`** *(nouveau)* | 1er du mois **suivant** la période (terme échu) | EF-33/60 |
 | `Garantie` | `statut` | `DETENU` \| `RESTITUE_PARTIEL` \| `RESTITUE_TOTAL` | EF-41 |
 | `Honoraire` | `statut` | `DU` \| `EN_ATTENTE` \| `PAYE` | EF-52 |
 | `Alerte` | `statut`, `type`, `periode` | cf. EB Annexe A.1 | EF-60→65 |
@@ -201,9 +202,14 @@ Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, b
 
 ### Mécaniques détaillées (Réserve 3)
 
-**EF-33 — génération des loyers attendus (ADR-04) :** le batch quotidien parcourt les baux `ACTIF` ; pour le **mois courant**, il fait un upsert idempotent d'un `Paiement` attendu = `loyer_CC` si absent, en appliquant les bornes Annexe A.3 (1er loyer = mois **suivant** le début ; dernier = mois du terme ; pas de prorata). Idempotence garantie par `uq_paiement_periode`. Mutualisé avec le balayage d'alertes.
+**EF-33 — génération des loyers attendus (ADR-04), modèle à terme échu :**
+- **Période de consommation** : du **mois de début** du bail jusqu'au **mois du terme** (inclus), un loyer attendu = `loyer_CC` par mois, **sans prorata**.
+- **Exigibilité (terme échu)** : chaque échéance de période `m` est **exigible le 1er du mois `m+1`** (`date_exigibilite`). Le locataire paie le mois consommé.
+- **Génération par le batch** : à chaque run, le job parcourt les baux `ACTIF` et fait un **upsert idempotent** (`uq_paiement_periode` sur `(bien_id, periode)`) des échéances dont la période est **révolue ou en cours** jusqu'au dernier mois consommé, en calculant `date_exigibilite = 1er(periode + 1 mois)`.
 
-> ✅ **Point tranché (décideur, 2026-06-04) :** loyer **à terme échu** — le locataire paie le mois consommé. La règle « 1er loyer = mois suivant le début » (Annexe A.3) n'est donc pas une perte du mois d'entrée mais la mécanique normale du paiement à terme échu. Borne de génération EF-33 **confirmée** ; aucun prorata.
+> 💡 **Exemple (décideur, 2026-06-04) :** bail démarrant le **1er mai 2026** → échéance `periode = 2026-05`, **`date_exigibilite = 2026-06-01`**. Au début de juin, le locataire paie l'échéance **Mai_2026**. Le mois d'entrée n'est **pas** perdu : il est facturé à terme échu.
+>
+> **Impact EF-60 (alerte retard) :** le retard se calcule par rapport à **`date_exigibilite` + tolérance**, et non par rapport à la période — une échéance `2026-05` ne peut être « en retard » qu'à partir de juin.
 
 **EF-51 — déclenchement des honoraires (ADR-05) :** clé idempotente `(affectation_id, periode)`. `POURCENTAGE` : recalcul = `% × loyer_encaissé_du_mois` à chaque pointage **tant que** `statut ≠ PAYE` (un paiement partiel fait évoluer l'assiette). `FORFAIT` : montant fixe posé par le batch de fin de mois. Les deux chemins (pointage / batch) **convergent vers le même upsert** ; le montant se **fige dès `→ PAYE`** (validation BAILLEUR, EF-52).
 
