@@ -7,7 +7,7 @@
 | Date | 2026-06-04 |
 | Phase | 03 — Faisabilité |
 | Gate visé | Gate 2 (verrou de codage) |
-| Statut | En revue |
+| Statut | ✅ **Validé — Gate 2 Go** |
 | Prérequis | EB v1.1 validée — Gate 1 Go (17/20) |
 
 ---
@@ -139,7 +139,7 @@ Recommandation de décision : **✅ Go** (les conditions ci-dessus sont des exig
 
 ## 9. Décision Gate 2
 
-- **Décision recommandée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
+- **Décision (consignée par le porteur) :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
 - **Justification :** faisabilité technique/orga/éco démontrée, options étudiées et arbitrées (stack A retenue), risques majeurs identifiés avec mitigation, recommandation argumentée, score 16/20 (≥ 14).
 - **Conditions à porter en Phase 04 (CDC) / Phase 05 (Architecture) — n'empêchent pas le Go :**
   1. **ADR « cloisonnement multi-tenant »** : pattern de scoping `bailleurId` centralisé + stratégie de tests d'autorisation (R1).
