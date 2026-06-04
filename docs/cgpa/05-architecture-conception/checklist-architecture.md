@@ -16,11 +16,11 @@
 ## 3. Sécurité by design
 - [x] Authentification/autorisation conçue (Keycloak/OIDC) — *ADR-02 (AuthN Keycloak + ReBAC app)*
 - [x] Gestion des secrets prévue — *DAT §5.3 (hors dépôt, scan CI)*
-- [x] Surface d'attaque évaluée — *DAT §5.4 (intégrations externes nulles)*
+- [x] Surface d'attaque évaluée — *DAT §5.4 (Nginx seul exposé en 443, intégrations externes nulles, durcissement)*
 - [x] Conformité (RGPD) prise en compte — *ADR-03 (pseudonymisation)*
 
 ## 4. Déploiement
-- [x] Conteneurisation définie (Docker) — *DAT §6, ENF-09*
+- [x] Conteneurisation définie (Docker) — *DAT §6 : nginx/api/keycloak/postgres, réseau interne, seul 443 publié (ADR-08), ENF-09*
 - [x] Environnements `dev`/`staging`/`prod` prévus — *DAT §6 (image unique, config externalisée)*
 - [x] Stratégie de déploiement et scalabilité définies — *DAT §6 (recreate/rolling, backup ENF-07)*
 

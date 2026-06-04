@@ -21,39 +21,37 @@ LoyerTracker est une application web **bailleur-centrée avec délégation fine 
 Le choix du monolithe modulaire (vs microservices) est délibéré : périmètre MVP borné, dev solo, coûts cash quasi nuls, surface d'intégration externe nulle (CDC §5.4). La modularité interne (packages par domaine métier) préserve l'évolutivité sans le coût opérationnel d'une architecture distribuée.
 
 ```
-                    ┌──────────────────────────────────────────────┐
-                    │                Navigateur                    │
-                    │   Angular SPA (client public OIDC + PKCE)     │
-                    └───────────────┬──────────────────────────────┘
-                                    │ HTTPS
-              ┌─────────────────────┼───────────────────────┐
-              │ (1) login OIDC      │ (2) API REST           │
-              ▼                     ▼  Bearer JWT            │
-   ┌────────────────────┐   ┌───────────────────────────────┴───────┐
-   │     Keycloak       │   │          Spring Boot API              │
-   │  (realm dédié)     │   │  ┌─────────────────────────────────┐  │
-   │  AuthN + RBAC      │◄──┤  │ SecurityFilter (valide JWT)     │  │
-   │  rôles BAILLEUR /  │   │  ├─────────────────────────────────┤  │
-   │  GESTIONNAIRE      │   │  │ AuthorizationService (ReBAC)    │  │
-   │  Admin API ▲       │   │  │  → résout périmètre effectif    │  │
-   └────────────┼───────┘   │  ├─────────────────────────────────┤  │
-                │           │  │ Services métier (modules)       │  │
-   (3) create   │           │  │  comptes · biens · baux ·       │  │
-   gestionnaire │           │  │  affectations · paiements ·     │  │
-   (EF-04)      └───────────┤  │  garanties · honoraires ·       │  │
-                            │  │  alertes · audit                │  │
-                            │  ├─────────────────────────────────┤  │
-                            │  │ Batch @Scheduled 07:00          │  │
-                            │  │  (échéances + alertes)          │  │
-                            │  └─────────────┬───────────────────┘  │
-                            └────────────────┼──────────────────────┘
-                                             │ JDBC
-                                   ┌─────────▼──────────┐
-                                   │    PostgreSQL      │
-                                   │  RLS sur bailleurId │
-                                   │  (défense en prof.) │
-                                   └────────────────────┘
+                          ┌──────────────────────────┐
+                          │        Navigateur        │
+                          │  Angular SPA (OIDC+PKCE)  │
+                          └────────────┬─────────────┘
+                                       │ HTTPS (443) — origine unique
+                             ┌─────────▼─────────────┐
+                             │   Nginx reverse proxy │  ← terminaison TLS
+                             │   point d'entrée unique│
+                             │  /            → SPA    │
+                             │  /auth        → Keycloak (console + OIDC)
+                             │  /api         → Backend │
+                             └───┬───────────┬────────┬┘
+              (1) login OIDC     │           │        │ (2) API REST (Bearer JWT)
+                  + console      ▼           ▼ static │
+              ┌────────────────────┐   ┌──────────┐  ▼
+              │     Keycloak       │   │  Angular │ ┌───────────────────────────┐
+              │  (realm dédié)     │   │  statique│ │     Spring Boot API        │
+              │  AuthN + RBAC      │◄──┤ (assets) │ │ SecurityFilter (JWT)       │
+              │  rôles BAILLEUR /  │   └──────────┘ │ AuthorizationService(ReBAC)│
+              │  GESTIONNAIRE      │                │ Services métier (modules)  │
+              │  Admin API ▲       │◄───────────────┤  comptes·biens·baux·...    │
+              │             │      │ (3) provision  │ Batch @Scheduled 07:00     │
+              └─────────────┼──────┘   gestionnaire └─────────────┬──────────────┘
+                            │            (EF-04)                  │ JDBC
+                            │                          ┌──────────▼──────────┐
+                            └─────────(JDBC)──────────►│     PostgreSQL      │
+                                                       │  RLS sur bailleurId │
+                                                       └─────────────────────┘
 ```
+
+> **Point d'entrée unique :** seul **Nginx** est exposé (443). SPA, Keycloak (console + endpoints OIDC) et API sont servis derrière le même hôte/origine, ce qui réduit la surface d'attaque et simplifie le TLS et le CORS (origine unique). Keycloak et PostgreSQL ne sont **pas** publiés directement.
 
 ---
 
@@ -61,7 +59,8 @@ Le choix du monolithe modulaire (vs microservices) est délibéré : périmètre
 
 | Composant | Responsabilité | Technologie |
 |-----------|----------------|-------------|
-| Frontend | SPA, tableaux de bord cloisonnés (EF-70/71), affichage alertes in-app, responsive (ENF-11) | Angular |
+| Reverse proxy | **Point d'entrée unique** : terminaison TLS, routage `/`→SPA, `/auth`→Keycloak (console + OIDC), `/api`→backend ; sert les assets statiques de la SPA | **Nginx** |
+| Frontend | SPA, tableaux de bord cloisonnés (EF-70/71), affichage alertes in-app, responsive (ENF-11) | Angular (build statique servi par Nginx) |
 | Backend | API métier REST, règles de gestion, cloisonnement, batch | Spring Boot (Java) |
 | Auth | AuthN OIDC + RBAC grossier (rôles), provisioning gestionnaire via Admin API | Keycloak (OIDC) |
 | Données | Persistance + intégrité (contraintes, index uniques partiels) + RLS | PostgreSQL |
@@ -166,8 +165,13 @@ Ressources REST métier, **toutes scopées `bailleurId`** au service layer, JWT 
 ### 5.3 Gestion des secrets
 Secrets **hors dépôt** (variables d'environnement / fichier `.env` non versionné, `.env.example` fourni). Aucun secret en clair (ENF-03, interdiction CLAUDE.md §6). Scan secrets en CI (Phase 07).
 
-### 5.4 Surface d'attaque
-Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, banque, paiement). Points d'entrée = SPA + API + Keycloak. HTTPS, validation d'entrées, anti-CSRF géré par flux OIDC + JWT stateless.
+### 5.4 Surface d'attaque & reverse proxy (ADR-08)
+Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, banque, paiement). **Nginx est le seul composant exposé** (port 443) ; Keycloak, le backend et PostgreSQL ne sont **pas** publiés (réseau Docker interne).
+- **Terminaison TLS** centralisée sur Nginx (certificat unique) ; trafic interne en clair sur le réseau privé Docker.
+- **Origine unique** (`/`→SPA, `/auth`→Keycloak, `/api`→backend) : simplifie le CORS (same-origin) et la politique de cookies.
+- **Durcissement Nginx :** en-têtes de sécurité (HSTS, CSP, `X-Content-Type-Options`, `X-Frame-Options`), masquage de version, limites de débit/taille de requête, timeouts.
+- **Console d'admin Keycloak** atteignable **uniquement** via `/auth/admin` derrière Nginx (restriction d'accès possible par IP/règle au niveau proxy).
+- Anti-CSRF géré par flux OIDC + JWT stateless ; validation d'entrées au backend.
 
 ### 5.5 Conformité RGPD (ADR-03)
 - **Pseudonymisation** du locataire à l'effacement (vs suppression physique) → préserve l'intégrité financière (paiements/honoraires) et la chaîne d'audit (conservation bail+3 ans, ENF-05), tout en honorant le droit à l'effacement (ENF-04). Résout le conflit effacement ↔ conservation.
@@ -180,7 +184,9 @@ Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, b
 ## 6. Infrastructure & déploiement
 
 - **Environnements :** `dev` (Compose local) ; `staging`/`prod` = même image, config externalisée (cible self-hosting unique au MVP).
-- **Conteneurisation :** images `api`, `web`, `postgres`, `keycloak` ; `docker compose up` démarre la stack via variables d'environnement (ENF-09).
+- **Conteneurisation :** images `nginx` (reverse proxy/TLS, **seul port publié : 443**), `api`, `keycloak`, `postgres` ; `docker compose up` démarre la stack via variables d'environnement (ENF-09). La SPA Angular est buildée en assets statiques servis par Nginx (pas de conteneur web séparé).
+- **Réseau :** un réseau Docker interne ; `api`, `keycloak`, `postgres` non exposés à l'hôte — joignables seulement via Nginx (ou en interne).
+- **Routage Nginx :** `/`→assets SPA · `/auth`→Keycloak · `/api`→backend. Config Nginx versionnée (template + variables, pas de secret en dur).
 - **Stratégie de déploiement :** recreate/rolling simple (dev solo, pas de HA). Sauvegardes PostgreSQL planifiées + test de restauration (ENF-07).
 - **Migrations :** Flyway au démarrage de l'`api` (schéma reproductible, ordonnancé).
 
@@ -197,8 +203,9 @@ Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, b
 | ADR-05 | EF-51 = **upsert idempotent `(affectation_id, periode)`**, recalcul `POURCENTAGE` à chaque pointage tant que `≠ PAYE`, gel du montant à `PAYE` | Double déclencheur non réconcilié | Supprime le risque de double calcul ; assiette `%` correcte sur paiements partiels |
 | ADR-06 | **Monolithe modulaire** Spring Boot (packages par domaine) | Microservices | Périmètre borné, dev solo, coût opérationnel nul |
 | ADR-07 | Intégrité métier par **index uniques partiels** PostgreSQL → 409 | Verrous applicatifs | Atomique, sûr en concurrence |
+| ADR-08 | **Nginx en reverse proxy** : point d'entrée unique (TLS), sert la SPA et proxy `/auth`→Keycloak (console + OIDC) et `/api`→backend | Exposer chaque service directement ; Traefik/Caddy | Surface d'attaque réduite (seul 443 publié), origine unique (CORS simplifié), TLS centralisé ; Nginx maîtrisé, léger, statique |
 
-> ADR-01 à 03 sont détaillés en fiches dédiées (réserves Gate 2). ADR-04 à 07 sont consignés ci-dessus (décisions de moindre portée).
+> ADR-01 à 03 sont détaillés en fiches dédiées (réserves Gate 2). ADR-04 à 08 sont consignés ci-dessus (décisions de moindre portée).
 
 ### Mécaniques détaillées (Réserve 3)
 
