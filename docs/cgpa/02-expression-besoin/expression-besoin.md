@@ -7,8 +7,14 @@
 | Date | 2026-06-04 |
 | Phase | 02 — Expression du besoin |
 | Gate visé | Gate 1 (verrou de codage) |
-| Statut | ✅ **Validé — Gate 1 Go** (v1.1 — décisions de cadrage intégrées) |
+| Statut | ✅ **Validé — Gate 1 Go** (v1.2 — sémantique terme échu précisée) |
 | Prérequis | Fiche idée v3 validée — Gate 0 Go (15/20) |
+
+### Changelog v1.1 → v1.2
+
+| Ref | Modification |
+|-----|-------------|
+| BF-33 / A.3 | **Sémantique « terme échu » précisée** : la `periode` d'une échéance est le **mois consommé** (à partir du mois de **début** du bail) ; elle devient **exigible le 1er du mois suivant** (`date_exigibilite`). Lève l'ambiguïté de la formulation v1.1 « mois suivant le début » (qui décrivait le *paiement*, pas le mois facturé). Cohérent avec le DAT Phase 05 (ADR-04) et le Gate 4. |
 
 ### Changelog v1.0 → v1.1
 
@@ -129,7 +135,7 @@ LoyerTracker répond au besoin d'un **bailleur propriétaire** qui souhaite cent
 | BF-30 | Pointer un loyer mois par mois avec un statut : **reçu / partiel / en retard / impayé**. | Must |
 | BF-31 | Visualiser l'**historique des paiements** par bien et par période. | Must |
 | BF-32 | Enregistrer un paiement **partiel** (montant reçu + reste dû calculé). | Should |
-| BF-33 | Le système génère automatiquement les **loyers attendus** par mois selon les règles suivantes : (1) Le premier loyer attendu est le mois civil complet **suivant** la date de début du bail — pas de prorata. (2) Le dernier loyer attendu est le mois civil du terme du bail — pas de prorata. (3) Le montant attendu est le **loyer CC** (charges comprises) défini dans le bail. (4) Ces règles sont des partis pris MVP ; la révision de loyer (IRL) est hors périmètre. | Must |
+| BF-33 | Le système génère automatiquement les **loyers attendus** par mois (paiement **à terme échu**) selon les règles suivantes : (1) Une échéance porte sur un **mois consommé** (`periode`), depuis le **mois de début** du bail jusqu'au mois du terme — pas de prorata. (2) Chaque échéance de période `m` est **exigible le 1er du mois `m+1`** (`date_exigibilite`) : le locataire paie le mois qu'il a occupé. (3) Le montant attendu est le **loyer CC** (charges comprises) défini dans le bail. (4) Ces règles sont des partis pris MVP ; la révision de loyer (IRL) est hors périmètre. | Must |
 
 ### 4.5 Garanties locatives
 
@@ -343,16 +349,20 @@ AuditLog {
 
 ---
 
-### A.3 Règles de calcul des loyers attendus (BF-33)
+### A.3 Règles de calcul des loyers attendus (BF-33) — paiement à terme échu
 
 | Situation | Règle MVP |
 |-----------|-----------|
-| Mois de début de bail | Premier loyer = mois civil **suivant** la date de début. Pas de prorata. |
-| Mois de fin de bail | Dernier loyer = mois civil du **terme** du bail. Pas de prorata. |
+| Sémantique de l'échéance | Paiement **à terme échu** : une échéance porte sur un **mois consommé** (`periode`) et devient **exigible le 1er du mois suivant** (`date_exigibilite`). |
+| Première période | **Mois de début** du bail (le mois d'entrée est facturé, pas perdu). Pas de prorata. |
+| Dernière période | Mois civil du **terme** du bail. Pas de prorata. |
+| Exigibilité | Pour une période `m`, `date_exigibilite = 1er jour de (m + 1 mois)`. |
 | Montant mensuel attendu | `loyer_CC` du bail (charges comprises). Un seul montant par mois. |
 | Révision de loyer | **Hors périmètre MVP** (IRL exclu). Le montant reste celui du bail jusqu'à sa clôture. |
 
-> Ces règles sont des **partis pris MVP** documentés, non des règles légales imposées.
+> **Exemple :** bail démarrant le **1er mai 2026** → échéance `periode = 2026-05`, **exigible le 2026-06-01**. Au début de juin, le locataire paie l'échéance **Mai_2026**.
+>
+> Ces règles sont des **partis pris MVP** documentés, non des règles légales imposées. L'alerte de retard (BF-60) se calcule sur `date_exigibilite + tolérance`.
 
 ---
 
@@ -385,4 +395,4 @@ DETENU ──────────────────────► RES
 **Alerte associée :** si statut = `DETENU` et bail terminé depuis > X jours (défaut : 30), une alerte `GARANTIE_NON_RESTITUEE` est générée (cf. BF-63).
 
 ---
-*Livrable CGPA v1.1 — Phase 02 (Expression du besoin). Mis à jour le 2026-06-04 : décisions de cadrage intégrées, IRL exclu du périmètre MVP, modèles de données annexés. ⛔ Verrou de codage maintenu : Gates 1→4 requis en Go avant tout développement applicatif. Prochaine phase : 03 — Faisabilité (Gate 2).*
+*Livrable CGPA v1.2 — Phase 02 (Expression du besoin). Mis à jour le 2026-06-04 : v1.1 décisions de cadrage intégrées (IRL exclu, modèles de données annexés) ; v1.2 sémantique « terme échu » précisée (BF-33 / A.3), alignée sur le DAT Phase 05. ✅ Verrou de codage levé : Gates 1→4 statués Go (Gate 4 le 2026-06-04). Prochaine phase : 06 — Planification Agile (backlog).*

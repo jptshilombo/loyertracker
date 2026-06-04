@@ -7,7 +7,7 @@
 | Date | 2026-06-04 |
 | Phase | 05 — Architecture & conception |
 | Gate visé | Gate 4 (dernier verrou avant code) |
-| Statut | En revue |
+| Statut | ✅ Validé — Gate 4 Go (verrou de codage levé) |
 | Prérequis | CDC validé (Gate 3 Go) |
 
 > Ce DAT matérialise les **7 décisions d'architecture** arbitrées en clôture de Phase 04 (réserves Gate 3). Chaque décision structurante est détaillée dans un **ADR** dédié (`adr/`). ⛔ **Aucun code applicatif** n'est produit ici : ce document est une spécification de conception (verrou de codage maintenu jusqu'à Gate 4 Go).
@@ -253,8 +253,8 @@ Volontairement minimale : **aucune intégration externe** au MVP (pas de SMTP, b
 
 ## 10. Décision Gate 4
 
-- **Décision recommandée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go
-- **Autorisation de coder :** ☑ **Oui (si Go)** — Gate 4 est le **dernier verrou** ; son passage en Go lève le verrou de codage (Gates 1→4 tous Go).
+- **Décision actée :** ☑ ✅ **Go** · ☐ Go sous réserve · ☐ No Go — *validée par le décideur le 2026-06-04.*
+- **Autorisation de coder :** ☑ **OUI** — Gate 4 est le **dernier verrou** ; les Gates 1→4 sont tous Go, le **verrou de codage est levé**. Le développement applicatif est autorisé à partir de la Phase 06.
 - **Réserves / points de vigilance :**
   1. ✅ *Résolu* — loyer à terme échu confirmé par le décideur (cf. §7, EF-33).
   2. Outiller la CI/CD + suite de tests d'autorisation dès le 1er lot de dev (Phases 06–07).
