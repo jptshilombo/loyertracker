@@ -83,7 +83,9 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_BATCH_USER: ${DB_BATCH_USER}
       DB_BATCH_PASSWORD: ${DB_BATCH_PASSWORD}
+      # iss validé contre l'URL publique ; JWKS récupéré en interne (cf. application.yml)
       KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI}
+      KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI}
     depends_on:
       postgres:
         condition: service_healthy

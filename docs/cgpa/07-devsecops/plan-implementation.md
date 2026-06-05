@@ -180,9 +180,9 @@ volumes:
 - [x] **postgres** démarre et atteint l'état `healthy` (healthcheck `pg_isready` réel)
 - [x] **Nginx sert le placeholder SPA en HTTPS** (`curl -k https://…/` → page LoyerTracker) avec en-têtes de sécurité (HSTS, nosniff, X-Frame-Options DENY, CSP, Referrer-Policy)
 - [x] **Redirection HTTP → HTTPS** (301) vérifiée
-- [ ] *Bring-up complet 4 services `healthy`* → finalisé en fin d'**étape 04** (image `api`) + **étape 03** (realm Keycloak), dépendances non encore présentes
-- [ ] `https://localhost/api/actuator/health` → `{"status":"UP"}` → **étape 04**
-- [ ] `https://localhost/auth` → page Keycloak → **étape 03**
+- [x] *Bring-up complet 4 services `healthy`* — validé à l'**étape 04** : `postgres`/`keycloak`/`api` healthy, `keycloak-init` exit 0, `nginx` up
+- [x] `https://localhost/api/actuator/health` → `{"status":"UP"}` — validé à l'**étape 04**
+- [x] `https://localhost/auth` → Keycloak via Nginx (HTTP 200 sur le realm) — validé à l'**étape 04**
 - [x] Conception : Keycloak/PostgreSQL **non publiés** sur l'hôte (réseau interne `loyertracker-net`, seuls 80/443 exposés par Nginx)
 
 > 🔧 **Corrections appliquées à l'étape 03** (Keycloak réellement démarré pour la 1ʳᵉ fois) :
@@ -304,12 +304,25 @@ class SecurityConfig {
 // Utilisé via @PreAuthorize("@authz.peutAccederBien(#bienId, authentication)")
 ```
 
-### Critère de validation (US-02 côté backend)
-- [ ] `mvn clean package` sans erreur
-- [ ] `GET /api/actuator/health` → 200 sans auth
-- [ ] `GET /api/biens` sans JWT → 401
-- [ ] `GET /api/biens` avec JWT `BAILLEUR` valide → 200 (liste vide)
-- [ ] `GET /api/biens` avec JWT `GESTIONNAIRE` → 200 (liste vide, périmètre filtré)
+### Critère de validation (US-02 côté backend) — étape 04 (commit à suivre)
+- [x] `mvn clean package` sans erreur — 8 tests verts (5 sécurité MockMvc + 3 unitaires converter)
+- [x] `GET /api/actuator/health` → 200 sans auth (`{"status":"UP"}`, vérifié via Nginx en HTTPS)
+- [x] `GET /api/biens` sans JWT → 401 ; **JWT à signature invalide → 401** (validation réelle, pas seulement présence)
+- [x] `GET /api/biens` avec JWT `BAILLEUR` valide (obtenu par flow PKCE complet via Nginx) → 200 `[]`
+- [x] `GET /api/biens` avec JWT `GESTIONNAIRE` → 200 `[]` (test d'intégration MockMvc) ; JWT sans rôle métier → 403
+
+> **Décisions / écarts de plan documentés (traçabilité CGPA) :**
+> - **Dépendances introduites au plus juste.** L'étape 04 reste un squelette *bootable sans base* :
+>   `data-jpa` / `flyway` / `postgresql` sont **reportés à l'étape 06** (là où le schéma est créé),
+>   `batch` au pas batch, `mapstruct` / `springdoc` à leur premier usage. Évite un couplage BDD
+>   inutile au démarrage et garde les tests hors-ligne.
+> - **Validation JWT compatible reverse proxy.** `issuer-uri` (public `https://localhost/auth/...`)
+>   pour valider le claim `iss`, mais `jwk-set-uri` interne (`http://keycloak:8080/auth/...`) pour
+>   récupérer les clés — sinon le conteneur `api` tenterait de joindre `https://localhost` (lui-même).
+> - **Préfixe `/api`** porté par les `@RequestMapping` + `management.base-path=/api/actuator`
+>   (plutôt que `context-path`), pour un routage Nginx direct et des tests MockMvc sans contorsion.
+> - **Dockerfile backend** créé dès maintenant (nécessaire au build Compose) ; son durcissement et
+>   le scan Trivy restent du ressort de l'étape 07.
 
 ---
 

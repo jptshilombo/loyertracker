@@ -1,0 +1,10 @@
+# Profil de test : valeurs factices pour le resource-server. Les tests utilisent le
+# post-processeur jwt() (jeton pré-authentifié) — le décodeur n'est jamais invoqué, donc
+# aucun appel réseau (JWKS) n'est effectué au démarrage du contexte.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:0/realms/loyertracker/protocol/openid-connect/certs
+          issuer-uri: https://localhost/auth/realms/loyertracker

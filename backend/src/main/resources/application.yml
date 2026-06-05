@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: loyertracker-api
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # JWKS récupéré en interne (atteignable depuis le conteneur api), tandis que le
+          # claim `iss` est validé contre l'URL publique (terminaison TLS par Nginx, ADR-08).
+          # Sans cette dissociation, l'api tenterait de joindre https://localhost (= elle-même).
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+server:
+  port: 8080
+  # Respecte les en-têtes X-Forwarded-* posés par Nginx (scheme/host corrects).
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      # Exposé derrière Nginx sous /api/ : la santé est donc à /api/actuator/health.
+      base-path: /api/actuator
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+app:
+  cors:
+    allowed-origin: ${APP_CORS_ALLOWED_ORIGIN:https://localhost}
