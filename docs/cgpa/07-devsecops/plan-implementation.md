@@ -555,10 +555,21 @@ COPY infra/nginx/nginx.conf /etc/nginx/nginx.conf
 ```
 
 ### Critère de validation (US-04)
-- [ ] Push sur `develop` → pipeline CI vert (backend + frontend + security)
-- [ ] Rapport gitleaks : 0 secret détecté
-- [ ] Rapport OWASP DC : 0 vulnérabilité critique non traitée
-- [ ] Couverture tests backend : rapport JaCoCo publié
+- [x] Workflow `.github/workflows/ci.yml` complet : 4 jobs `backend` / `frontend` / `security` / `docker-build` (YAML valide, sans injection — n'utilise que `GITHUB_SHA`).
+- [x] **Backend** validé localement : `mvn verify` vert (14 tests, dont migration Flyway via Testcontainers) + **gate JaCoCo** (paquet `securite` ≥ 80 % → **96 %** mesuré) + rapport JaCoCo publié en artefact.
+- [x] **Frontend** validé localement : `npm ci` + `ng build --configuration production` OK + `ng test` headless **3 tests verts** (launcher `ChromeHeadlessNoSandbox`).
+- [x] **Gitleaks** exécuté localement (binaire v8.21.2) sur le dépôt **et les 24 commits d'historique** : **0 secret détecté**.
+- [x] **Trivy** exécuté localement (v0.71.0) sur l'image API : après remédiation (cf. écarts), **0 vulnérabilité CRITICAL/HIGH corrigeable** (`--ignore-unfixed`, gate `exit-code 1`).
+- [x] **Images Docker** : `loyertracker-api` (392 MB) et `loyertracker-web` (74 MB, SPA + Nginx ADR-08, contexte racine) buildent.
+- [ ] **Pipeline CI vert sur push** : **en attente** — l'authentification de push GitHub n'est pas configurée (le remote `origin` existe mais les commits restent locaux). Le workflow et toutes ses étapes sont validés hors-ligne ci-dessus ; la confirmation « vert sur push » sera cochée à la mise en place de l'auth (cf. étape 08).
+
+#### Écarts & décisions documentés (traçabilité CGPA)
+- **Remédiation de sécurité — Spring Boot 3.3.5 → 3.5.14 (décision validée par le PO).** Le scan SCA/Trivy du pipeline a révélé **5 CRITICAL + 20 HIGH** dans les dépendances gérées par Boot 3.3.5 (Tomcat embarqué 10.1.31, spring-security-web 6.3.4 → CVE-2026-22732 *contournement de politique*, spring-core, pgjdbc). Le correctif de la CVE `spring-security-web` n'existant qu'en 6.5.9+, la montée à **Spring Boot 3.5.14** était requise. Deux versions restant en deçà du seuil après bump, surcharge explicite des propriétés du BOM : **`tomcat.version=10.1.55`** (CVE → 10.1.55) et **`postgresql.version=42.7.11`** (CVE-2026-42198 → 42.7.11). Résultat : **0 CRITICAL/HIGH corrigeable**. La baseline de stack n'était figée que dans le `pom.xml` (aucun ADR/doc ne pinnait le patch `3.3.5` ; ADR-06 « Monolithe modulaire Spring Boot » reste valide) → pas de nouvel ADR, consignation ici. Les 14 tests passent inchangés sous Boot 3.5.14 (Spring Security 6.5 sans impact sur `SecurityConfig`).
+- **Quality gate JaCoCo ciblé.** La règle `check` s'applique au paquet `com.loyertracker.securite` (cloisonnement, ADR-01) à **≥ 80 %** de lignes — élargie aux règles métier (transitions de statut) à leur arrivée dans les phases applicatives. Rapport HTML/XML/CSV généré en phase `verify`, publié en artefact CI.
+- **Dockerfile frontend — contexte racine.** Construit via `docker build -f frontend/Dockerfile .` (et non depuis `frontend/`) afin d'embarquer à la fois la SPA **et** `infra/nginx/nginx.conf` (image web = point d'entrée unique ADR-08). Un `.dockerignore` racine limite le contexte transféré. Les certificats TLS ne sont **pas** embarqués (montés au runtime).
+- **Tests frontend ajoutés** (aucune infra de test n'existait) : karma + jasmine, cible `test` dans `angular.json`, `tsconfig.spec.json`, `karma.conf.js` (launcher NoSandbox pour CI) et un spec réel `auth.service.spec.ts` couvrant le parsing du token (bug corrigé à l'étape 05).
+- **Déclencheurs CI** élargis à toute branche (`push: ["**"]` + `pull_request`) plutôt que `develop` seul, pour couvrir le flux de dev actuel sur `main`. OWASP Dependency-Check : clé `NVD_API_KEY` (optionnelle, accélère le téléchargement de la base) prévue en secret à l'**étape 08**.
+- **Outillage non exécutable en local** (gitleaks/trivy installés ad hoc et exécutés ; OWASP DC non lancé localement car NVD volumineux) : la configuration des actions correspondantes est validée syntaxiquement et suit l'usage documenté de chaque action.
 
 ---
 

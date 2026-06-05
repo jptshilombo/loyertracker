@@ -1,0 +1,14 @@
+# Contexte racine utilisé par le build de l'image web (frontend/Dockerfile). On exclut tout
+# ce qui n'est pas nécessaire (frontend/ + infra/nginx/nginx.conf sont les seuls COPY).
+.git
+**/node_modules
+**/target
+**/dist
+**/out-tsc
+.env
+.env.*
+backend
+docs
+infra/nginx/certs
+infra/nginx/html
+**/*.log
