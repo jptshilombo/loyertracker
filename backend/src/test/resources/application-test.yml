@@ -2,6 +2,15 @@
 # post-processeur jwt() (jeton pré-authentifié) — le décodeur n'est jamais invoqué, donc
 # aucun appel réseau (JWKS) n'est effectué au démarrage du contexte.
 spring:
+  # SecurityIntegrationTest (@SpringBootTest) ne doit PAS exiger de BDD : on désactive les
+  # autoconfigurations datasource / JPA / Flyway. La migration V1 est validée séparément par
+  # SchemaMigrationTest via Testcontainers (vrai PostgreSQL), hors contexte Spring.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
   security:
     oauth2:
       resourceserver:

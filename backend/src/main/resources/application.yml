@@ -1,6 +1,24 @@
 spring:
   application:
     name: loyertracker-api
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    # Le schéma est la propriété de Flyway (source de vérité SQL) ; Hibernate ne fait que valider
+    # la correspondance entité↔table au démarrage, jamais de DDL automatique.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
   security:
     oauth2:
       resourceserver:

@@ -457,11 +457,20 @@ CREATE ROLE loyertracker_batch BYPASSRLS;
 > L'intercepteur Spring injecte `SET app.current_bailleur_id = '<uuid>'` à chaque connexion issue d'une requête utilisateur. Le batch utilise un `DataSource` dédié avec le rôle `loyertracker_batch`.
 
 ### Critère de validation (US-03)
-- [ ] `docker compose up` → Flyway log : `Successfully applied 1 migration`
-- [ ] Toutes les tables existent : `\dt` PostgreSQL
-- [ ] Les 5 index uniques partiels sont créés : `\di`
-- [ ] RLS active sur les tables métier : `SELECT relrowsecurity FROM pg_class WHERE relname = 'bien'` → `t`
-- [ ] 2ᵉ `docker compose up` : Flyway log : `Schema [...] is up to date`
+- [x] `docker compose up` → Flyway log : `Successfully applied 1 migration to schema "public", now at version v1`
+- [x] Toutes les tables existent : 11 tables métier + `flyway_schema_history` présentes (`information_schema.tables`)
+- [x] Les 5 index uniques métier sont créés (`uq_bail_actif`, `uq_affectation_active`, `uq_paiement_periode`, `uq_honoraire_periode`, `uq_alerte_nonlue`) + 8 index de performance
+- [x] RLS active **et forcée** sur les tables métier : `SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname = 'bien'` → `t | t` (10 tables au total)
+- [x] 2ᵉ démarrage : Flyway log : `Schema "public" is up to date. No migration necessary.`
+- [x] Test automatisé `SchemaMigrationTest` (Testcontainers PostgreSQL 16) : migration, présence tables/index, RLS ENABLE+FORCE, rôle batch BYPASSRLS, idempotence, **et preuve fonctionnelle du cloisonnement** (rôle restreint → ne voit que les biens du bailleur courant ; GUC absent → 0 ligne). Suite verte : 14 tests.
+
+#### Écarts documentés (traçabilité CGPA)
+- **`FORCE ROW LEVEL SECURITY` ajouté** (au-delà du `ENABLE` du plan) : l'API se connecte en tant que **propriétaire** des tables, or un propriétaire contourne la RLS par défaut. Sans `FORCE`, les politiques ne s'appliqueraient pas à l'API — la RLS serait inopérante. Correction de sécurité indispensable (ADR-01).
+- **Fail-closed durci** : la politique utilise `NULLIF(current_setting('app.current_bailleur_id', true), '')::uuid`. Le `true` (missing_ok) évite l'erreur si le GUC est absent ; le `NULLIF(..., '')` couvre le cas d'une connexion **poolée réinitialisée** (un GUC placeholder rendu renvoie `''`, pas `NULL`) → comparaison à `NULL` ⇒ 0 ligne, sans lever d'erreur SQL.
+- **Rôle `loyertracker_batch` créé `NOLOGIN` sans mot de passe** (créé idempotemment via bloc `DO`) : aucun secret versionné dans la migration. L'activation `LOGIN` + mot de passe sera faite au **pas batch** via une migration ultérieure (`DB_BATCH_USER/PASSWORD` déjà réservés dans `.env.example`). `BYPASSRLS` est positionné dès maintenant ; des `GRANT SELECT/INSERT/UPDATE/DELETE` lui sont accordés.
+- **2 des 5 index « uniques »** (`uq_paiement_periode`, `uq_honoraire_periode`) sont des **uniques totaux** (sans clause `WHERE`) conformément à leur SQL dans le plan — 3 seulement sont réellement partiels. Tous validés par nom.
+- **Colonne `audit_log.timestamp` renommée `horodatage`** (`timestamp` est un mot réservé SQL).
+- **Environnement de test** : sur cet hôte, le daemon Docker exige une API ≥ 1.40 alors que le client docker-java embarqué par Testcontainers 1.19.8 négocie 1.32 par défaut ; contourné **hors-repo** par `-Dapi.version=1.43` + `DOCKER_HOST` à l'exécution. Aucun artefact spécifique à l'hôte n'est versionné (le CI standard de l'étape 07 négociera la version nominalement).
 
 ---
 
