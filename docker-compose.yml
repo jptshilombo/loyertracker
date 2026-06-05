@@ -31,25 +31,48 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       # Derrière le reverse proxy Nginx (terminaison TLS) — cf. ADR-08
+      # KC 24 (hostname v1) : KC_HOSTNAME = hôte seul (pas une URL). Le scheme https
+      # + le chemin relatif /auth donnent l'issuer https://localhost/auth/realms/loyertracker.
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME: https://localhost/auth
-      KC_HOSTNAME_ADMIN: https://localhost/auth
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT_HTTPS: "true"
       KC_HEALTH_ENABLED: "true"
     volumes:
-      - ./infra/keycloak:/opt/keycloak/data/import:ro
+      # Realm versionné (sans secret) importé au démarrage. Mont du seul fichier
+      # JSON : le répertoire d'import ne doit contenir que des realms.
+      - ./infra/keycloak/realm-loyertracker.json:/opt/keycloak/data/import/realm-loyertracker.json:ro
     depends_on:
       postgres:
         condition: service_healthy
     networks: [loyertracker-net]
     healthcheck:
-      # L'image Keycloak (UBI minimal) n'a ni curl ni wget : on teste le port de management 9000 via bash/dev-tcp.
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      # L'image Keycloak (UBI minimal) n'a ni curl ni wget : on sonde /health/ready via bash/dev-tcp.
+      # KC 24 sert l'endpoint santé sur le port HTTP principal (8080) sous le chemin relatif /auth
+      # (le port de management dédié 9000 n'est par défaut qu'à partir de KC 25).
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 15s
       timeout: 5s
       retries: 10
       start_period: 60s
     restart: unless-stopped
+
+  # One-shot : injecte le mot de passe du compte de test DEV (depuis .env) après l'import
+  # du realm. Aucun secret n'est ainsi versionné dans realm-loyertracker.json. Idempotent.
+  keycloak-init:
+    image: quay.io/keycloak/keycloak:24.0
+    entrypoint: ["bash", "/opt/keycloak/data/bootstrap-test-account.sh"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_TEST_BAILLEUR_PASSWORD: ${KEYCLOAK_TEST_BAILLEUR_PASSWORD}
+    volumes:
+      - ./infra/keycloak/bootstrap-test-account.sh:/opt/keycloak/data/bootstrap-test-account.sh:ro
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks: [loyertracker-net]
+    restart: "no"
 
   api:
     build:
