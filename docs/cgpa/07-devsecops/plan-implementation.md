@@ -367,12 +367,25 @@ app.routes.ts              # routes protégées par AuthGuard
 // bearerExcludedUrls: ['/auth']   // ne pas envoyer le token aux endpoints Keycloak
 ```
 
-### Critère de validation (US-10 côté frontend)
-- [ ] `ng build` sans erreur ; assets dans `dist/` servis par Nginx
-- [ ] Accès à `https://localhost/` redirige vers Keycloak login
-- [ ] Après login avec bailleur-test, retour sur le dashboard bailleur (placeholder)
-- [ ] `AuthInterceptor` ajoute bien le header `Authorization: Bearer <token>` aux appels `/api`
-- [ ] Logout fonctionne (session Keycloak révoquée)
+### Critère de validation (US-10 côté frontend) — étape 05 (commit à suivre)
+*Validé end-to-end avec Chrome headless (Puppeteer) contre la stack complète servant le build réel.*
+- [x] `ng build` sans erreur ; `dist/loyertracker/browser` servi par Nginx (index + bundles 200, fallback SPA sur `/bailleur` 200)
+- [x] Accès à `https://localhost/` redirige vers le login Keycloak (`onLoad: 'login-required'`, PKCE S256)
+- [x] Après login `bailleur-test` → dashboard bailleur ; bandeau « bailleur-test@test.local · rôles : BAILLEUR »
+- [x] `authInterceptor` pose `Authorization: Bearer <token>` sur `/api/biens` → **200 OK** (header capturé côté navigateur)
+- [x] Logout → retour à la page de login Keycloak
+
+> **Décisions / écarts de plan documentés (traçabilité CGPA) :**
+> - **`@angular/material` et NgRx reportés** : non nécessaires au squelette US-10 (auth + routing).
+>   Material sera introduit avec les premiers écrans métier ; un simple service d'état d'abord.
+> - **CSP × build prod** : l'inlining CSS critique (critters) injectait un handler inline
+>   `onload="..."` bloqué par notre CSP `default-src 'self'`. Corrigé en désactivant
+>   `optimization.styles.inlineCritical` — la CSP stricte reste inchangée (pas d'assouplissement).
+> - **`getUsername()` via le token** : lu depuis `tokenParsed.preferred_username` plutôt que
+>   `KeycloakService.getUsername()` (qui exige un `loadUserProfile()` préalable).
+> - **Service de la SPA en dev** : `docker compose up` sert toujours le placeholder ; le build
+>   Angular est servi en montant `dist/loyertracker/browser` dans Nginx. L'intégration du build
+>   dans l'image (Dockerfile frontend) est finalisée à l'**étape 07**.
 
 ---
 
