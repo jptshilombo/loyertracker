@@ -700,12 +700,17 @@ access_log /var/log/nginx/access.log json_combined;
 Renseigner les deux checklists CGPA et recommander la décision Gate 6 (DevSecOps Go).
 
 **Livrables :**
-- `docs/cgpa/07-devsecops/checklist-devops.md` (renseignée)
-- `docs/cgpa/07-devsecops/checklist-securite.md` (renseignée)
+- [x] `docs/cgpa/07-devsecops/checklist-devops.md` (renseignée)
+- [x] `docs/cgpa/07-devsecops/checklist-securite.md` (renseignée)
+- [x] `docs/cgpa/07-devsecops/gate-6-decision.md` (score + réserves + recommandation)
 
-Les checklists seront complétées à l'issue des étapes 01→09, chaque item coché lorsque son critère est vérifié.
+### Critère de validation
+- [x] Les deux checklists CGPA sont renseignées **honnêtement** (✅ couvert / 🟠 partiel / ⏭️ différé), chaque item référençant sa preuve (étape, fichier, run CI).
+- [x] **Score de maturité calculé : 16/20** (Complétude 3 · Qualité 3 · Sécurité 4 · Traçabilité 3 · Automatisation 3) — **≥ 14/20**.
+- [x] **Recommandation : ✅ Go** avec 6 réserves datées (R1 SAST/lint · R2 envs+CD · R3 registry · R4 logs/métriques/alerting · R5 durcissement prod · R6 migration keycloak-angular).
+- [ ] **Ratification PO** (décision Gate 6 formelle + dates fermes) — *en attente de validation*.
 
-**Seuil Gate 6 :** score ≥ 14/20 recommandé.
+**Seuil Gate 6 :** score ≥ 14/20 recommandé → **atteint (16/20)**.
 
 ---
 

@@ -14,7 +14,7 @@ Projet gouverné par le **CGPA** (Cadre de Gouvernance des Projets Applicatifs, 
 | Gate 3 | Cahier des charges | ✅ Go |
 | Gate 4 | Architecture & conception | ✅ Go — **verrou de codage levé** |
 | Gate 5 | Backlog & planification | ✅ Go |
-| Gate 6 | DevSecOps | 🚧 en cours (Phase 07) |
+| Gate 6 | DevSecOps | 🟢 Phase 07 complète — recommandation **Go (16/20)**, ratification PO en attente |
 
 ## Stack
 
