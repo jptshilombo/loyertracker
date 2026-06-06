@@ -561,7 +561,7 @@ COPY infra/nginx/nginx.conf /etc/nginx/nginx.conf
 - [x] **Gitleaks** exécuté localement (binaire v8.21.2) sur le dépôt **et les 24 commits d'historique** : **0 secret détecté**.
 - [x] **Trivy** exécuté localement (v0.71.0) sur l'image API : après remédiation (cf. écarts), **0 vulnérabilité CRITICAL/HIGH corrigeable** (`--ignore-unfixed`, gate `exit-code 1`).
 - [x] **Images Docker** : `loyertracker-api` (392 MB) et `loyertracker-web` (74 MB, SPA + Nginx ADR-08, contexte racine) buildent.
-- [ ] **Pipeline CI vert sur push** : **en attente** — l'authentification de push GitHub n'est pas configurée (le remote `origin` existe mais les commits restent locaux). Le workflow et toutes ses étapes sont validés hors-ligne ci-dessus ; la confirmation « vert sur push » sera cochée à la mise en place de l'auth (cf. étape 08).
+- [x] **Pipeline CI vert sur push** : confirmé sur `main` (push du 2026-06-06). Les **4 jobs** `backend` / `frontend` / `security` / `docker-build` passent au vert sur le runner GitHub (run `27056760183`). La validation hors-ligne ci-dessus a depuis été confirmée en conditions réelles (cf. écarts post-push à l'étape 08).
 
 #### Écarts & décisions documentés (traçabilité CGPA)
 - **Remédiation de sécurité — Spring Boot 3.3.5 → 3.5.14 (décision validée par le PO).** Le scan SCA/Trivy du pipeline a révélé **5 CRITICAL + 20 HIGH** dans les dépendances gérées par Boot 3.3.5 (Tomcat embarqué 10.1.31, spring-security-web 6.3.4 → CVE-2026-22732 *contournement de politique*, spring-core, pgjdbc). Le correctif de la CVE `spring-security-web` n'existant qu'en 6.5.9+, la montée à **Spring Boot 3.5.14** était requise. Deux versions restant en deçà du seuil après bump, surcharge explicite des propriétés du BOM : **`tomcat.version=10.1.55`** (CVE → 10.1.55) et **`postgresql.version=42.7.11`** (CVE-2026-42198 → 42.7.11). Résultat : **0 CRITICAL/HIGH corrigeable**. La baseline de stack n'était figée que dans le `pom.xml` (aucun ADR/doc ne pinnait le patch `3.3.5` ; ADR-06 « Monolithe modulaire Spring Boot » reste valide) → pas de nouvel ADR, consignation ici. Les 14 tests passent inchangés sous Boot 3.5.14 (Spring Security 6.5 sans impact sur `SecurityConfig`).
@@ -622,10 +622,22 @@ infra/nginx/certs/*.key
 - **Rotation :** documentée dans le README (pas automatisée au MVP)
 
 ### Critère de validation
-- [ ] `git log --all -- '**/.env'` → 0 résultat
-- [ ] Gitleaks CI : 0 secret détecté sur tout l'historique
-- [ ] `.env.example` présent et documenté
-- [ ] Tout secret réel absent du dépôt (`grep -r "password" --include="*.yml" --include="*.properties"` → 0 valeur en dur)
+- [x] `git log --all -- '**/.env'` → **0 résultat** (aucun `.env` n'a jamais été versionné).
+- [x] **Gitleaks CI** : job `security` vert sur `main` (run `27056760183`) → **0 secret** détecté sur le dépôt et tout l'historique.
+- [x] `.env.example` présent et documenté (18 variables, en-tête renvoyant à la doc, section TLS mkcert).
+- [x] Tout secret réel absent du dépôt (revue `*.yml`/`*.properties`/`*.ts` : uniquement des placeholders `CHANGE_ME` et des références `${{ secrets.* }}` / `${VAR}` — **0 valeur en dur**).
+
+#### Décision PO (gestion des secrets)
+- **Push sur `main`** (et non sur une branche `develop`/`feat` dédiée) : déclenchement direct de la CI sur la branche par défaut.
+- **« Documenter seulement »** : aucun secret GitHub créé à ce stade. `GITHUB_TOKEN` est fourni automatiquement ; `NVD_API_KEY` est optionnel (OWASP DC informatif) ; les secrets runtime ne servent qu'à un futur job de déploiement. Les **valeurs** de secrets ne transitent jamais par le chat (l'utilisateur les posera via `gh secret set`).
+
+#### Écarts & décisions documentés (post-push — traçabilité CGPA)
+Le premier push réel a fait tourner le pipeline en conditions réelles et révélé des points non détectables hors-ligne, corrigés en suivant :
+- **Références d'actions GitHub.** `aquasecurity/trivy-action@0.24.0` puis `@v0.28.0` ne se résolvaient pas (tags préfixés `v` ; `setup-trivy@v0.2.1` interne supprimé en amont) → pinné sur **`@v0.36.0`** (qui référence `setup-trivy@v0.2.6`, SHA valide).
+- **Remédiation SCA suite à la revue de sécurité du push.** (1) OWASP Dependency-Check passé en *informatif* laissait les dépendances **npm** sans gate bloquant (l'image API ne contient aucun paquet npm) → ajout d'un gate **`trivy fs` sur `frontend/`** (même politique CRITICAL,HIGH, `ignore-unfixed`). (2) `scanners: vuln` désactivait le scanner de **secrets** de Trivy sur l'image → rétabli en **`vuln,secret`** (défense en profondeur, en plus de Gitleaks).
+- **Remédiation de sécurité — Angular 18 → 19.2.25 (décision validée par le PO).** Le nouveau gate `trivy fs` a détecté **7 CVE HIGH** (XSS/XSRF) dans Angular 18.2.14, **sans correctif dans la ligne 18.x** (CVE-2025-66035 `@angular/common` ; CVE-2025-66412/22610/32635 `@angular/compiler` ; CVE-2026-22610/27970/32635 `@angular/core`). Montée via `ng update @angular/core@19 @angular/cli@19` → **19.2.25** (≥ tous les correctifs requis), zone.js 0.15.1, migrations auto (retrait de `standalone: true` redondant). Le PO a choisi la **remédiation par upgrade** plutôt que l'acceptation du risque.
+- **keycloak-angular 16 → 19.0.2** (conséquence du bump Angular : `npm ci` strict refusait le peer `^18`). v19.0.2 cible `^19` et **conserve l'API héritée `KeycloakService`** (ré-exportée depuis l'entrée principale) → **aucun refactor** du code d'auth ; keycloak-js 24 reste compatible. Validé : build prod + 3 tests unitaires + `trivy fs frontend` = 0 vuln.
+- **⚠️ Dette technique enregistrée — migration vers l'API fonctionnelle keycloak-angular.** L'API `KeycloakService` (classe) est **dépréciée** en v19 et sera retirée en v20+. Une migration vers l'API fonctionnelle (`provideKeycloak`, `includeBearerTokenInterceptor` + `createInterceptorCondition` pour la politique `/api` only / `/auth` exclu, garde et lecture de token via *signals*) reste à faire. **À traiter lors du câblage applicatif de l'auth (US-10)**, où le flux OIDC/PKCE doit aussi être validé en runtime contre le realm Keycloak (les tests unitaires actuels *mockent* `KeycloakService` et n'exercent pas le flux réel).
 
 ---
 
