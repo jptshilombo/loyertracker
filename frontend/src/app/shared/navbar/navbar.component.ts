@@ -4,10 +4,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  imports: [RouterLink, RouterLinkActive],
-  template: `
+    selector: 'app-navbar',
+    imports: [RouterLink, RouterLinkActive],
+    template: `
     <nav class="navbar">
       <span class="brand">LoyerTracker</span>
       <a routerLink="/bailleur" routerLinkActive="active">Bailleur</a>
@@ -17,8 +16,8 @@ import { AuthService } from '../../core/auth/auth.service';
       <button type="button" (click)="logout()">Déconnexion</button>
     </nav>
   `,
-  styles: [
-    `
+    styles: [
+        `
       .navbar {
         display: flex;
         align-items: center;
@@ -47,7 +46,7 @@ import { AuthService } from '../../core/auth/auth.service';
         font-size: 0.9rem;
       }
     `,
-  ],
+    ]
 })
 export class NavbarComponent {
   private readonly auth = inject(AuthService);
