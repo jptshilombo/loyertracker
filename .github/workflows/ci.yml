@@ -97,10 +97,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. SCA — vulnérabilités des dépendances Java et npm. Échoue sur une CVE critique
-      #    (CVSS ≥ 9). La clé NVD (optionnelle) accélère le téléchargement de la base ;
-      #    elle sera fournie en secret à l'étape 08.
-      - name: OWASP Dependency-Check (SCA)
+      # 2. SCA — vulnérabilités des dépendances Java et npm. Informatif (continue-on-error) :
+      #    sans clé NVD, le téléchargement de la base est lent et soumis au rate-limiting.
+      #    Le gate bloquant de SCA est porté par Trivy (ci-dessous), qui scanne aussi les
+      #    dépendances Java de l'artefact. Fournir NVD_API_KEY (secret) rend ce job fiable.
+      - name: OWASP Dependency-Check (SCA, informatif)
+        continue-on-error: true
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: loyertracker
@@ -126,6 +128,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: loyertracker-api:ci
+          scanners: "vuln"
           severity: "CRITICAL,HIGH"
           exit-code: "1"
           ignore-unfixed: true
