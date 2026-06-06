@@ -97,10 +97,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. SCA — vulnérabilités des dépendances Java et npm. Informatif (continue-on-error) :
-      #    sans clé NVD, le téléchargement de la base est lent et soumis au rate-limiting.
-      #    Le gate bloquant de SCA est porté par Trivy (ci-dessous), qui scanne aussi les
-      #    dépendances Java de l'artefact. Fournir NVD_API_KEY (secret) rend ce job fiable.
+      # 2. SCA agrégé — informatif (continue-on-error) : sans clé NVD, le téléchargement de
+      #    la base est lent et soumis au rate-limiting. Les gates SCA *bloquants* sont portés
+      #    par Trivy : `trivy fs` sur frontend/ (npm) ci-dessous, et `trivy image` sur l'API
+      #    (dépendances Java de l'artefact). Fournir NVD_API_KEY (secret) rend ce job fiable.
       - name: OWASP Dependency-Check (SCA, informatif)
         continue-on-error: true
         uses: dependency-check/Dependency-Check_Action@main
@@ -120,7 +120,21 @@ jobs:
           name: dependency-check-report
           path: reports/
 
-      # 3. Scan de l'image conteneur de l'API (vulnérabilités OS + dépendances).
+      # 3. SCA npm bloquant — scanne le lockfile frontend (Trivy fs), même politique de
+      #    sévérité que le scan d'image. Comble la couverture npm que l'image API (Nginx +
+      #    fichiers statiques, sans paquets npm dans le runtime) ne porte pas.
+      - name: Trivy (scan dépendances npm)
+        uses: aquasecurity/trivy-action@v0.28.0
+        with:
+          scan-type: "fs"
+          scan-ref: "frontend"
+          scanners: "vuln"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+          ignore-unfixed: true
+
+      # 4. Scan de l'image conteneur de l'API (vulnérabilités OS + dépendances Java + secrets
+      #    éventuellement empaquetés dans les couches — scanners vuln,secret par défaut).
       - name: Build de l'image API (pour le scan)
         run: docker build -t loyertracker-api:ci ./backend
 
@@ -128,7 +142,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: loyertracker-api:ci
-          scanners: "vuln"
+          scanners: "vuln,secret"
           severity: "CRITICAL,HIGH"
           exit-code: "1"
           ignore-unfixed: true
