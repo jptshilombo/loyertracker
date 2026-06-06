@@ -7,7 +7,7 @@
 | Date | 2026-06-04 |
 | Phase | 07 — DevSecOps |
 | Gate visé | Gate 6 |
-| Statut | En revue |
+| Statut | ✅ Clôturée — Gate 6 statué **Go** (16/20) le 2026-06-06 |
 | Prérequis | Backlog validé (Gate 5 Go) — autorisation de coder active (Gate 4 Go) |
 
 > **Principe directeur :** avant d'écrire la première ligne de code métier, chaque couche de l'usine logicielle est planifiée ici dans le détail — fichiers à créer, commandes clés, critère de validation. Ce document est la référence de la Phase 07. Chaque étape doit être complète et validée avant de passer à la suivante (même logique que les gates CGPA, mais à granularité technique).
@@ -708,7 +708,7 @@ Renseigner les deux checklists CGPA et recommander la décision Gate 6 (DevSecOp
 - [x] Les deux checklists CGPA sont renseignées **honnêtement** (✅ couvert / 🟠 partiel / ⏭️ différé), chaque item référençant sa preuve (étape, fichier, run CI).
 - [x] **Score de maturité calculé : 16/20** (Complétude 3 · Qualité 3 · Sécurité 4 · Traçabilité 3 · Automatisation 3) — **≥ 14/20**.
 - [x] **Recommandation : ✅ Go** avec 6 réserves datées (R1 SAST/lint · R2 envs+CD · R3 registry · R4 logs/métriques/alerting · R5 durcissement prod · R6 migration keycloak-angular).
-- [ ] **Ratification PO** (décision Gate 6 formelle + dates fermes) — *en attente de validation*.
+- [x] **Ratification PO** : **Gate 6 statué ✅ Go** le 2026-06-06 (jptshilombo@gmail.com), réserves R1→R6 acceptées. Phase 08 ouverte. Cf. `gate-6-decision.md`.
 
 **Seuil Gate 6 :** score ≥ 14/20 recommandé → **atteint (16/20)**.
 

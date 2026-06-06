@@ -48,10 +48,18 @@ Seuil CGPA : **≥ 14/20 recommandé** → **atteint (16/20)**.
 
 ## Décision
 - Score de maturité : **16 / 20**
-- Recommandation : **✅ Go** (avec réserves R1→R6) — *à ratifier par le PO*
-- Décision PO : ☐ ✅ Go ☐ 🟠 Go sous réserve ☐ ⛔ No Go
-- Réserves retenues / dates fermes : _(à compléter par le PO)_
-- Date & responsable : _(à compléter — PO : jptshilombo@gmail.com)_
+- Recommandation : **✅ Go** (avec réserves R1→R6)
+- Décision PO : ☑ ✅ **Go** ☐ 🟠 Go sous réserve ☐ ⛔ No Go
+- **Réserves retenues / dates fermes** (toutes acceptées, suivies en phase 08) :
+  - **R1** — SAST + gate lint : **≤ 2026-06-20** (fin sprint 1).
+  - **R2** — envs staging/prod + CD + rollback : **avant la 1ʳᵉ mise en staging** (jalon, hors MVP).
+  - **R3** — publication registry : **avec R2**.
+  - **R4** — logs centralisés + métriques + alerting : **avant prod**.
+  - **R5** — Nginx non-root + chiffrement au repos + sauvegardes : **avant prod**.
+  - **R6** — migration API fonctionnelle keycloak-angular + validation runtime OIDC/PKCE : **lors de US-10**.
+- Date & responsable : **2026-06-06** — PO **jptshilombo@gmail.com** (jordan).
+
+> ✅ **Gate 6 statué Go.** Le verrou de la phase 07 est levé : la **phase 08 (Développement)** est ouverte. Les réserves R1→R6 sont reportées et suivies dans le backlog (R1 dans le sprint 1 ; R2→R5 avant mise en production ; R6 avec US-10).
 
 ---
 *Livrable CGPA v1.0 — Gate 6 (DevSecOps). Réf. : `setup-cgpa/docs/cgpa/gates/gate-6-devsecops.md`.*
