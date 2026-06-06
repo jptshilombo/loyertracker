@@ -1,16 +1,14 @@
-import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import { createAuthGuard } from 'keycloak-angular';
 
 /**
- * Garde de route : exige une session authentifiée, sinon redirige vers la connexion Keycloak
- * (Authorization Code + PKCE). Défense applicative complémentaire à `onLoad: 'login-required'`.
+ * Garde de route : exige une session authentifiée, sinon redirige vers Keycloak.
  */
-export const authGuard: CanActivateFn = async () => {
-  const keycloak = inject(KeycloakService);
-  if (keycloak.isLoggedIn()) {
+export const authGuard = createAuthGuard<CanActivateFn>(async (_route, state, authData) => {
+  if (authData.authenticated) {
     return true;
   }
-  await keycloak.login({ redirectUri: window.location.href });
+
+  await authData.keycloak.login({ redirectUri: window.location.origin + state.url });
   return false;
-};
+});

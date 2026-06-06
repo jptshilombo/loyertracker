@@ -24,7 +24,8 @@ services:
     # En production, Nginx est buildé avec les assets Angular (dist) intégrés (cf. Étape 07).
     image: loyertracker/web:${IMAGE_TAG:-latest}
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     volumes:
       # On ne monte plus le code : seuls la conf et les certificats sont injectés.
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro

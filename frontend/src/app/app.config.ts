@@ -1,22 +1,41 @@
-import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
+import { ApplicationConfig } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
+import {
+  INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
+  IncludeBearerTokenCondition,
+  createInterceptorCondition,
+  includeBearerTokenInterceptor,
+  provideKeycloak,
+} from 'keycloak-angular';
 
 import { routes } from './app.routes';
-import { authInterceptor } from './core/auth/auth.interceptor';
-import { initializeKeycloak } from './core/keycloak/keycloak-init';
+
+const apiBearerCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
+  urlPattern: /^\/api(\/.*)?$/i,
+  bearerPrefix: 'Bearer',
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
-    KeycloakService,
+    provideKeycloak({
+      config: {
+        url: '/auth',
+        realm: 'loyertracker',
+        clientId: 'loyertracker-spa',
+      },
+      initOptions: {
+        onLoad: 'login-required',
+        pkceMethod: 'S256',
+        checkLoginIframe: false,
+        redirectUri: window.location.origin + '/',
+      },
+    }),
     {
-      provide: APP_INITIALIZER,
-      useFactory: initializeKeycloak,
-      multi: true,
-      deps: [KeycloakService],
+      provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
+      useValue: [apiBearerCondition],
     },
+    provideHttpClient(withInterceptors([includeBearerTokenInterceptor])),
   ],
 };

@@ -12,3 +12,5 @@ docs
 infra/nginx/certs
 infra/nginx/html
 **/*.log
+
+**/.angular

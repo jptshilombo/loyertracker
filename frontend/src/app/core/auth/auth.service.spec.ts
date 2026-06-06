@@ -1,38 +1,49 @@
 import { TestBed } from '@angular/core/testing';
-import { KeycloakService } from 'keycloak-angular';
+import Keycloak from 'keycloak-js';
 
 import { AuthService } from './auth.service';
 
-/**
- * Vérifie que getUsername() lit `preferred_username` depuis le token déjà parsé (et ne
- * dépend pas de loadUserProfile(), source du bug corrigé à l'étape 05), et reste robuste
- * lorsqu'aucun token n'est disponible.
- */
 describe('AuthService', () => {
-  function configure(tokenParsed: unknown): AuthService {
-    const keycloakMock: Partial<KeycloakService> = {
-      getKeycloakInstance: () => ({ tokenParsed } as ReturnType<KeycloakService['getKeycloakInstance']>),
-    };
+  function configure(keycloakMock: Partial<Keycloak>): AuthService {
     TestBed.configureTestingModule({
-      providers: [AuthService, { provide: KeycloakService, useValue: keycloakMock }],
+      providers: [AuthService, { provide: Keycloak, useValue: keycloakMock }],
     });
     return TestBed.inject(AuthService);
   }
 
   afterEach(() => TestBed.resetTestingModule());
 
-  it('retourne preferred_username depuis le token parsé', () => {
-    const auth = configure({ preferred_username: 'bailleur-test' });
+  it('retourne preferred_username depuis le token parse', () => {
+    const auth = configure({ tokenParsed: { preferred_username: 'bailleur-test' } });
     expect(auth.getUsername()).toBe('bailleur-test');
   });
 
-  it('retourne une chaîne vide quand le token est absent', () => {
-    const auth = configure(undefined);
+  it('retourne une chaine vide quand le token est absent', () => {
+    const auth = configure({ tokenParsed: undefined });
     expect(auth.getUsername()).toBe('');
   });
 
-  it('retourne une chaîne vide quand preferred_username est manquant', () => {
-    const auth = configure({ sub: 'abc-123' });
+  it('retourne une chaine vide quand preferred_username est manquant', () => {
+    const auth = configure({ tokenParsed: { sub: 'abc-123' } });
     expect(auth.getUsername()).toBe('');
+  });
+
+  it('retourne vrai quand le client Keycloak est authentifie', () => {
+    expect(configure({ authenticated: true }).isLoggedIn()).toBeTrue();
+  });
+
+  it('retourne faux quand le client Keycloak n est pas authentifie', () => {
+    expect(configure({ authenticated: false }).isLoggedIn()).toBeFalse();
+  });
+
+  it('retourne les roles realm', () => {
+    const auth = configure({ realmAccess: { roles: ['BAILLEUR'] } });
+    expect(auth.roles).toEqual(['BAILLEUR']);
+  });
+
+  it('delegue hasRole au client Keycloak', () => {
+    const auth = configure({ hasRealmRole: (role: string) => role === 'BAILLEUR' });
+    expect(auth.hasRole('BAILLEUR')).toBeTrue();
+    expect(auth.hasRole('GESTIONNAIRE')).toBeFalse();
   });
 });
