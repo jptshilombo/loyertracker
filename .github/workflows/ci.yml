@@ -124,7 +124,7 @@ jobs:
       #    sévérité que le scan d'image. Comble la couverture npm que l'image API (Nginx +
       #    fichiers statiques, sans paquets npm dans le runtime) ne porte pas.
       - name: Trivy (scan dépendances npm)
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: "fs"
           scan-ref: "frontend"
@@ -139,7 +139,7 @@ jobs:
         run: docker build -t loyertracker-api:ci ./backend
 
       - name: Trivy (scan image)
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: loyertracker-api:ci
           scanners: "vuln,secret"
