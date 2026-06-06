@@ -682,10 +682,15 @@ access_log /var/log/nginx/access.log json_combined;
 ```
 
 ### Critère de validation
-- [ ] `GET /api/actuator/health` → `{"status":"UP"}` en < 200 ms
-- [ ] Logs Spring visibles dans `docker compose logs api` (format structuré)
-- [ ] Logs Nginx visibles dans `docker compose logs nginx` (JSON)
-- [ ] Aucune PII (email, nom) dans les logs applicatifs
+- [x] `GET /api/actuator/health` → `{"status":"UP"}` en **< 200 ms** — validé en runtime contre l'image de prod (`docker compose up postgres api`, réponse immédiate `~0 ms`). Endpoint public (test `SecurityIntegrationTest#health_estPublic`).
+- [x] Logs Spring visibles dans `docker compose logs api` (**format structuré JSON ECS**) — vérifié sur le conteneur réel (`{"@timestamp":…,"log":{"level":…},"service":{"name":"loyertracker-api"},…,"ecs":{"version":"8.11"}}`).
+- [x] Logs Nginx au **format JSON** (`log_format json_combined` + `access_log`) — implémentés dans `infra/nginx/nginx.conf` et validés au runtime dès l'étape 02 ; inchangés depuis.
+- [x] **Aucune PII** dans les logs applicatifs — niveau `INFO` par défaut, règle ENF-03 inscrite en commentaire de config ; aucune logique métier ne journalise encore de donnée. Le décodeur JWT ne logge pas les tokens.
+
+#### Écarts & décisions documentés (traçabilité CGPA)
+- **Journalisation structurée native (Spring Boot 3.5) plutôt que pattern console.** Le plan prévoyait un `logging.pattern.console` texte — non réellement « structuré ». Étant sur Boot 3.5.14, choix de la **journalisation structurée native `logging.structured.format.console: ecs`** (JSON ECS 8.11) : véritablement parsable, cohérente avec l'access log JSON de Nginx, **sans dépendance ajoutée** (pas de `logstash-logback-encoder`), logs sur stdout (12-factor). Surchargeable en dev (`--logging.structured.format.console=` vide) pour un rendu texte.
+- **Actuator déjà en place (étapes 04/08).** `health`/`info` exposés sous `/api/actuator` (`show-details: when-authorized`), liste blanche `SecurityConfig`. Ajout mineur ici : `management.info.env.enabled: true` (endpoint `info` exploitable). L'access log Nginx JSON existait déjà (étape 02). Le delta réel de l'étape 09 se limite donc à la **config de journalisation backend**.
+- **Validation runtime ciblée.** Stack complète (Keycloak + Nginx + TLS) déjà validée aux étapes 02/06 ; ici, validation proportionnée du seul nouveau livrable via `postgres + api` (`--no-deps`, `.env` jetable gitignoré, démonté ensuite). `mvn verify` reste vert (14 tests, gate JaCoCo) avec la nouvelle config.
 
 ---
 

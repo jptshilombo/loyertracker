@@ -44,6 +44,25 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  info:
+    # Alimente /api/actuator/info (env actif) — utile pour identifier la version déployée.
+    env:
+      enabled: true
+
+# Observabilité (Étape 09). Journalisation structurée JSON (ECS) native Spring Boot 3.5 :
+# logs émis sur stdout (12-factor), parsables par un agrégateur, cohérents avec l'access log
+# JSON de Nginx. Aucune dépendance ajoutée. Surchargeable en dev pour un format texte via
+# l'option `--logging.structured.format.console=` (vide).
+# ⚠️ ENF-03 — ne JAMAIS journaliser de PII (mots de passe, tokens, noms/emails de locataires) :
+#   ✅ id d'entité, action, bailleurId, horodatage   ❌ secrets, identité du locataire.
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    root: INFO
+    com.loyertracker: INFO            # élever à DEBUG en dev via LOGGING_LEVEL_COM_LOYERTRACKER=DEBUG
+    org.springframework.security: INFO
 
 app:
   cors:
