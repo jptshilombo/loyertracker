@@ -1,0 +1,44 @@
+name: CodeQL
+
+# SAST (réserve R1, Gate 6). Analyse statique de sécurité du backend Java et du frontend
+# TypeScript. Les alertes remontent dans l'onglet Security ; l'application bloquante des PR se
+# configure via la protection de branche (« Require code scanning results »).
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1" # hebdomadaire (lundi 03:00 UTC) : capte les nouvelles règles CodeQL
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyse CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["java-kotlin", "javascript-typescript"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Initialiser CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # build-mode none : extraction depuis les sources, sans compilation (supporté pour Java
+          # et TS). Évite de dépendre du build Maven/npm ici — la compilation est déjà gatée par ci.yml.
+          build-mode: none
+          queries: security-extended
+
+      - name: Analyser
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
