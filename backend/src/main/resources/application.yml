@@ -67,3 +67,15 @@ logging:
 app:
   cors:
     allowed-origin: ${APP_CORS_ALLOWED_ORIGIN:https://localhost}
+  invitation:
+    # Base du lien d'acceptation transmis au gestionnaire (US-11). Front Angular derrière Nginx.
+    base-url: ${APP_INVITATION_BASE_URL:https://localhost}
+
+# Admin API Keycloak — création de compte gestionnaire (US-12, ADR-10). Le client confidentiel
+# `loyertracker-api` doit disposer du rôle `manage-users` sur le realm. Secret hors dépôt (ENF-03).
+keycloak:
+  admin:
+    base-url: ${KEYCLOAK_ADMIN_BASE_URL:http://keycloak:8080}
+    realm: ${KEYCLOAK_REALM:loyertracker}
+    client-id: ${KEYCLOAK_API_CLIENT_ID:loyertracker-api}
+    client-secret: ${KEYCLOAK_API_CLIENT_SECRET:}
