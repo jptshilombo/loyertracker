@@ -41,8 +41,8 @@ class SchemaMigrationTest {
                 .locations("classpath:db/migration")
                 .load();
         MigrateResult result = flyway.migrate();
-        // Critère US-03 : exactement 1 migration appliquée.
-        assertThat(result.migrationsExecuted).isEqualTo(1);
+        // V1 (schéma US-03) + V2 (résolution tenant, ADR-09) + V3 (prédicats d'autorisation, US-13).
+        assertThat(result.migrationsExecuted).isEqualTo(3);
         assertThat(result.success).isTrue();
     }
 
@@ -98,6 +98,36 @@ class SchemaMigrationTest {
                      "SELECT rolbypassrls FROM pg_roles WHERE rolname = 'loyertracker_batch'")) {
             assertThat(rs.next()).as("rôle loyertracker_batch présent").isTrue();
             assertThat(rs.getBoolean("rolbypassrls")).isTrue();
+        }
+    }
+
+    @Test
+    void resolveBailleurIdContourneLaRlsViaSecurityDefiner() throws SQLException {
+        // ADR-09 : la résolution keycloak_id → bailleur_id doit aboutir SANS contexte tenant et
+        // sans droit de lecture direct sur `bailleur` — c'est tout l'intérêt du SECURITY DEFINER.
+        UUID bailleurId = UUID.randomUUID();
+        try (Connection c = connect()) {
+            c.setAutoCommit(false);
+            seedBailleurEtBien(c, bailleurId, "definer@test.local", "3 rue C");
+
+            try (Statement s = c.createStatement()) {
+                s.execute("DROP ROLE IF EXISTS app_user_definer");
+                s.execute("CREATE ROLE app_user_definer NOLOGIN");
+                s.execute("GRANT USAGE ON SCHEMA public TO app_user_definer");
+                // Volontairement AUCUN GRANT SELECT sur bailleur : seule la fonction y donne accès.
+            }
+
+            try (Statement s = c.createStatement()) {
+                s.execute("RESET app.current_bailleur_id"); // fail-closed pour un SELECT direct
+                s.execute("SET ROLE app_user_definer");
+                try (ResultSet rs = s.executeQuery(
+                        "SELECT resolve_bailleur_id('kc-" + bailleurId + "')")) {
+                    assertThat(rs.next()).isTrue();
+                    assertThat(rs.getObject(1, UUID.class)).isEqualTo(bailleurId);
+                }
+                s.execute("RESET ROLE");
+            }
+            c.rollback();
         }
     }
 
