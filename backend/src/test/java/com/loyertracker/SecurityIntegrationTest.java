@@ -13,6 +13,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import com.loyertracker.bailleur.InscriptionService;
+import com.loyertracker.comptes.AcceptationService;
+import com.loyertracker.comptes.InvitationService;
+import com.loyertracker.securite.AuthorizationService;
+import com.loyertracker.securite.TenantContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -28,6 +32,16 @@ class SecurityIntegrationTest {
     MockMvc mockMvc;
     @MockitoBean
     InscriptionService inscriptionService;
+    // Beans dépendant de JPA (EntityManager / repository), exclu du profil `test` : on les neutralise
+    // pour garder ce test de contrat de sécurité léger (sans base), comme InscriptionService.
+    @MockitoBean
+    InvitationService invitationService;
+    @MockitoBean
+    AcceptationService acceptationService;
+    @MockitoBean
+    TenantContext tenantContext;
+    @MockitoBean
+    AuthorizationService authorizationService;
 
     @Test
     void health_estPublic() throws Exception {

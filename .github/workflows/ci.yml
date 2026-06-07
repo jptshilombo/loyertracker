@@ -70,6 +70,10 @@ jobs:
       - name: Installation des dépendances
         run: npm ci
 
+      # Gate lint/format frontend (réserve R1) : ESLint v9 + angular-eslint (config plate).
+      - name: Lint (ESLint)
+        run: npm run lint
+
       - name: Build production
         run: npm run build -- --configuration production
 
