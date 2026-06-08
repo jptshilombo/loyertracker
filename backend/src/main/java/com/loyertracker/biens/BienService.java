@@ -1,0 +1,95 @@
+package com.loyertracker.biens;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.loyertracker.securite.TenantContext;
+
+import jakarta.persistence.EntityManager;
+
+@Service
+public class BienService {
+
+    private final BienRepository biens;
+    private final TenantContext tenant;
+    private final EntityManager em;
+
+    public BienService(BienRepository biens, TenantContext tenant, EntityManager em) {
+        this.biens = biens;
+        this.tenant = tenant;
+        this.em = em;
+    }
+
+    @Transactional(readOnly = true)
+    public List<BienDto> lister(Authentication authentication) {
+        Jwt jwt = principalJwt(authentication);
+        if (aRole(authentication, "ROLE_BAILLEUR")) {
+            UUID bailleurId = tenant.activerDepuisKeycloak(jwt.getSubject());
+            return biens.findByBailleurIdOrderByAdresseAsc(bailleurId).stream()
+                    .map(BienDto::from)
+                    .toList();
+        }
+        if (aRole(authentication, "ROLE_GESTIONNAIRE")) {
+            return listerBiensGestionnaire(jwt.getSubject());
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    @Transactional
+    public BienDto creer(Jwt jwt, BienRequest requete) {
+        UUID bailleurId = tenant.activerDepuisKeycloak(jwt.getSubject());
+        Bien bien = new Bien(UUID.randomUUID(), bailleurId, requete.adresse(), requete.type(),
+                requete.statut());
+        return BienDto.from(biens.saveAndFlush(bien));
+    }
+
+    @Transactional
+    public BienDto modifier(UUID id, Jwt jwt, BienRequest requete) {
+        tenant.activerDepuisKeycloak(jwt.getSubject());
+        Bien bien = biens.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Bien introuvable."));
+        bien.modifier(requete.adresse(), requete.type(), requete.statut());
+        return BienDto.from(bien);
+    }
+
+    @Transactional
+    public BienDto archiver(UUID id, Jwt jwt) {
+        tenant.activerDepuisKeycloak(jwt.getSubject());
+        Bien bien = biens.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Bien introuvable."));
+        bien.archiver();
+        return BienDto.from(bien);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<BienDto> listerBiensGestionnaire(String keycloakId) {
+        List<Object[]> lignes = em.createNativeQuery(
+                        "SELECT id, adresse, type, statut FROM biens_affectes_gestionnaire(:keycloakId)")
+                .setParameter("keycloakId", keycloakId)
+                .getResultList();
+        return lignes.stream()
+                .map(l -> new BienDto((UUID) l[0], (String) l[1], (String) l[2], (String) l[3]))
+                .toList();
+    }
+
+    private static Jwt principalJwt(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return jwt;
+    }
+
+    private static boolean aRole(Authentication authentication, String role) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(autorite -> role.equals(autorite.getAuthority()));
+    }
+}

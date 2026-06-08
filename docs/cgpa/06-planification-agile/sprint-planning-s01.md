@@ -5,7 +5,7 @@
 | Projet | LoyerTracker |
 | Sprint | 01 |
 | Période | 2026-06-08 → 2026-06-19 (2 semaines) |
-| Phase | 06 / 07 — Agile & développement |
+| Phase | CGPA v3.0.1 — Phase 7 Développement |
 | Responsable | jptshilombo@gmail.com |
 
 ---
@@ -86,11 +86,42 @@
 
 ---
 
-## 7. Revue & rétrospective (fin de sprint)
+## 7. Revue & rétrospective (clôture documentaire S01)
 
-*À compléter en fin de sprint S01.*
+> Mise à jour documentaire CGPA v3.0.1 le **2026-06-07**. La période initiale du sprint (2026-06-08 → 2026-06-19) est incohérente avec les commits et validations déjà présents au 2026-06-07 ; cette section clôture l'état réel observé dans le dépôt.
 
-- Réalisé : —
-- Non réalisé : —
-- Vélocité effective : — pts
-- Améliorations pour S02 : —
+### Réalisé
+
+| Story / réserve | Statut | Preuve documentaire ou technique |
+|-----------------|--------|----------------------------------|
+| US-01 — Stack Docker Compose | ✅ Réalisée | `docker-compose.yml`, `infra/nginx/nginx.conf`, Gate 6. |
+| US-02 — Realm Keycloak + resource server | ✅ Réalisée | `infra/keycloak/realm-loyertracker.json`, `SecurityConfig`, tests sécurité. |
+| US-03 — Flyway schéma complet + RLS | ✅ Réalisée | migrations V1/V2/V3, `SchemaMigrationTest`. |
+| US-04 — CI build/tests/scans | ✅ Réalisée | `.github/workflows/ci.yml`, runs CI verts. |
+| US-10 — Inscription bailleur | ✅ Réalisée | module `bailleur`, tests d'intégration. |
+| US-11 — Invitation gestionnaire | ✅ Réalisée | module `comptes`, tests d'intégration. |
+| US-12 — Acceptation invitation | 🟠 Réalisée avec réserve runtime | logique et tests avec faux IdP ; validation live Keycloak Admin API restante. |
+| US-13 — Autorisation fine ReBAC | ✅ Réalisée | `AuthorizationService`, migration V3, tests cross-tenant. |
+| R1 — SAST + lint/format | ✅ Clôturée | CodeQL, Spotless Maven, ESLint Angular en CI. |
+
+### Non réalisé / reporté
+
+- Validation runtime complète OIDC/PKCE post Angular 20 et Admin API gestionnaire Keycloak (R6).
+- OpenAPI des endpoints.
+- Modules métier réels de S02 : biens, baux, affectations, rotation.
+- Staging/prod, CD, registry, observabilité centralisée, backup/restore (R2→R5).
+
+### Vélocité effective
+
+- Engagement initial : **19 pts**.
+- Réalisé initial strict : **19 pts** (US-01, US-02, US-03, US-04, US-10).
+- Réalisé additionnel : **13 pts** (US-11, US-12, US-13).
+- Vélocité fonctionnelle constatée : **32 pts**, dont **5 pts US-12 sous réserve runtime R6**.
+
+### Améliorations pour S02
+
+- Produire un Plan d'Exécution CGPA v3.0.1 avant tout code.
+- Garder un périmètre S02 strict : US-20 à US-24.
+- Ajouter les tests d'autorisation endpoint par endpoint dès le premier endpoint métier.
+- Ne pas fermer R6 avant validation runtime réelle.
+- Maintenir `docs/project-state.md` après chaque étape significative.

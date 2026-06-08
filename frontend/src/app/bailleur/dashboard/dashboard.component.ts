@@ -1,58 +1,519 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { API_BASE_URL } from '../../core/api/api.config';
 import { AuthService } from '../../core/auth/auth.service';
+import {
+  Affectation,
+  AffectationPayload,
+  Bail,
+  BailPayload,
+  Bien,
+  BienPayload,
+  S02ApiService,
+  StatutBien,
+  TypeHonoraires,
+} from '../../core/s02/s02-api.service';
 import { BailleurInscriptionService } from '../inscription/bailleur-inscription.service';
 
-/**
- * Tableau de bord bailleur (placeholder — étape 05). Au premier accès authentifié, il rattache
- * le compte Keycloak au bailleur applicatif (US-10), puis permet de tester l'appel protégé
- * `GET /api/biens`.
- */
 @Component({
   selector: 'app-bailleur-dashboard',
-  standalone: true,
+  imports: [ReactiveFormsModule],
   template: `
-    <h1>Tableau de bord — Bailleur</h1>
-    <p>
-      Connecté en tant que <strong>{{ username }}</strong> · rôles : {{ roles.join(', ') || '—' }}
-    </p>
-    <p>Inscription applicative : {{ inscriptionStatus() }}</p>
-    <button type="button" (click)="chargerBiens()">Charger mes biens (GET /api/biens)</button>
-    <pre>{{ resultat() }}</pre>
+    <header class="page-head">
+      <div>
+        <h1>Espace bailleur</h1>
+        <p>{{ username }} · {{ roles.join(', ') || 'aucun rôle' }}</p>
+      </div>
+      <div class="status">Inscription : {{ inscriptionStatus() }}</div>
+    </header>
+
+    <section class="toolbar">
+      <button type="button" (click)="chargerBiens()" [disabled]="chargement()">Rafraîchir</button>
+      <span>{{ message() }}</span>
+    </section>
+
+    <section class="grid two">
+      <form [formGroup]="bienForm" (ngSubmit)="enregistrerBien()" class="panel">
+        <h2>{{ bienSelectionne() ? 'Modifier le bien' : 'Nouveau bien' }}</h2>
+        <label>
+          Adresse
+          <input type="text" formControlName="adresse" />
+        </label>
+        <label>
+          Type
+          <input type="text" formControlName="type" />
+        </label>
+        <label>
+          Statut
+          <select formControlName="statut">
+            <option value="LIBRE">LIBRE</option>
+            <option value="LOUE">LOUE</option>
+            <option value="EN_TRAVAUX">EN_TRAVAUX</option>
+            <option value="ARCHIVE">ARCHIVE</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button type="submit" [disabled]="bienForm.invalid || chargement()">
+            {{ bienSelectionne() ? 'Enregistrer' : 'Créer' }}
+          </button>
+          <button type="button" (click)="reinitialiserBien()">Nouveau</button>
+        </div>
+      </form>
+
+      <div class="panel">
+        <h2>Biens</h2>
+        @if (biens().length === 0) {
+          <p class="muted">Aucun bien.</p>
+        }
+        <div class="list">
+          @for (bien of biens(); track bien.id) {
+            <button
+              type="button"
+              class="row"
+              [class.selected]="bien.id === bienSelectionne()?.id"
+              (click)="selectionnerBien(bien)"
+            >
+              <span>
+                <strong>{{ bien.adresse }}</strong>
+                <small>{{ bien.type }}</small>
+              </span>
+              <span class="badge">{{ bien.statut }}</span>
+            </button>
+          }
+        </div>
+        @if (bienSelectionne()) {
+          <button type="button" class="danger" (click)="archiverBien()">Archiver</button>
+        }
+      </div>
+    </section>
+
+    @if (bienSelectionne(); as bien) {
+      <section class="grid two detail">
+        <form [formGroup]="bailForm" (ngSubmit)="creerBail()" class="panel">
+          <h2>Bail · {{ bien.adresse }}</h2>
+          <label>
+            Locataire
+            <input type="text" formControlName="locataireNom" />
+          </label>
+          <label>
+            Email
+            <input type="email" formControlName="locataireEmail" />
+          </label>
+          <div class="fields">
+            <label>
+              Loyer CC
+              <input type="number" formControlName="loyerCc" min="0" step="0.01" />
+            </label>
+            <label>
+              Dépôt
+              <input type="number" formControlName="depotGarantie" min="0" step="0.01" />
+            </label>
+          </div>
+          <div class="fields">
+            <label>
+              Début
+              <input type="date" formControlName="dateDebut" />
+            </label>
+            <label>
+              Fin
+              <input type="date" formControlName="dateFin" />
+            </label>
+          </div>
+          <button type="submit" [disabled]="bailForm.invalid || chargement()">Créer le bail</button>
+        </form>
+
+        <div class="panel">
+          <h2>Historique des baux</h2>
+          @for (bail of baux(); track bail.id) {
+            <div class="item">
+              <strong>{{ bail.locataireNom }}</strong>
+              <span>{{ bail.loyerCc }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
+              <span class="badge">{{ bail.statut }}</span>
+            </div>
+          } @empty {
+            <p class="muted">Aucun bail.</p>
+          }
+        </div>
+      </section>
+
+      <section class="grid two detail">
+        <form [formGroup]="affectationForm" (ngSubmit)="creerAffectation()" class="panel">
+          <h2>Affectation</h2>
+          <label>
+            Gestionnaire ID
+            <input type="text" formControlName="gestionnaireId" />
+          </label>
+          <div class="fields">
+            <label>
+              Honoraires
+              <select formControlName="typeHonoraires">
+                <option value="POURCENTAGE">POURCENTAGE</option>
+                <option value="FORFAIT">FORFAIT</option>
+              </select>
+            </label>
+            <label>
+              Montant
+              <input type="number" formControlName="montantHonoraires" min="0" step="0.01" />
+            </label>
+          </div>
+          <div class="fields">
+            <label>
+              Début
+              <input type="date" formControlName="dateDebut" />
+            </label>
+            <label>
+              Fin
+              <input type="date" formControlName="dateFin" />
+            </label>
+          </div>
+          <button type="submit" [disabled]="affectationForm.invalid || chargement()">
+            Créer l'affectation
+          </button>
+        </form>
+
+        <div class="panel">
+          <h2>Historique affectations</h2>
+          @for (affectation of affectations(); track affectation.id) {
+            <div class="item">
+              <strong>{{ affectation.gestionnaireId }}</strong>
+              <span>
+                {{ affectation.typeHonoraires }} {{ affectation.montantHonoraires }} ·
+                {{ affectation.dateDebut }} → {{ affectation.dateFin || 'en cours' }}
+              </span>
+              <span class="badge">{{ affectation.statut }}</span>
+              @if (affectation.statut === 'ACTIVE') {
+                <button type="button" class="danger" (click)="revoquerAffectation(affectation.id)">
+                  Révoquer
+                </button>
+              }
+            </div>
+          } @empty {
+            <p class="muted">Aucune affectation.</p>
+          }
+        </div>
+      </section>
+    }
   `,
+  styles: [
+    `
+      .page-head,
+      .toolbar,
+      .actions,
+      .fields,
+      .row,
+      .item {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .page-head,
+      .toolbar,
+      .row,
+      .item {
+        align-items: center;
+        justify-content: space-between;
+      }
+      h1,
+      h2,
+      p {
+        margin-top: 0;
+      }
+      .grid {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .two {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .panel {
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 1rem;
+        background: #111827;
+      }
+      label {
+        display: grid;
+        gap: 0.35rem;
+        margin-bottom: 0.75rem;
+        color: #cbd5e1;
+      }
+      input,
+      select {
+        width: 100%;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 0.5rem;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .list {
+        display: grid;
+        gap: 0.5rem;
+      }
+      .row {
+        width: 100%;
+        text-align: left;
+      }
+      .selected {
+        border-color: #38bdf8;
+      }
+      .badge,
+      .status {
+        color: #bae6fd;
+        font-size: 0.85rem;
+      }
+      .muted,
+      small {
+        color: #94a3b8;
+      }
+      .danger {
+        border-color: #7f1d1d;
+        color: #fecaca;
+      }
+    `,
+  ],
 })
 export class BailleurDashboardComponent implements OnInit {
-  private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly inscription = inject(BailleurInscriptionService);
+  private readonly api = inject(S02ApiService);
 
   readonly username = this.auth.getUsername();
   readonly roles = this.auth.roles;
   readonly inscriptionStatus = signal('en cours');
-  readonly resultat = signal('—');
+  readonly message = signal('Prêt');
+  readonly chargement = signal(false);
+  readonly biens = signal<Bien[]>([]);
+  readonly baux = signal<Bail[]>([]);
+  readonly affectations = signal<Affectation[]>([]);
+  readonly bienSelectionne = signal<Bien | null>(null);
+  readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
+
+  readonly bienForm = new FormGroup({
+    adresse: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    type: new FormControl('APPARTEMENT', { nonNullable: true, validators: [Validators.required] }),
+    statut: new FormControl<StatutBien>('LIBRE', { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  readonly bailForm = new FormGroup({
+    locataireNom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    locataireEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
+    loyerCc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    dateFin: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly affectationForm = new FormGroup({
+    gestionnaireId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    typeHonoraires: new FormControl<TypeHonoraires>('POURCENTAGE', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    montantHonoraires: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    dateFin: new FormControl('', { nonNullable: true }),
+  });
 
   ngOnInit(): void {
     if (!this.auth.hasRole('BAILLEUR')) {
       this.inscriptionStatus.set('non applicable');
+      this.chargerBiens();
       return;
     }
 
     this.inscription.inscrire().subscribe({
       next: (result) => {
-        this.inscriptionStatus.set(
-          result.status === 'created' ? 'créée' : 'déjà existante',
-        );
+        this.inscriptionStatus.set(result.status === 'created' ? 'créée' : 'déjà existante');
+        this.chargerBiens();
       },
-      error: (err) => this.inscriptionStatus.set(`erreur ${err.status}`),
+      error: (err: HttpErrorResponse) => this.inscriptionStatus.set(`erreur ${err.status}`),
     });
   }
 
   chargerBiens(): void {
-    this.http.get<unknown[]>(`${API_BASE_URL}/biens`).subscribe({
-      next: (biens) => this.resultat.set(`200 OK — ${biens.length} bien(s)`),
-      error: (err) => this.resultat.set(`Erreur ${err.status}`),
+    this.executer('Chargement des biens', () =>
+      this.api.listerBiens().subscribe({
+        next: (biens) => {
+          this.biens.set(biens);
+          this.message.set(`${biens.length} bien(s)`);
+          const selection = this.bienSelectionneId();
+          if (selection && !biens.some((bien) => bien.id === selection)) {
+            this.reinitialiserBien();
+          }
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  selectionnerBien(bien: Bien): void {
+    this.bienSelectionne.set(bien);
+    this.bienForm.setValue({ adresse: bien.adresse, type: bien.type, statut: bien.statut });
+    this.chargerDetails(bien.id);
+  }
+
+  reinitialiserBien(): void {
+    this.bienSelectionne.set(null);
+    this.bienForm.reset({ adresse: '', type: 'APPARTEMENT', statut: 'LIBRE' });
+    this.baux.set([]);
+    this.affectations.set([]);
+  }
+
+  enregistrerBien(): void {
+    if (this.bienForm.invalid) {
+      return;
+    }
+    const payload = this.bienPayload();
+    const selection = this.bienSelectionne();
+    const action = selection
+      ? this.api.modifierBien(selection.id, payload)
+      : this.api.creerBien(payload);
+
+    this.executer('Enregistrement du bien', () =>
+      action.subscribe({
+        next: (bien) => {
+          this.message.set(selection ? 'Bien modifié' : 'Bien créé');
+          this.bienSelectionne.set(bien);
+          this.chargerBiens();
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  archiverBien(): void {
+    const bien = this.bienSelectionne();
+    if (!bien) {
+      return;
+    }
+    this.executer('Archivage du bien', () =>
+      this.api.archiverBien(bien.id).subscribe({
+        next: (archive) => {
+          this.message.set('Bien archivé');
+          this.bienSelectionne.set(archive);
+          this.bienForm.patchValue({ statut: archive.statut });
+          this.chargerBiens();
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  creerBail(): void {
+    const bienId = this.bienSelectionneId();
+    if (!bienId || this.bailForm.invalid) {
+      return;
+    }
+    this.executer('Création du bail', () =>
+      this.api.creerBail(bienId, this.bailPayload()).subscribe({
+        next: () => {
+          this.message.set('Bail créé');
+          this.bailForm.reset({
+            locataireNom: '',
+            locataireEmail: '',
+            loyerCc: 0,
+            depotGarantie: 0,
+            dateDebut: '',
+            dateFin: '',
+          });
+          this.chargerDetails(bienId);
+          this.chargerBiens();
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  creerAffectation(): void {
+    const bienId = this.bienSelectionneId();
+    if (!bienId || this.affectationForm.invalid) {
+      return;
+    }
+    this.executer('Création de l affectation', () =>
+      this.api.creerAffectation(this.affectationPayload(bienId)).subscribe({
+        next: () => {
+          this.message.set('Affectation créée');
+          this.affectationForm.reset({
+            gestionnaireId: '',
+            typeHonoraires: 'POURCENTAGE',
+            montantHonoraires: 0,
+            dateDebut: '',
+            dateFin: '',
+          });
+          this.chargerDetails(bienId);
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  revoquerAffectation(id: string): void {
+    const bienId = this.bienSelectionneId();
+    if (!bienId) {
+      return;
+    }
+    this.executer('Révocation', () =>
+      this.api.revoquerAffectation(id).subscribe({
+        next: () => {
+          this.message.set('Affectation révoquée');
+          this.chargerDetails(bienId);
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  private chargerDetails(bienId: string): void {
+    this.api.listerBaux(bienId).subscribe({
+      next: (baux) => this.baux.set(baux),
+      error: (err: unknown) => this.signalerErreur(err),
     });
+    this.api.listerAffectations(bienId).subscribe({
+      next: (affectations) => this.affectations.set(affectations),
+      error: (err: unknown) => this.signalerErreur(err),
+    });
+  }
+
+  private bienPayload(): BienPayload {
+    return this.bienForm.getRawValue();
+  }
+
+  private bailPayload(): BailPayload {
+    const form = this.bailForm.getRawValue();
+    return {
+      ...form,
+      locataireEmail: form.locataireEmail || null,
+      dateFin: form.dateFin || null,
+    };
+  }
+
+  private affectationPayload(bienId: string): AffectationPayload {
+    const form = this.affectationForm.getRawValue();
+    return { ...form, bienId, dateFin: form.dateFin || null };
+  }
+
+  private executer(message: string, action: () => void): void {
+    this.chargement.set(true);
+    this.message.set(message);
+    action();
+  }
+
+  private signalerErreur(err: unknown): void {
+    if (err instanceof HttpErrorResponse) {
+      const detail = err.status === 409 ? 'conflit métier' : err.status === 403 ? 'accès refusé' : 'erreur API';
+      this.message.set(`${detail} (${err.status})`);
+      this.chargement.set(false);
+      return;
+    }
+    this.message.set('erreur inconnue');
+    this.chargement.set(false);
   }
 }

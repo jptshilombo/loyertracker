@@ -2,8 +2,10 @@ package com.loyertracker.biens;
 
 import java.util.UUID;
 
-/**
- * Vue minimale d'un bien (squelette — étape 04). Enrichie avec la persistance à l'étape 06.
- */
+/** Vue API d'un bien locatif. */
 public record BienDto(UUID id, String adresse, String type, String statut) {
+
+    public static BienDto from(Bien bien) {
+        return new BienDto(bien.getId(), bien.getAdresse(), bien.getType(), bien.getStatut().name());
+    }
 }

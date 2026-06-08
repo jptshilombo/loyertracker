@@ -2,7 +2,6 @@ package com.loyertracker;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -12,7 +11,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import com.loyertracker.affectations.AffectationService;
 import com.loyertracker.bailleur.InscriptionService;
+import com.loyertracker.baux.BailService;
+import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
 import com.loyertracker.comptes.InvitationService;
 import com.loyertracker.securite.AuthorizationService;
@@ -32,6 +34,12 @@ class SecurityIntegrationTest {
     MockMvc mockMvc;
     @MockitoBean
     InscriptionService inscriptionService;
+    @MockitoBean
+    BienService bienService;
+    @MockitoBean
+    BailService bailService;
+    @MockitoBean
+    AffectationService affectationService;
     // Beans dépendant de JPA (EntityManager / repository), exclu du profil `test` : on les neutralise
     // pour garder ce test de contrat de sécurité léger (sans base), comme InscriptionService.
     @MockitoBean
@@ -56,19 +64,17 @@ class SecurityIntegrationTest {
     }
 
     @Test
-    void biens_avecRoleBailleur_renvoie200ListeVide() throws Exception {
+    void biens_avecRoleBailleur_renvoie200() throws Exception {
         mockMvc.perform(get("/api/biens")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_BAILLEUR"))))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[]"));
+                .andExpect(status().isOk());
     }
 
     @Test
-    void biens_avecRoleGestionnaire_renvoie200ListeVide() throws Exception {
+    void biens_avecRoleGestionnaire_renvoie200() throws Exception {
         mockMvc.perform(get("/api/biens")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_GESTIONNAIRE"))))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[]"));
+                .andExpect(status().isOk());
     }
 
     @Test
