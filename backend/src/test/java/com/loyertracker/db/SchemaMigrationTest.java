@@ -208,32 +208,34 @@ class SchemaMigrationTest {
             UUID affectationB =
                     seedAffectationActive(c, bailleurB, bienIdDe(c, bailleurB), gestionnaire);
 
-            try (Statement s = c.createStatement()) {
-                s.execute("SET app.current_bailleur_id = '" + bailleurA + "'");
-                s.execute("SET ROLE loyertracker_api");
+            // Contexte tenant A via set_config paramétré (pas de SQL concaténé).
+            positionnerTenant(c, bailleurA);
+            try (Statement role = c.createStatement()) {
+                role.execute("SET ROLE loyertracker_api");
 
-                try (ResultSet rs = s.executeQuery("SELECT count(*) FROM affectation")) {
+                try (Statement s = c.createStatement();
+                        ResultSet rs = s.executeQuery("SELECT count(*) FROM affectation")) {
                     rs.next();
                     assertThat(rs.getInt(1)).as("affectations visibles sous tenant A").isEqualTo(1);
                 }
                 // Révocation cross-tenant (affectation de B) : invisible → 0 ligne touchée.
-                assertThat(s.executeUpdate(
-                        "UPDATE affectation SET statut = 'REVOQUEE' WHERE id = '" + affectationB + "'"))
+                assertThat(revoquer(c, affectationB))
                         .as("révocation cross-tenant bloquée par la RLS").isZero();
                 // Contrôle positif : le tenant A révoque bien sa propre affectation.
-                assertThat(s.executeUpdate(
-                        "UPDATE affectation SET statut = 'REVOQUEE' WHERE id = '" + affectationA + "'"))
+                assertThat(revoquer(c, affectationA))
                         .as("révocation de sa propre affectation autorisée").isEqualTo(1);
 
-                s.execute("RESET ROLE");
+                role.execute("RESET ROLE");
             }
 
             // L'affectation de B est restée ACTIVE (vérifié en superutilisateur).
-            try (Statement s = c.createStatement();
-                    ResultSet rs = s.executeQuery(
-                            "SELECT statut FROM affectation WHERE id = '" + affectationB + "'")) {
-                rs.next();
-                assertThat(rs.getString(1)).isEqualTo("ACTIVE");
+            try (PreparedStatement ps =
+                    c.prepareStatement("SELECT statut FROM affectation WHERE id = ?")) {
+                ps.setObject(1, affectationB);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    assertThat(rs.getString(1)).isEqualTo("ACTIVE");
+                }
             }
 
             c.rollback();
@@ -320,6 +322,24 @@ class SchemaMigrationTest {
             ps.executeUpdate();
         }
         return id;
+    }
+
+    /** Positionne le contexte tenant (GUC de session) via set_config paramétré. */
+    private void positionnerTenant(Connection c, UUID bailleurId) throws SQLException {
+        try (PreparedStatement ps =
+                c.prepareStatement("SELECT set_config('app.current_bailleur_id', ?, false)")) {
+            ps.setString(1, bailleurId.toString());
+            ps.executeQuery();
+        }
+    }
+
+    /** Révoque une affectation par id (UPDATE paramétré) ; renvoie le nombre de lignes touchées. */
+    private int revoquer(Connection c, UUID affectationId) throws SQLException {
+        try (PreparedStatement ps =
+                c.prepareStatement("UPDATE affectation SET statut = 'REVOQUEE' WHERE id = ?")) {
+            ps.setObject(1, affectationId);
+            return ps.executeUpdate();
+        }
     }
 
     /** Compte les biens visibles sous le rôle restreint et le bailleur courant donné (NULL = aucun). */
