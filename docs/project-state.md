@@ -6,7 +6,7 @@
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
 * Version actuelle : 0.1.0-SNAPSHOT
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active : `feat/s01-delegation-gestionnaire`
+* Branche active : `main` (lot delegation S02 + RLS integre via PR #3 le 2026-06-08, merge commit `d6a586f`)
 * Derniere mise a jour : 2026-06-08
 * Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, consolidation delegation S02
 
@@ -220,7 +220,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-08 | Consolidation delegation S02 — durcissement autorisation affectations | ReBAC `peutAccederBien` sur `creer` (403 cross-bailleur) ; controle de propriete sur `revoquer` (404 cross-bailleur) ; test d'integration cross-bailleur ajoute ; `mvn verify` vert 36 tests ; lot S02 versionne | `backend/.../affectations/AffectationController.java`, `backend/.../affectations/AffectationService.java`, `backend/.../s02/S02BiensBauxAffectationsIntegrationTest.java`, `docs/project-state.md` | Claude Code |
 | 2026-06-08 | Remediation RLS — role applicatif a privileges minimaux | Migration V5 (`loyertracker_api` LOGIN NOSUPERUSER NOBYPASSRLS + grants DML/EXECUTE) ; Flyway via role admin separe (`spring.flyway.user`) ; compose/.env bascules ; tests RLS sous role reel + attributs du role ; `mvn verify` vert 38 tests. Reactive la 2e couche de defense en profondeur (ADR-01) | `V5__role_applicatif_rls.sql`, `application.yml`, `src/test/resources/application.properties`, `docker-compose.yml`, `.env(.example)`, `SchemaMigrationTest.java`, `docs/project-state.md` | Claude Code |
 | 2026-06-08 | Smoke test runtime sous role restreint | App bootee via jar reel + PostgreSQL dedie : Flyway migre en admin et cree `loyertracker_api`, l'app se connecte en rôle restreint (pool Hikari, health UP). Verifie live : TRUNCATE/DDL refuses, isolation RLS par tenant (sans GUC=0, tenant A voit son bien, tenant B ne le voit pas). Non couvert : flux API authentifie (Keycloak) | (validation runtime, aucun fichier source) | Claude Code |
-| 2026-06-08 | Push + PR #3 vers `main` + CI verte | Branche `feat/s02-delegation-affectations` poussee, PR #3 (4 commits : delegation S02, autorisation cross-tenant, RLS, smoke test). Gate CodeQL d'abord rouge (4 alertes high `java/concatenated-sql-query` dans le nouveau test RLS) corrige par SQL parametre (`set_config`/PreparedStatement). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL, Packaging Docker. **PR ouverte, non encore mergee.** | `SchemaMigrationTest.java`, PR #3 | Claude Code |
+| 2026-06-08 | PR #3 mergee dans `main` (CI verte) | Branche `feat/s02-delegation-affectations` -> `main` via PR #3 (delegation S02, autorisation cross-tenant, RLS rôle applicatif, smoke test). Gate CodeQL d'abord rouge (4 alertes high `java/concatenated-sql-query` dans le nouveau test RLS) corrige par SQL parametre (`set_config`/PreparedStatement). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL, Packaging Docker. **Mergee le 2026-06-08T07:56Z, merge commit `d6a586f`.** | `main`, PR #3 | Claude Code / PO |
 
 ## 13. Risques ouverts
 
