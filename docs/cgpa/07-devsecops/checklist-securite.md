@@ -1,6 +1,7 @@
 # Checklist sécurité (DevSecOps) — LoyerTracker
 
 > Renseignée au **Gate 6 (DevSecOps)** — état au 2026-06-06 (issue des étapes 01→09).
+> Mise à jour documentaire CGPA v3.0.1 le **2026-06-07** : R1 clôturée ; R6 validée partiellement en runtime (OIDC/PKCE OK, Admin API gestionnaire KO).
 > Légende : `[x]` fait · `[ ]` non fait. Statut : ✅ couvert · 🟠 partiel · ⏭️ différé (réserve datée au Gate 6).
 
 ## 1. Conception (Shift-Left)
@@ -11,7 +12,7 @@
 ## 2. Authentification & autorisation
 - [x] ✅ Authentification centralisée (Keycloak / OIDC / OAuth2) — realm `loyertracker` versionné, SPA en OIDC **PKCE**, API resource-server JWT.
 - [x] ✅ Rôles et scopes appliqués côté API — `SecurityConfig` (liste blanche health/info + invitation), `@EnableMethodSecurity`/`@PreAuthorize`, rôles via `realm_access.roles` (RBAC grossier ADR-02) + ReBAC applicatif + RLS.
-- [x] 🟠 Sessions / tokens sécurisés — API **stateless** (aucune session), JWT bearer, expiration/refresh gérés par Keycloak, TLS obligatoire. 🟠 *Dette US-10* : migrer vers l'API fonctionnelle keycloak-angular et **valider le flux OIDC/PKCE en runtime** (tests actuels mockés) — réserve R6.
+- [x] 🟠 Sessions / tokens sécurisés — API **stateless** (aucune session), JWT bearer, expiration/refresh gérés par Keycloak, TLS obligatoire. L'API fonctionnelle `keycloak-angular` est en place (Angular/keycloak-angular 20). Le flux OIDC/PKCE S256 est validé en runtime avec JWT bailleur et API protégée OK. 🟠 L'Admin API Keycloak gestionnaire échoue encore en runtime (401) — réserve R6 non clôturée.
 
 ## 3. Gestion des secrets
 - [x] ✅ Aucun secret en clair dans le dépôt — Gitleaks CI = 0 secret sur dépôt + historique ; `git log --all -- '**/.env'` = 0.
@@ -19,10 +20,10 @@
 - [x] 🟠 Rotation des secrets prévue — procédure **manuelle documentée** (README, `openssl rand`). ⏭️ Rotation automatisée différée — réserve R5.
 
 ## 4. Code & dépendances
-- [ ] ⏭️ SAST (analyse statique) intégré à la CI — **absent** (ni CodeQL, ni Semgrep, ni SpotBugs) — **réserve R1 (prioritaire)**.
+- [x] ✅ SAST (analyse statique) intégré à la CI — **CodeQL Java/TypeScript** actif sur push, pull request et planification hebdomadaire — **réserve R1 clôturée sur le volet SAST**.
 - [x] ✅ SCA (vulnérabilités des dépendances) intégré — Trivy `fs` (npm, bloquant) + Trivy image (Java, bloquant) + OWASP Dependency-Check (informatif).
 - [x] ✅ Scan de secrets dans la CI — Gitleaks (dépôt + historique) + Trivy `secret` sur l'image.
-- [x] ✅ Vulnérabilités critiques traitées avant fusion — **démontré** : Spring Boot 3.3.5→3.5.14 (+ overrides Tomcat/pgjdbc) ; Angular 18→19.2.25 (7 CVE HIGH XSS/XSRF). Politique `CRITICAL,HIGH` `exit-code 1`.
+- [x] ✅ Vulnérabilités critiques traitées avant fusion — **démontré** : Spring Boot 3.3.5→3.5.14 (+ overrides Tomcat/pgjdbc) ; Angular 18→19.2.25→20.3.x (7 CVE HIGH XSS/XSRF). Politique `CRITICAL,HIGH` `exit-code 1`.
 
 ## 5. Conteneurs & infrastructure
 - [x] ✅ Images Docker scannées — Trivy `vuln,secret`, `severity CRITICAL,HIGH`, `ignore-unfixed`, gate bloquant.
@@ -32,7 +33,7 @@
 ## 6. Communication & données
 - [x] ✅ HTTPS / TLS partout — Nginx point d'entrée unique 443 (TLS 1.2/1.3), redirection 80→443, **HSTS**, en-têtes `X-Content-Type-Options`/`Referrer-Policy`/`X-Frame-Options`/CSP de base.
 - [ ] ⏭️ Chiffrement des données sensibles au repos — volume PostgreSQL non chiffré (à traiter au niveau infra/prod) — réserve R5.
-- [x] 🟠 Validation/échappement des entrées (OWASP Top 10) — sécurités cadre en place (CORS restreint, CSRF désactivé car API stateless à jeton, CSP, sanitization Angular). 🟠 Validation applicative (Bean Validation) à ajouter avec les endpoints métier — phase 08.
+- [x] 🟠 Validation/échappement des entrées (OWASP Top 10) — sécurités cadre en place (CORS restreint, CSRF désactivé car API stateless à jeton, CSP, sanitization Angular). 🟠 Validation applicative (Bean Validation) à ajouter avec les endpoints métier — Phase 7.
 
 ## 7. Journalisation & supervision
 - [x] 🟠 Logs de sécurité (auth, erreurs) — `org.springframework.security` à INFO, logs structurés JSON ECS sur stdout, prêts pour centralisation. ⏭️ Centralisation/corrélation non déployées — réserve R4.
@@ -43,5 +44,13 @@
 - [x] ✅ Conformité RGPD vérifiée — ADR-03 (minimisation, finalité, droits) ; classification des données sensibles faite.
 - [ ] ⏭️ Politique de sauvegarde/restauration en place — différée (pas de prod) — réserve R5.
 
+## 9. État des réserves sécurité après resynchronisation CGPA v3.0.1
+
+| Réserve | Statut au 2026-06-07 | Commentaire |
+|---------|----------------------|-------------|
+| R1 — SAST + lint/format | ✅ Clôturée techniquement | CodeQL, Spotless et ESLint en CI. |
+| R6 — auth frontend/runtime Keycloak | 🟠 Partielle | OIDC/PKCE et appel API protégé validés ; Admin API gestionnaire KO en 401, configuration client/service account et variables runtime à corriger. |
+| R2/R4/R5 | ⏭️ Ouvertes | Coffre, observabilité centralisée, alerting, chiffrement, backup/restore avant prod. |
+
 ---
-*Checklist CGPA v1.0 — Phase 07 (DevSecOps). Réserves R1→R6 détaillées dans `gate-6-decision.md`.*
+*Checklist CGPA v3.0.1 — Phase 6 (DevSecOps). Réserves R1→R6 détaillées dans `gate-6-decision.md`.*

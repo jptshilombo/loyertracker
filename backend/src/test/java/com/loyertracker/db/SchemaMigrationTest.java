@@ -41,8 +41,9 @@ class SchemaMigrationTest {
                 .locations("classpath:db/migration")
                 .load();
         MigrateResult result = flyway.migrate();
-        // V1 (schéma US-03) + V2 (résolution tenant, ADR-09) + V3 (prédicats d'autorisation, US-13).
-        assertThat(result.migrationsExecuted).isEqualTo(3);
+        // V1 (schéma US-03) + V2 (résolution tenant) + V3 (prédicats d'autorisation)
+        // + V4 (helpers S02 biens/baux/affectations).
+        assertThat(result.migrationsExecuted).isEqualTo(4);
         assertThat(result.success).isTrue();
     }
 

@@ -63,6 +63,21 @@ public class TenantContext {
         return bailleurId;
     }
 
+    /**
+     * Résout le bailleur propriétaire d'un bien et positionne le contexte RLS. Utilisé après une
+     * décision ReBAC positive, notamment pour les gestionnaires qui n'ont pas de tenant propre.
+     */
+    public UUID activerDepuisBien(UUID bienId) {
+        UUID bailleurId = (UUID) em.createNativeQuery("SELECT resolve_bien_bailleur(CAST(:arg AS uuid))")
+                .setParameter("arg", bienId.toString())
+                .getSingleResult();
+        if (bailleurId == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bien introuvable.");
+        }
+        positionner(bailleurId);
+        return bailleurId;
+    }
+
     /** Positionne {@code app.current_bailleur_id} sur la transaction courante (RLS). */
     public void positionner(UUID bailleurId) {
         em.createNativeQuery("SELECT set_config('app.current_bailleur_id', :id, true)")

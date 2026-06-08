@@ -4,7 +4,7 @@ Application web de **gestion locative bailleur-centrée avec délégation fine p
 
 ## État du projet
 
-Projet gouverné par le **CGPA** (Cadre de Gouvernance des Projets Applicatifs, `setup-cgpa/`). Phases de gouvernance franchies :
+Projet gouverné par le **CGPA**. Le projet a été démarré avec le référentiel local v1.0 (`setup-cgpa/`) et resynchronisé vers **CGPA v3.0.1**. Le point d'entrée de reprise est `docs/project-state.md`. Phases de gouvernance franchies :
 
 | Gate | Phase | Statut |
 |------|-------|--------|
@@ -14,15 +14,19 @@ Projet gouverné par le **CGPA** (Cadre de Gouvernance des Projets Applicatifs, 
 | Gate 3 | Cahier des charges | ✅ Go |
 | Gate 4 | Architecture & conception | ✅ Go — **verrou de codage levé** |
 | Gate 5 | Backlog & planification | ✅ Go |
-| Gate 6 | DevSecOps | ✅ Go (16/20) — **ratifié le 2026-06-06**, réserves R1→R6 suivies en phase 08 |
+| Gate 6 | DevSecOps | ✅ Go (16/20) — **ratifié le 2026-06-06** ; R1 clôturée, R2→R5 ouvertes avant prod, R6 partielle |
+
+## Phase actuelle
+
+CGPA v3.0.1 : **Phase 7 — Développement**. Dernier gate statué : **Gate 06 — Go**. Gate courant : **Gate 07**, non encore statué.
 
 ## Stack
 
-Spring Boot (Java 21) · Angular · Keycloak (OIDC/PKCE) · PostgreSQL · Nginx (reverse proxy) · Docker · CI/CD.
+Spring Boot (Java 21) · Angular 20 · Keycloak (OIDC/PKCE) · PostgreSQL · Nginx (reverse proxy) · Docker · CI/CD.
 
 ## Démarrage rapide (dev)
 
-> ⚠️ La stack n'est pas encore opérationnelle (en cours d'implémentation — Phase 07).
+> Stack de développement largement opérationnelle pour le socle S01. Certaines validations runtime restent ouvertes, notamment R6 (OIDC/PKCE complet et Admin API Keycloak gestionnaire).
 
 ```bash
 cp .env.example .env      # renseigner les secrets locaux
@@ -56,5 +60,6 @@ gh secret list                       # vérifier les secrets enregistrés
 |-------|-------------|
 | Architecture & ADR | `docs/cgpa/05-architecture-conception/` |
 | Backlog & sprints | `docs/cgpa/06-planification-agile/` |
+| Project State CGPA v3.0.1 | `docs/project-state.md` |
 | Plan d'implémentation DevSecOps | `docs/cgpa/07-devsecops/plan-implementation.md` |
 | Contribuer | `CONTRIBUTING.md` |
