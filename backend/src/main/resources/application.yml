@@ -19,6 +19,15 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: false
+    # Flyway migre via un rôle ADMINISTRATEUR (propriétaire du schéma), distinct du rôle runtime
+    # à privilèges minimaux (spring.datasource ci-dessus = loyertracker_api en prod). Il faut le DDL
+    # et la création de rôle (V5), tout en gardant l'application sous RLS FORCE. DB_ADMIN_* doit être
+    # fourni en prod ; repli sur le datasource sinon (échec explicite si ce rôle n'a pas les droits).
+    user: ${DB_ADMIN_USER:${DB_USER}}
+    password: ${DB_ADMIN_PASSWORD:${DB_PASSWORD}}
+    placeholders:
+      # Mot de passe du rôle loyertracker_api créé en V5 — DOIT égaler spring.datasource.password.
+      api_password: ${DB_PASSWORD}
   security:
     oauth2:
       resourceserver:

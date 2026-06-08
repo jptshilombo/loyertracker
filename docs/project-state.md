@@ -164,7 +164,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 * Tests unitaires : backend et frontend presents.
 * Tests d'integration : backend avec PostgreSQL Testcontainers.
 * Tests securite : RLS, ReBAC, 401/403, cross-tenant/cross-affectation S02, scans secrets/dependances/images, CodeQL.
-* Couverture de test : `mvn verify` backend passe avec 36 tests verts (2026-06-08, ajout du test cross-bailleur sur les ecritures d'affectation) ; gate JaCoCo cible sur `com.loyertracker.securite` respecte ; frontend passe avec 14 tests Karma headless (non impacte par la consolidation delegation).
+* Couverture de test : `mvn verify` backend passe avec 38 tests verts (2026-06-08 : +1 cross-bailleur ecritures d'affectation, +2 RLS sous role applicatif/attributs du role) ; gate JaCoCo cible sur `com.loyertracker.securite` respecte ; frontend passe avec 14 tests Karma headless (non impacte).
 * Qualite du code : Spotless Maven, ESLint Angular, builds CI verts historiquement ; verification backend et frontend locale verte le 2026-06-07.
 * Observabilite : logs JSON ECS backend, access logs JSON Nginx, Actuator health/info ; pas encore de metriques ni alerting.
 
@@ -196,6 +196,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-07 | ADR-10 acceptee | Encapsulation Keycloak Admin API via port/adaptateur | jptshilombo@gmail.com | Debloque US-12 |
 | 2026-06-08 | Rapport de Reprise CGPA v3.0.1 — GO sous reserve (consolidation S02) / NO GO (nouveau lot S03) | Livrables S02 non versionnes + faille autorisation Critique a traiter avant tout nouveau lot | jptshilombo@gmail.com | Autorise la consolidation/securisation de la delegation S02 |
 | 2026-06-08 | Correctif Fix-1 approuve (controle d'autorisation applicatif sur revoquer) | Faille cross-bailleur revelee par un test ; Option A initiale (RLS seule) invalidee | jptshilombo@gmail.com | Ferme la faille sans migration ; ouvre une investigation RLS |
+| 2026-06-08 | Plan de remediation RLS approuve (role applicatif dedie) — D1 split Flyway/runtime, D2 placeholder, D3 oui | Investigation : RLS contournee car l'API se connecte en superutilisateur | jptshilombo@gmail.com | Migration V5 + bascule connexion ; conversion full-stack des tests reportee en suivi |
 
 ## 12. Historique des etapes realisees
 
@@ -217,6 +218,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-07 | Approbation frontend S02 minimal | GO sous reserve accepte par le PO/CGPA | `docs/project-state.md`, `docs/cgpa/06-planification-agile/rapport-execution-frontend-s02.md` | PO / Codex |
 | 2026-06-07 | Validation runtime R6 | OIDC/PKCE et API protegee OK ; Admin API gestionnaire KO 401 ; R6 non cloturee | `docs/cgpa/07-devsecops/rapport-validation-r6.md`, `docs/cgpa/07-devsecops/`, `docs/project-state.md` | Codex |
 | 2026-06-08 | Consolidation delegation S02 — durcissement autorisation affectations | ReBAC `peutAccederBien` sur `creer` (403 cross-bailleur) ; controle de propriete sur `revoquer` (404 cross-bailleur) ; test d'integration cross-bailleur ajoute ; `mvn verify` vert 36 tests ; lot S02 versionne | `backend/.../affectations/AffectationController.java`, `backend/.../affectations/AffectationService.java`, `backend/.../s02/S02BiensBauxAffectationsIntegrationTest.java`, `docs/project-state.md` | Claude Code |
+| 2026-06-08 | Remediation RLS — role applicatif a privileges minimaux | Migration V5 (`loyertracker_api` LOGIN NOSUPERUSER NOBYPASSRLS + grants DML/EXECUTE) ; Flyway via role admin separe (`spring.flyway.user`) ; compose/.env bascules ; tests RLS sous role reel + attributs du role ; `mvn verify` vert 38 tests. Reactive la 2e couche de defense en profondeur (ADR-01) | `V5__role_applicatif_rls.sql`, `application.yml`, `src/test/resources/application.properties`, `docker-compose.yml`, `.env(.example)`, `SchemaMigrationTest.java`, `docs/project-state.md` | Claude Code |
 
 ## 13. Risques ouverts
 
@@ -226,7 +228,8 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | Admin API Keycloak gestionnaire KO en runtime | Majeur | US-12 echoue a l'acceptation invitation / creation gestionnaire | Creer/configurer client confidentiel ou service account, injecter variables Admin API dans `api`, reexecuter R6 | Ouvert |
 | Tests d'autorisation incomplets sur futurs endpoints | Critique | Fuite cross-bailleur/cross-affectation | Imposer tests d'autorisation par endpoint dans S03+ ; ecritures d'affectation desormais couvertes | En reduction |
 | Faille cross-bailleur sur `POST /affectations/{id}/revocation` (200 au lieu de 404/403) | Critique | Un bailleur pouvait revoquer l'affectation d'un autre bailleur | Corrige le 2026-06-08 (controle de propriete applicatif dans `AffectationService.revoquer`) + test de non-regression | Ferme |
-| RLS n'a pas isole l'affectation lors d'un acces par-id sous tenant tiers | Majeur | Defense en profondeur (2e couche RLS) non effective sur ce chemin ; l'autorisation applicative la couvre desormais | Investiguer la propagation du contexte tenant (`set_config` local vs connexion JPA) sur les acces par-id ; verifier les autres modules | Ouvert |
+| RLS contournee : l'API se connectait en SUPERUTILISATEUR (`POSTGRES_USER`) en test et en runtime | Majeur | Defense en profondeur (2e couche RLS, ADR-01) totalement inerte sur le chemin applicatif ; seule l'autorisation applicative cloisonnait | Diagnostic 2026-06-08 (cause = role superuser, pas la propagation du GUC). Corrige par migration V5 : role `loyertracker_api` LOGIN NOSUPERUSER NOBYPASSRLS + Flyway admin separe ; RLS prouvee sous ce role (`SchemaMigrationTest`) | Ferme (code + tests) |
+| Comportement runtime sous le role restreint non verifie end-to-end | Mineur | Les tests `@SpringBootTest` tournent encore en superuser (harnais TRUNCATE/seed admin) ; un flux applicatif dependant implicitement du superuser passerait inapercu | Code concu pour la RLS (TenantContext + InscriptionService positionnent le GUC avant ecriture, fonctions SECURITY DEFINER). Suivi : convertir les tests d'integration au double datasource (admin pour le harnais, `loyertracker_api` pour l'app) + smoke test runtime | Ouvert (suivi) |
 | Pas de Plan d'Execution S03 approuve | Critique gouvernance | Codage non conforme CGPA v3.0.1 | Produire et faire approuver un Plan d'Execution standard | Ouvert |
 | Pas de staging/prod/CD/backup | Majeur | Non readiness production | Traiter en phase production readiness | Differe |
 | Interfaces frontend S02 minimales seulement | Mineur produit | Ergonomie suffisante pour reprise mais pas pour recette large | Prevoir ameliorations UX avant beta | Ouvert |
@@ -234,4 +237,4 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 ## 14. Prochaine action claire
 
-La delegation S02 a ete consolidee et securisee le 2026-06-08 (faille cross-bailleur fermee, lot versionne). Prochaines etapes recommandees, par priorite : (1) investiguer la non-isolation RLS sur les acces par-id (risque Majeur ouvert) et verifier les autres modules ; (2) corriger la configuration Admin API Keycloak et reexecuter R6 jusqu'a cloture, ou arbitrer explicitement le report de R6 ; (3) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement ne doit demarrer sans approbation explicite.
+La delegation S02 a ete consolidee et securisee le 2026-06-08 (faille cross-bailleur fermee, lot versionne), et la RLS reactivee via un role applicatif dedie (migration V5). Prochaines etapes recommandees, par priorite : (1) verifier le comportement runtime sous le role `loyertracker_api` (smoke test stack complete) et convertir les tests d'integration au double datasource pour fermer le suivi de fidelite ; (2) corriger la configuration Admin API Keycloak et reexecuter R6 jusqu'a cloture, ou arbitrer explicitement le report de R6 ; (3) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement ne doit demarrer sans approbation explicite.

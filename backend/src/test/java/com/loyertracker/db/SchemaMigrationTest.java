@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 import java.util.UUID;
 
 import org.flywaydb.core.Flyway;
@@ -39,11 +40,13 @@ class SchemaMigrationTest {
         flyway = Flyway.configure()
                 .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
                 .locations("classpath:db/migration")
+                // V5 crée le rôle applicatif via un placeholder de mot de passe (cf. application.yml).
+                .placeholders(Map.of("api_password", "loyertracker_api_test"))
                 .load();
         MigrateResult result = flyway.migrate();
         // V1 (schéma US-03) + V2 (résolution tenant) + V3 (prédicats d'autorisation)
-        // + V4 (helpers S02 biens/baux/affectations).
-        assertThat(result.migrationsExecuted).isEqualTo(4);
+        // + V4 (helpers S02 biens/baux/affectations) + V5 (rôle applicatif RLS).
+        assertThat(result.migrationsExecuted).isEqualTo(5);
         assertThat(result.success).isTrue();
     }
 
@@ -169,6 +172,74 @@ class SchemaMigrationTest {
         }
     }
 
+    @Test
+    void roleApiExisteSansSuperuserNiBypassRls() throws SQLException {
+        try (Connection c = connect();
+                Statement s = c.createStatement();
+                ResultSet rs = s.executeQuery(
+                        "SELECT rolcanlogin, rolsuper, rolbypassrls "
+                                + "FROM pg_roles WHERE rolname = 'loyertracker_api'")) {
+            assertThat(rs.next()).as("rôle loyertracker_api créé par V5").isTrue();
+            assertThat(rs.getBoolean("rolcanlogin")).as("LOGIN").isTrue();
+            assertThat(rs.getBoolean("rolsuper")).as("NOSUPERUSER").isFalse();
+            assertThat(rs.getBoolean("rolbypassrls")).as("NOBYPASSRLS").isFalse();
+        }
+    }
+
+    /**
+     * Preuve que la RLS, sous le rôle applicatif réel (loyertracker_api, sans BYPASSRLS), aurait
+     * bloqué la fuite cross-bailleur de {@code revoquer} : la révocation (UPDATE) d'une affectation
+     * d'un autre tenant n'affecte aucune ligne et celle-ci reste ACTIVE, tandis que le tenant
+     * propriétaire révoque bien la sienne (contrôle positif).
+     */
+    @Test
+    void rlsBloqueRevocationAffectationCrossTenantSousRoleApi() throws SQLException {
+        UUID bailleurA = UUID.randomUUID();
+        UUID bailleurB = UUID.randomUUID();
+
+        try (Connection c = connect()) {
+            c.setAutoCommit(false);
+            // Seed des deux tenants en superutilisateur (RLS contournée).
+            seedBailleurEtBien(c, bailleurA, "a-aff@test.local", "1 rue A");
+            seedBailleurEtBien(c, bailleurB, "b-aff@test.local", "2 rue B");
+            UUID gestionnaire = seedGestionnaire(c, "kc-g-aff", "g-aff@test.local");
+            UUID affectationA =
+                    seedAffectationActive(c, bailleurA, bienIdDe(c, bailleurA), gestionnaire);
+            UUID affectationB =
+                    seedAffectationActive(c, bailleurB, bienIdDe(c, bailleurB), gestionnaire);
+
+            try (Statement s = c.createStatement()) {
+                s.execute("SET app.current_bailleur_id = '" + bailleurA + "'");
+                s.execute("SET ROLE loyertracker_api");
+
+                try (ResultSet rs = s.executeQuery("SELECT count(*) FROM affectation")) {
+                    rs.next();
+                    assertThat(rs.getInt(1)).as("affectations visibles sous tenant A").isEqualTo(1);
+                }
+                // Révocation cross-tenant (affectation de B) : invisible → 0 ligne touchée.
+                assertThat(s.executeUpdate(
+                        "UPDATE affectation SET statut = 'REVOQUEE' WHERE id = '" + affectationB + "'"))
+                        .as("révocation cross-tenant bloquée par la RLS").isZero();
+                // Contrôle positif : le tenant A révoque bien sa propre affectation.
+                assertThat(s.executeUpdate(
+                        "UPDATE affectation SET statut = 'REVOQUEE' WHERE id = '" + affectationA + "'"))
+                        .as("révocation de sa propre affectation autorisée").isEqualTo(1);
+
+                s.execute("RESET ROLE");
+            }
+
+            // L'affectation de B est restée ACTIVE (vérifié en superutilisateur).
+            try (Statement s = c.createStatement();
+                    ResultSet rs = s.executeQuery(
+                            "SELECT statut FROM affectation WHERE id = '" + affectationB + "'")) {
+                rs.next();
+                assertThat(rs.getString(1)).isEqualTo("ACTIVE");
+            }
+
+            c.rollback();
+        }
+    }
+
     // --- Helpers ---------------------------------------------------------------------
 
     private Connection connect() throws SQLException {
@@ -211,6 +282,44 @@ class SchemaMigrationTest {
             ps.setString(2, adresse);
             ps.executeUpdate();
         }
+    }
+
+    private UUID seedGestionnaire(Connection c, String keycloakId, String email) throws SQLException {
+        UUID id = UUID.randomUUID();
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO gestionnaire (id, keycloak_id, email, nom, prenom) VALUES (?,?,?,'N','P')")) {
+            ps.setObject(1, id);
+            ps.setString(2, keycloakId);
+            ps.setString(3, email);
+            ps.executeUpdate();
+        }
+        return id;
+    }
+
+    private UUID bienIdDe(Connection c, UUID bailleurId) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT id FROM bien WHERE bailleur_id = ?")) {
+            ps.setObject(1, bailleurId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getObject(1, UUID.class);
+            }
+        }
+    }
+
+    private UUID seedAffectationActive(Connection c, UUID bailleurId, UUID bienId, UUID gestionnaireId)
+            throws SQLException {
+        UUID id = UUID.randomUUID();
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO affectation (id, bailleur_id, bien_id, gestionnaire_id, type_honoraires, "
+                        + "montant_honoraires, date_debut) "
+                        + "VALUES (?,?,?,?, 'POURCENTAGE', 10.00, '2026-06-01')")) {
+            ps.setObject(1, id);
+            ps.setObject(2, bailleurId);
+            ps.setObject(3, bienId);
+            ps.setObject(4, gestionnaireId);
+            ps.executeUpdate();
+        }
+        return id;
     }
 
     /** Compte les biens visibles sous le rôle restreint et le bailleur courant donné (NULL = aucun). */

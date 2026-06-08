@@ -79,8 +79,13 @@ services:
       context: ./backend
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Runtime : rôle applicatif à privilèges minimaux (NOSUPERUSER/NOBYPASSRLS) → la RLS FORCE
+      # s'applique réellement (ADR-01). Créé par la migration V5.
+      DB_USER: ${DB_APP_USER}
+      DB_PASSWORD: ${DB_APP_PASSWORD}
+      # Migrations : rôle administrateur (propriétaire) distinct, capable de DDL et CREATE ROLE.
+      DB_ADMIN_USER: ${POSTGRES_USER}
+      DB_ADMIN_PASSWORD: ${POSTGRES_PASSWORD}
       DB_BATCH_USER: ${DB_BATCH_USER}
       DB_BATCH_PASSWORD: ${DB_BATCH_PASSWORD}
       # iss validé contre l'URL publique ; JWKS récupéré en interne (cf. application.yml)
