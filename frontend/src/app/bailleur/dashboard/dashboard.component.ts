@@ -14,11 +14,13 @@ import {
   StatutBien,
   TypeHonoraires,
 } from '../../core/s02/s02-api.service';
+import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
+import { PaiementsBienComponent } from '../../paiements/paiements-bien.component';
 import { BailleurInscriptionService } from '../inscription/bailleur-inscription.service';
 
 @Component({
   selector: 'app-bailleur-dashboard',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PaiementsBienComponent, GarantiesBailComponent],
   template: `
     <header class="page-head">
       <div>
@@ -126,15 +128,28 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         <div class="panel">
           <h2>Historique des baux</h2>
           @for (bail of baux(); track bail.id) {
-            <div class="item">
+            <div class="item" [class.selected]="bail.id === bailSelectionne()?.id">
               <strong>{{ bail.locataireNom }}</strong>
               <span>{{ bail.loyerCc }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
               <span class="badge">{{ bail.statut }}</span>
+              <button type="button" (click)="selectionnerBail(bail)">Garanties</button>
             </div>
           } @empty {
             <p class="muted">Aucun bail.</p>
           }
         </div>
+      </section>
+
+      <section class="grid two detail">
+        <app-paiements-bien [bienId]="bien.id" [peutDeclencher]="true" />
+        @if (bailSelectionne(); as bail) {
+          <app-garanties-bail [bienId]="bien.id" [bailId]="bail.id" />
+        } @else {
+          <div class="panel">
+            <h2>Garanties</h2>
+            <p class="muted">Choisir un bail (bouton « Garanties »).</p>
+          </div>
+        }
       </section>
 
       <section class="grid two detail">
@@ -289,6 +304,11 @@ export class BailleurDashboardComponent implements OnInit {
   readonly affectations = signal<Affectation[]>([]);
   readonly bienSelectionne = signal<Bien | null>(null);
   readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
+  readonly bailSelectionne = signal<Bail | null>(null);
+
+  selectionnerBail(bail: Bail): void {
+    this.bailSelectionne.set(bail);
+  }
 
   readonly bienForm = new FormGroup({
     adresse: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -351,12 +371,14 @@ export class BailleurDashboardComponent implements OnInit {
 
   selectionnerBien(bien: Bien): void {
     this.bienSelectionne.set(bien);
+    this.bailSelectionne.set(null);
     this.bienForm.setValue({ adresse: bien.adresse, type: bien.type, statut: bien.statut });
     this.chargerDetails(bien.id);
   }
 
   reinitialiserBien(): void {
     this.bienSelectionne.set(null);
+    this.bailSelectionne.set(null);
     this.bienForm.reset({ adresse: '', type: 'APPARTEMENT', statut: 'LIBRE' });
     this.baux.set([]);
     this.affectations.set([]);

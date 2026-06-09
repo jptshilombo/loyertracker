@@ -48,6 +48,11 @@ public class PaiementService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Un paiement PARTIEL exige 0 < montant reçu < montant attendu.");
         }
+        if (requete.statut() == StatutPaiement.RECU
+                && requete.montantRecu().compareTo(paiement.getMontantAttendu()) < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Un paiement RECU exige un montant reçu >= montant attendu.");
+        }
         paiement.pointer(requete.montantRecu(), requete.statut());
         Paiement enregistre = paiements.save(paiement);
         audit.enregistrer(authentication, bailleurId, "POINTER_PAIEMENT", "paiement",
