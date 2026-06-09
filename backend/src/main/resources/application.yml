@@ -80,11 +80,14 @@ app:
     # Base du lien d'acceptation transmis au gestionnaire (US-11). Front Angular derrière Nginx.
     base-url: ${APP_INVITATION_BASE_URL:https://localhost}
 
-# Admin API Keycloak — création de compte gestionnaire (US-12, ADR-10). Le client confidentiel
-# `loyertracker-api` doit disposer du rôle `manage-users` sur le realm. Secret hors dépôt (ENF-03).
+# Admin API Keycloak — création de compte gestionnaire (US-12, ADR-10, R6). Client confidentiel
+# dédié `loyertracker-admin` (service account, distinct du resource-server bearer-only
+# `loyertracker-api`), portant les rôles realm-management manage-users/view-users/view-realm.
+# base-url inclut le chemin relatif /auth (KC démarré avec --http-relative-path=/auth).
+# Secret hors dépôt (ENF-03), fourni par variable d'environnement.
 keycloak:
   admin:
-    base-url: ${KEYCLOAK_ADMIN_BASE_URL:http://keycloak:8080}
+    base-url: ${KEYCLOAK_ADMIN_BASE_URL:http://keycloak:8080/auth}
     realm: ${KEYCLOAK_REALM:loyertracker}
-    client-id: ${KEYCLOAK_API_CLIENT_ID:loyertracker-api}
+    client-id: ${KEYCLOAK_API_CLIENT_ID:loyertracker-admin}
     client-secret: ${KEYCLOAK_API_CLIENT_SECRET:}

@@ -6,9 +6,9 @@
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
 * Version actuelle : 0.1.0-SNAPSHOT
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active : `main` (lot delegation S02 + RLS integre via PR #3 le 2026-06-08, merge commit `d6a586f`)
-* Derniere mise a jour : 2026-06-08
-* Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, consolidation delegation S02
+* Branche active : `fix/r6-keycloak-admin-api` (remediation R6 Admin API Keycloak ; partie de `main` au commit `8a84a62`)
+* Derniere mise a jour : 2026-06-09
+* Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, execution Plan R6 Admin API
 
 ## 2. Resume executif
 
@@ -24,7 +24,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 * Dernier gate statue : Gate 06 — DevSecOps
 * Statut du dernier gate : Go, ratifie le 2026-06-06
 * Decision actuelle : GO sous reserve
-* Justification : les phases 0 a 6 disposent de livrables et decisions Go, le developpement est autorise. La resynchronisation documentaire minimale et la cloture S01 ont ete realisees le 2026-06-07. Le Plan d'Execution S02 backend a ete approuve, execute puis accepte en GO sous reserve. Le frontend S02 minimal a ete approuve, execute puis accepte en GO sous reserve le 2026-06-07. La poursuite reste sous reserve de valider les points runtime restants et de produire le Plan d'Execution S03 avant tout nouveau developpement.
+* Justification : les phases 0 a 6 disposent de livrables et decisions Go, le developpement est autorise. La resynchronisation documentaire minimale et la cloture S01 ont ete realisees le 2026-06-07. Le Plan d'Execution S02 backend a ete approuve, execute puis accepte en GO sous reserve. Le frontend S02 minimal a ete approuve, execute puis accepte en GO sous reserve le 2026-06-07. La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee et reexecutee avec succes le 2026-06-09 (client service account dedie, acceptation invitation 201, gestionnaire cree) : R6 est clotûree. La poursuite reste sous reserve de produire le Plan d'Execution S03 avant tout nouveau developpement.
 
 ## 4. D'ou l'on vient
 
@@ -83,8 +83,9 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * frontend S02 minimal bailleur : liste, creation, modification, archivage des biens, baux, historiques et affectations ;
   * frontend S02 minimal gestionnaire : biens affectes, historique baux et creation de bail.
 * Fonctionnalites en cours :
-  * validation runtime OIDC/PKCE et Admin API Keycloak ;
-  * synchronisation documentaire post-frontend S02.
+  * synchronisation documentaire post-frontend S02 ;
+  * conversion des tests d'integration au double datasource (suivi fidelite RLS).
+* Reserve R6 clotûree le 2026-06-09 : Admin API Keycloak gestionnaire operationnelle (client confidentiel service account `loyertracker-admin`, secret hors depot, acceptation invitation validee en runtime 201).
 * Fonctionnalites non commencees :
   * interfaces frontend avancees pour biens, baux et affectations ;
   * paiements, garanties, honoraires ;
@@ -94,7 +95,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * export/effacement RGPD ;
   * QA/recette, production readiness, exploitation.
 * Dette technique :
-  * adaptateur `KeycloakGestionnaireIdentityProvider` teste en runtime R6 mais non valide : acceptation invitation KO 401 cote Admin API ;
+  * adaptateur `KeycloakGestionnaireIdentityProvider` valide en runtime le 2026-06-09 (acceptation invitation 201, gestionnaire cree avec role `GESTIONNAIRE`) — dette levee ;
   * endpoints backend S02 presents mais OpenAPI non produit ;
   * observabilite limitee aux logs/Actuator, sans metriques ni alerting ;
   * image Nginx dev encore root ;
@@ -147,7 +148,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * logs sans PII ;
   * pseudonymisation RGPD prevue.
 * Risques securite ouverts :
-  * validation live Keycloak Admin API executee mais KO en 401 ;
+  * (resolu 2026-06-09) validation live Keycloak Admin API : client service account dedie a privileges minimaux, secret hors depot, parcours acceptation OK 201 ;
   * endpoints metier futurs a couvrir par tests cross-tenant ;
   * role SQL privilegie en test pouvant contourner RLS, compense par filtres applicatifs explicites et tests ;
   * backup, chiffrement au repos et restauration non traites ;
@@ -197,6 +198,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-08 | Rapport de Reprise CGPA v3.0.1 — GO sous reserve (consolidation S02) / NO GO (nouveau lot S03) | Livrables S02 non versionnes + faille autorisation Critique a traiter avant tout nouveau lot | jptshilombo@gmail.com | Autorise la consolidation/securisation de la delegation S02 |
 | 2026-06-08 | Correctif Fix-1 approuve (controle d'autorisation applicatif sur revoquer) | Faille cross-bailleur revelee par un test ; Option A initiale (RLS seule) invalidee | jptshilombo@gmail.com | Ferme la faille sans migration ; ouvre une investigation RLS |
 | 2026-06-08 | Plan de remediation RLS approuve (role applicatif dedie) — D1 split Flyway/runtime, D2 placeholder, D3 oui | Investigation : RLS contournee car l'API se connecte en superutilisateur | jptshilombo@gmail.com | Migration V5 + bascule connexion ; conversion full-stack des tests reportee en suivi |
+| 2026-06-09 | Plan d'Execution R6 (Niveau 2) approuve puis execute — GO | Lever la reserve Gate 6 R6 / risque Majeur Admin API gestionnaire | jptshilombo@gmail.com | Client service account dedie + injection runtime ; R6 clotûree |
 
 ## 12. Historique des etapes realisees
 
@@ -221,13 +223,14 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-08 | Remediation RLS — role applicatif a privileges minimaux | Migration V5 (`loyertracker_api` LOGIN NOSUPERUSER NOBYPASSRLS + grants DML/EXECUTE) ; Flyway via role admin separe (`spring.flyway.user`) ; compose/.env bascules ; tests RLS sous role reel + attributs du role ; `mvn verify` vert 38 tests. Reactive la 2e couche de defense en profondeur (ADR-01) | `V5__role_applicatif_rls.sql`, `application.yml`, `src/test/resources/application.properties`, `docker-compose.yml`, `.env(.example)`, `SchemaMigrationTest.java`, `docs/project-state.md` | Claude Code |
 | 2026-06-08 | Smoke test runtime sous role restreint | App bootee via jar reel + PostgreSQL dedie : Flyway migre en admin et cree `loyertracker_api`, l'app se connecte en rôle restreint (pool Hikari, health UP). Verifie live : TRUNCATE/DDL refuses, isolation RLS par tenant (sans GUC=0, tenant A voit son bien, tenant B ne le voit pas). Non couvert : flux API authentifie (Keycloak) | (validation runtime, aucun fichier source) | Claude Code |
 | 2026-06-08 | PR #3 mergee dans `main` (CI verte) | Branche `feat/s02-delegation-affectations` -> `main` via PR #3 (delegation S02, autorisation cross-tenant, RLS rôle applicatif, smoke test). Gate CodeQL d'abord rouge (4 alertes high `java/concatenated-sql-query` dans le nouveau test RLS) corrige par SQL parametre (`set_config`/PreparedStatement). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL, Packaging Docker. **Mergee le 2026-06-08T07:56Z, merge commit `d6a586f`.** | `main`, PR #3 | Claude Code / PO |
+| 2026-06-09 | Execution Plan R6 — correction Admin API Keycloak gestionnaire | Ajout client confidentiel service account `loyertracker-admin` (roles realm-management `manage-users`/`view-users`/`view-realm`), secret injecte post-import (`keycloak-init`), variables Admin API injectees dans `api` (base-url `/auth`), defauts Spring/adaptateur alignes. Bug d'import corrige (description client > 255 car.). `mvn verify` vert (38 tests). Reexecution runtime : token client_credentials 200, 4 ops Admin API OK (200/201/200/204), parcours API `POST /api/invitations` + acceptation OK 201 (adaptateur reel), gestionnaire cree + role `GESTIONNAIRE`. R6 clotûree. | `infra/keycloak/realm-loyertracker.json`, `infra/keycloak/bootstrap-test-account.sh`, `docker-compose.yml`, `.env.example`, `backend/.../application.yml`, `backend/.../KeycloakGestionnaireIdentityProvider.java`, `docs/cgpa/07-devsecops/rapport-validation-r6.md`, `docs/project-state.md` | Claude Code |
 
 ## 13. Risques ouverts
 
 | Risque | Niveau | Impact | Mitigation | Statut |
 | ------ | ------ | ------ | ---------- | ------ |
 | Documentation CGPA residuelle obsolescente | Mineur | Confusion possible sur quelques mentions historiques v1.0 | Corriger progressivement hors historique de decision | Ouvert |
-| Admin API Keycloak gestionnaire KO en runtime | Majeur | US-12 echoue a l'acceptation invitation / creation gestionnaire | Creer/configurer client confidentiel ou service account, injecter variables Admin API dans `api`, reexecuter R6 | Ouvert |
+| Admin API Keycloak gestionnaire KO en runtime | Majeur | US-12 echoue a l'acceptation invitation / creation gestionnaire | Corrige le 2026-06-09 : client confidentiel service account dedie `loyertracker-admin` (roles realm-management minimaux), secret injecte post-import hors depot, variables Admin API dans `api`. Reexecution R6 : token client_credentials 200, acceptation 201, gestionnaire cree + role assigne | Ferme |
 | Tests d'autorisation incomplets sur futurs endpoints | Critique | Fuite cross-bailleur/cross-affectation | Imposer tests d'autorisation par endpoint dans S03+ ; ecritures d'affectation desormais couvertes | En reduction |
 | Faille cross-bailleur sur `POST /affectations/{id}/revocation` (200 au lieu de 404/403) | Critique | Un bailleur pouvait revoquer l'affectation d'un autre bailleur | Corrige le 2026-06-08 (controle de propriete applicatif dans `AffectationService.revoquer`) + test de non-regression | Ferme |
 | RLS contournee : l'API se connectait en SUPERUTILISATEUR (`POSTGRES_USER`) en test et en runtime | Majeur | Defense en profondeur (2e couche RLS, ADR-01) totalement inerte sur le chemin applicatif ; seule l'autorisation applicative cloisonnait | Diagnostic 2026-06-08 (cause = role superuser, pas la propagation du GUC). Corrige par migration V5 : role `loyertracker_api` LOGIN NOSUPERUSER NOBYPASSRLS + Flyway admin separe ; RLS prouvee sous ce role (`SchemaMigrationTest`) | Ferme (code + tests) |
@@ -239,4 +242,4 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 ## 14. Prochaine action claire
 
-La delegation S02 a ete consolidee et securisee le 2026-06-08 (faille cross-bailleur fermee, lot versionne), et la RLS reactivee via un role applicatif dedie (migration V5). Prochaines etapes recommandees, par priorite : (1) verifier le comportement runtime sous le role `loyertracker_api` (smoke test stack complete) et convertir les tests d'integration au double datasource pour fermer le suivi de fidelite ; (2) corriger la configuration Admin API Keycloak et reexecuter R6 jusqu'a cloture, ou arbitrer explicitement le report de R6 ; (3) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement ne doit demarrer sans approbation explicite.
+La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee et reexecutee avec succes le 2026-06-09 (acceptation invitation 201, gestionnaire cree) : R6 est clotûree. Les modifications sont sur la branche `fix/r6-keycloak-admin-api`, non encore committees ni mergees. Prochaines etapes recommandees, par priorite : (1) committer la branche `fix/r6-keycloak-admin-api`, ouvrir la PR et verifier la CI verte avant merge dans `main` ; (2) convertir les tests d'integration au double datasource pour fermer le suivi de fidelite RLS sous le role restreint ; (3) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement metier ne doit demarrer sans approbation explicite.

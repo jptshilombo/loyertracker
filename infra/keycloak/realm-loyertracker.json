@@ -97,6 +97,19 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "loyertracker-admin",
+      "name": "LoyerTracker Admin API (service account)",
+      "description": "Service account Admin API (ADR-10, R6) : creation/rattachement gestionnaire (US-12). Secret injecte post-import par keycloak-init, non versionne.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
     }
   ],
 
@@ -111,6 +124,18 @@
       "realmRoles": [
         "BAILLEUR"
       ]
+    },
+    {
+      "username": "service-account-loyertracker-admin",
+      "enabled": true,
+      "serviceAccountClientId": "loyertracker-admin",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "view-realm"
+        ]
+      }
     }
   ]
 }

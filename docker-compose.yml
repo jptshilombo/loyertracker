@@ -66,6 +66,8 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_TEST_BAILLEUR_PASSWORD: ${KEYCLOAK_TEST_BAILLEUR_PASSWORD}
+      # Secret injecté post-import dans le client Admin API loyertracker-admin (R6).
+      KEYCLOAK_API_CLIENT_SECRET: ${KEYCLOAK_API_CLIENT_SECRET}
     volumes:
       - ./infra/keycloak/bootstrap-test-account.sh:/opt/keycloak/data/bootstrap-test-account.sh:ro
     depends_on:
@@ -91,6 +93,12 @@ services:
       # iss validé contre l'URL publique ; JWKS récupéré en interne (cf. application.yml)
       KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI}
       KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI}
+      # Admin API Keycloak (US-12, ADR-10, R6) : client confidentiel à service account.
+      # base-url inclut le chemin relatif /auth (KC démarré avec --http-relative-path=/auth).
+      KEYCLOAK_ADMIN_BASE_URL: ${KEYCLOAK_ADMIN_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID}
+      KEYCLOAK_API_CLIENT_SECRET: ${KEYCLOAK_API_CLIENT_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
