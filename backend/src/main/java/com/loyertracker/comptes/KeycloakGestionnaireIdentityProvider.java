@@ -19,9 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
  * Adaptateur de production du port {@link GestionnaireIdentityProvider} vers l'Admin API Keycloak
  * (ADR-10), via Spring {@link RestClient} — aucune dépendance ajoutée.
  *
- * <p>Flux : jeton {@code client_credentials} du client confidentiel {@code loyertracker-api} →
- * recherche de l'utilisateur par e-mail ({@code exact=true}) → réutilisation s'il existe (EF-05),
- * sinon création + mot de passe + rôle realm {@code GESTIONNAIRE}.</p>
+ * <p>Flux : jeton {@code client_credentials} du client confidentiel à service account
+ * {@code loyertracker-admin} → recherche de l'utilisateur par e-mail ({@code exact=true}) →
+ * réutilisation s'il existe (EF-05), sinon création + mot de passe + rôle realm
+ * {@code GESTIONNAIRE}.</p>
  *
  * <p><strong>Validation runtime = réserve R6</strong> (avant prod). L'adaptateur n'ouvre aucune
  * connexion au démarrage ; en test, il est remplacé par un double en mémoire.</p>
@@ -37,9 +38,9 @@ public class KeycloakGestionnaireIdentityProvider implements GestionnaireIdentit
     private final String clientSecret;
 
     public KeycloakGestionnaireIdentityProvider(
-            @Value("${keycloak.admin.base-url:http://keycloak:8080}") String baseUrl,
+            @Value("${keycloak.admin.base-url:http://keycloak:8080/auth}") String baseUrl,
             @Value("${keycloak.admin.realm:loyertracker}") String realm,
-            @Value("${keycloak.admin.client-id:loyertracker-api}") String clientId,
+            @Value("${keycloak.admin.client-id:loyertracker-admin}") String clientId,
             @Value("${keycloak.admin.client-secret:}") String clientSecret) {
         this.http = RestClient.builder().baseUrl(baseUrl).build();
         this.realm = realm;
