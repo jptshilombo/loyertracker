@@ -12,11 +12,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import com.loyertracker.affectations.AffectationService;
+import com.loyertracker.audit.AuditService;
 import com.loyertracker.bailleur.InscriptionService;
+import com.loyertracker.batch.GenerationEcheancesService;
 import com.loyertracker.baux.BailService;
 import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
 import com.loyertracker.comptes.InvitationService;
+import com.loyertracker.garanties.GarantieService;
+import com.loyertracker.paiements.PaiementService;
 import com.loyertracker.securite.AuthorizationService;
 import com.loyertracker.securite.TenantContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,6 +54,15 @@ class SecurityIntegrationTest {
     TenantContext tenantContext;
     @MockitoBean
     AuthorizationService authorizationService;
+    // Modules financiers S03 (dépendant de JPA) : neutralisés pour ce test de contrat sans BDD.
+    @MockitoBean
+    PaiementService paiementService;
+    @MockitoBean
+    GarantieService garantieService;
+    @MockitoBean
+    GenerationEcheancesService generationEcheancesService;
+    @MockitoBean
+    AuditService auditService;
 
     @Test
     void health_estPublic() throws Exception {
