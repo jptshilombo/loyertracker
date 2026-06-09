@@ -6,9 +6,9 @@
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
 * Version actuelle : 0.1.0-SNAPSHOT
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active : `fix/r6-keycloak-admin-api` (remediation R6 Admin API Keycloak ; partie de `main` au commit `8a84a62`)
+* Branche active : `main` (remediation R6 Admin API integree via PR #5 le 2026-06-09, merge commit `d77cf29`)
 * Derniere mise a jour : 2026-06-09
-* Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, execution Plan R6 Admin API
+* Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, synchronisation post-merge R6
 
 ## 2. Resume executif
 
@@ -224,6 +224,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-08 | Smoke test runtime sous role restreint | App bootee via jar reel + PostgreSQL dedie : Flyway migre en admin et cree `loyertracker_api`, l'app se connecte en rôle restreint (pool Hikari, health UP). Verifie live : TRUNCATE/DDL refuses, isolation RLS par tenant (sans GUC=0, tenant A voit son bien, tenant B ne le voit pas). Non couvert : flux API authentifie (Keycloak) | (validation runtime, aucun fichier source) | Claude Code |
 | 2026-06-08 | PR #3 mergee dans `main` (CI verte) | Branche `feat/s02-delegation-affectations` -> `main` via PR #3 (delegation S02, autorisation cross-tenant, RLS rôle applicatif, smoke test). Gate CodeQL d'abord rouge (4 alertes high `java/concatenated-sql-query` dans le nouveau test RLS) corrige par SQL parametre (`set_config`/PreparedStatement). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL, Packaging Docker. **Mergee le 2026-06-08T07:56Z, merge commit `d6a586f`.** | `main`, PR #3 | Claude Code / PO |
 | 2026-06-09 | Execution Plan R6 — correction Admin API Keycloak gestionnaire | Ajout client confidentiel service account `loyertracker-admin` (roles realm-management `manage-users`/`view-users`/`view-realm`), secret injecte post-import (`keycloak-init`), variables Admin API injectees dans `api` (base-url `/auth`), defauts Spring/adaptateur alignes. Bug d'import corrige (description client > 255 car.). `mvn verify` vert (38 tests). Reexecution runtime : token client_credentials 200, 4 ops Admin API OK (200/201/200/204), parcours API `POST /api/invitations` + acceptation OK 201 (adaptateur reel), gestionnaire cree + role `GESTIONNAIRE`. R6 clotûree. | `infra/keycloak/realm-loyertracker.json`, `infra/keycloak/bootstrap-test-account.sh`, `docker-compose.yml`, `.env.example`, `backend/.../application.yml`, `backend/.../KeycloakGestionnaireIdentityProvider.java`, `docs/cgpa/07-devsecops/rapport-validation-r6.md`, `docs/project-state.md` | Claude Code |
+| 2026-06-09 | PR #5 mergee dans `main` (CI verte) | Branche `fix/r6-keycloak-admin-api` -> `main` via PR #5 (remediation R6 Admin API gestionnaire). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL Java+TS, Packaging Docker. **Mergee le 2026-06-09T08:07Z, merge commit `d77cf29`.** | `main`, PR #5 | jptshilombo / Claude Code |
 
 ## 13. Risques ouverts
 
@@ -242,4 +243,4 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 ## 14. Prochaine action claire
 
-La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee et reexecutee avec succes le 2026-06-09 (acceptation invitation 201, gestionnaire cree) : R6 est clotûree. Les modifications sont sur la branche `fix/r6-keycloak-admin-api`, non encore committees ni mergees. Prochaines etapes recommandees, par priorite : (1) committer la branche `fix/r6-keycloak-admin-api`, ouvrir la PR et verifier la CI verte avant merge dans `main` ; (2) convertir les tests d'integration au double datasource pour fermer le suivi de fidelite RLS sous le role restreint ; (3) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement metier ne doit demarrer sans approbation explicite.
+La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee, reexecutee avec succes (acceptation invitation 201, gestionnaire cree) puis **integree dans `main` via PR #5 le 2026-06-09** (merge commit `d77cf29`, CI verte) : R6 est clotûree. Prochaines etapes recommandees, par priorite : (1) convertir les tests d'integration au double datasource pour fermer le suivi de fidelite RLS sous le role restreint ; (2) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement metier ne doit demarrer sans approbation explicite.
