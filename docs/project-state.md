@@ -6,7 +6,7 @@
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
 * Version actuelle : 0.1.0-SNAPSHOT
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active : `main` (remediation R6 Admin API integree via PR #5 le 2026-06-09, merge commit `d77cf29`)
+* Branche active : `feat/s03-paiements-garanties` (lot backend S03 paiements/garanties ; partie de `main` au commit `b14517b`)
 * Derniere mise a jour : 2026-06-09
 * Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, synchronisation post-merge R6
 
@@ -81,14 +81,19 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * US-23 creation d'affectation active avec honoraires ;
   * US-24 revocation, rotation et historique des affectations ;
   * frontend S02 minimal bailleur : liste, creation, modification, archivage des biens, baux, historiques et affectations ;
-  * frontend S02 minimal gestionnaire : biens affectes, historique baux et creation de bail.
+  * frontend S02 minimal gestionnaire : biens affectes, historique baux et creation de bail ;
+  * US-30 generation des loyers attendus a terme echu (batch idempotent, Annexe A.3) ;
+  * US-31 pointage des loyers (RECU/PARTIEL/EN_RETARD/IMPAYE, reste du, historique) ;
+  * US-32 depot et restitution de garantie (DETENU -> RESTITUE_PARTIEL -> RESTITUE_TOTAL, Annexe A.5) ;
+  * journalisation d'audit des ecritures financieres (BNF-05 ; consultation US-62 differee).
 * Fonctionnalites en cours :
   * synchronisation documentaire post-frontend S02 ;
   * conversion des tests d'integration au double datasource (suivi fidelite RLS).
 * Reserve R6 clotûree le 2026-06-09 : Admin API Keycloak gestionnaire operationnelle (client confidentiel service account `loyertracker-admin`, secret hors depot, acceptation invitation validee en runtime 201).
 * Fonctionnalites non commencees :
   * interfaces frontend avancees pour biens, baux et affectations ;
-  * paiements, garanties, honoraires ;
+  * honoraires (US-40) ;
+  * frontend S03 (pointage / garanties) ;
   * alertes et batch ;
   * dashboards metier ;
   * audit log applicatif ;
@@ -199,6 +204,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-08 | Correctif Fix-1 approuve (controle d'autorisation applicatif sur revoquer) | Faille cross-bailleur revelee par un test ; Option A initiale (RLS seule) invalidee | jptshilombo@gmail.com | Ferme la faille sans migration ; ouvre une investigation RLS |
 | 2026-06-08 | Plan de remediation RLS approuve (role applicatif dedie) — D1 split Flyway/runtime, D2 placeholder, D3 oui | Investigation : RLS contournee car l'API se connecte en superutilisateur | jptshilombo@gmail.com | Migration V5 + bascule connexion ; conversion full-stack des tests reportee en suivi |
 | 2026-06-09 | Plan d'Execution R6 (Niveau 2) approuve puis execute — GO | Lever la reserve Gate 6 R6 / risque Majeur Admin API gestionnaire | jptshilombo@gmail.com | Client service account dedie + injection runtime ; R6 clotûree |
+| 2026-06-09 | Plan d'Execution S03 (Niveau 3) approuve puis execute | Lot metier EP-04 paiements/garanties (US-30/31/32) | jptshilombo@gmail.com | Lot backend livre + teste ; arbitrages A (backend seul), B (@Scheduled + trigger manuel), C (audit ecrit des maintenant) retenus |
 
 ## 12. Historique des etapes realisees
 
@@ -225,6 +231,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-08 | PR #3 mergee dans `main` (CI verte) | Branche `feat/s02-delegation-affectations` -> `main` via PR #3 (delegation S02, autorisation cross-tenant, RLS rôle applicatif, smoke test). Gate CodeQL d'abord rouge (4 alertes high `java/concatenated-sql-query` dans le nouveau test RLS) corrige par SQL parametre (`set_config`/PreparedStatement). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL, Packaging Docker. **Mergee le 2026-06-08T07:56Z, merge commit `d6a586f`.** | `main`, PR #3 | Claude Code / PO |
 | 2026-06-09 | Execution Plan R6 — correction Admin API Keycloak gestionnaire | Ajout client confidentiel service account `loyertracker-admin` (roles realm-management `manage-users`/`view-users`/`view-realm`), secret injecte post-import (`keycloak-init`), variables Admin API injectees dans `api` (base-url `/auth`), defauts Spring/adaptateur alignes. Bug d'import corrige (description client > 255 car.). `mvn verify` vert (38 tests). Reexecution runtime : token client_credentials 200, 4 ops Admin API OK (200/201/200/204), parcours API `POST /api/invitations` + acceptation OK 201 (adaptateur reel), gestionnaire cree + role `GESTIONNAIRE`. R6 clotûree. | `infra/keycloak/realm-loyertracker.json`, `infra/keycloak/bootstrap-test-account.sh`, `docker-compose.yml`, `.env.example`, `backend/.../application.yml`, `backend/.../KeycloakGestionnaireIdentityProvider.java`, `docs/cgpa/07-devsecops/rapport-validation-r6.md`, `docs/project-state.md` | Claude Code |
 | 2026-06-09 | PR #5 mergee dans `main` (CI verte) | Branche `fix/r6-keycloak-admin-api` -> `main` via PR #5 (remediation R6 Admin API gestionnaire). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL Java+TS, Packaging Docker. **Mergee le 2026-06-09T08:07Z, merge commit `d77cf29`.** | `main`, PR #5 | jptshilombo / Claude Code |
+| 2026-06-09 | Execution S03 backend — paiements & garanties | US-30 fonction SQL `generer_echeances_loyers()` (V6, SECURITY DEFINER owner batch, idempotente A.3) + batch `@Scheduled` + trigger `POST /api/batch/echeances` ; US-31 pointage + historique ; US-32 garantie depot/restitution (A.5) ; audit des ecritures (BNF-05). Ecart maitrise vs plan : SECURITY DEFINER au lieu d'un 2e datasource batch. Anomalies corrigees : mapping `CHAR(7)` (periode) ; mocks S03 dans `SecurityIntegrationTest` ; `SchemaMigrationTest` 6 migrations. `mvn verify` vert : 44 tests (38 + 6 S03), 0 echec. | `db/migration/V6__...sql`, `paiements/*`, `garanties/*`, `batch/*`, `audit/AuditService.java`, tests `s03/*`, `SecurityIntegrationTest`, `SchemaMigrationTest`, `docs/cgpa/06-planification-agile/rapport-execution-s03.md`, `docs/project-state.md` | Claude Code |
 
 ## 13. Risques ouverts
 
@@ -243,4 +250,4 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 ## 14. Prochaine action claire
 
-La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee, reexecutee avec succes (acceptation invitation 201, gestionnaire cree) puis **integree dans `main` via PR #5 le 2026-06-09** (merge commit `d77cf29`, CI verte) : R6 est clotûree. Prochaines etapes recommandees, par priorite : (1) convertir les tests d'integration au double datasource pour fermer le suivi de fidelite RLS sous le role restreint ; (2) produire un Plan d'Execution S03 paiements/garanties avant tout nouveau code. Aucun nouveau developpement metier ne doit demarrer sans approbation explicite.
+Le lot **S03 backend (paiements & garanties)** a ete execute le 2026-06-09 sur la branche `feat/s03-paiements-garanties` (`mvn verify` vert, 44 tests) : US-30/31/32 livrees et testees (idempotence batch, pointage, cycle garantie, autorisation cross-bailleur/cross-affectation, audit). Non encore committe/merge au moment de la redaction. Prochaines etapes recommandees, par priorite : (1) committer la branche, ouvrir la PR et verifier la CI verte avant merge dans `main` ; (2) revue PO d'acceptation du lot S03 ; (3) convertir les tests d'integration au double datasource (suivi fidelite RLS, commun S02/S03) ; (4) cadrer S04 (honoraires US-40 + alertes/batch US-50..52) ou le frontend S03 via un Plan d'Execution avant tout nouveau code. Aucun nouveau developpement metier ne doit demarrer sans approbation explicite.
