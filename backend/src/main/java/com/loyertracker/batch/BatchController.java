@@ -19,12 +19,14 @@ public class BatchController {
         this.generation = generation;
     }
 
-    public record DeclenchementDto(int echeancesCreees) {
+    public record DeclenchementDto(int echeancesCreees, int loyersEnRetard) {
     }
 
     @PostMapping("/echeances")
     @PreAuthorize("hasRole('BAILLEUR')")
     public DeclenchementDto genererEcheances() {
-        return new DeclenchementDto(generation.genererEcheances());
+        int crees = generation.genererEcheances();
+        int enRetard = generation.marquerEnRetard();
+        return new DeclenchementDto(crees, enRetard);
     }
 }

@@ -27,4 +27,16 @@ public class GenerationEcheancesService {
         return ((Number) em.createNativeQuery("SELECT generer_echeances_loyers()")
                 .getSingleResult()).intValue();
     }
+
+    /**
+     * Bascule en {@code EN_RETARD} les loyers {@code IMPAYE} dont l'exigibilité est dépassée
+     * (US-31, V7), via la fonction SQL {@code marquer_loyers_en_retard()} (SECURITY DEFINER).
+     *
+     * @return le nombre de loyers basculés (0 si aucun — idempotence).
+     */
+    @Transactional
+    public int marquerEnRetard() {
+        return ((Number) em.createNativeQuery("SELECT marquer_loyers_en_retard()")
+                .getSingleResult()).intValue();
+    }
 }

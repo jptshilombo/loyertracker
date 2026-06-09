@@ -24,6 +24,8 @@ public class EcheancesScheduler {
     @Scheduled(cron = "${app.batch.echeances.cron:0 30 6 * * *}", zone = "${app.batch.zone:Europe/Paris}")
     public void genererEcheancesQuotidiennes() {
         int crees = generation.genererEcheances();
-        log.info("Batch échéances loyers : {} échéance(s) créée(s).", crees);
+        int enRetard = generation.marquerEnRetard();
+        log.info("Batch échéances loyers : {} échéance(s) créée(s), {} loyer(s) passé(s) EN_RETARD.",
+                crees, enRetard);
     }
 }

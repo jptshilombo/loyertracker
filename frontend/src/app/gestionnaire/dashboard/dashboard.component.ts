@@ -4,10 +4,12 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { AuthService } from '../../core/auth/auth.service';
 import { Bail, BailPayload, Bien, S02ApiService } from '../../core/s02/s02-api.service';
+import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
+import { PaiementsBienComponent } from '../../paiements/paiements-bien.component';
 
 @Component({
   selector: 'app-gestionnaire-dashboard',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PaiementsBienComponent, GarantiesBailComponent],
   template: `
     <header class="page-head">
       <div>
@@ -85,17 +87,30 @@ import { Bail, BailPayload, Bien, S02ApiService } from '../../core/s02/s02-api.s
       }
     </section>
 
-    @if (bienSelectionne()) {
+    @if (bienSelectionne(); as bien) {
       <section class="panel detail">
         <h2>Historique des baux</h2>
         @for (bail of baux(); track bail.id) {
-          <div class="item">
+          <div class="item" [class.selected]="bail.id === bailSelectionne()?.id">
             <strong>{{ bail.locataireNom }}</strong>
             <span>{{ bail.loyerCc }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
             <span class="badge">{{ bail.statut }}</span>
+            <button type="button" (click)="selectionnerBail(bail)">Garanties</button>
           </div>
         } @empty {
           <p class="muted">Aucun bail.</p>
+        }
+      </section>
+
+      <section class="grid two detail">
+        <app-paiements-bien [bienId]="bien.id" />
+        @if (bailSelectionne(); as bail) {
+          <app-garanties-bail [bienId]="bien.id" [bailId]="bail.id" />
+        } @else {
+          <div class="panel">
+            <h2>Garanties</h2>
+            <p class="muted">Choisir un bail (bouton « Garanties »).</p>
+          </div>
         }
       </section>
     }
@@ -187,6 +202,11 @@ export class GestionnaireDashboardComponent implements OnInit {
   readonly baux = signal<Bail[]>([]);
   readonly bienSelectionne = signal<Bien | null>(null);
   readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
+  readonly bailSelectionne = signal<Bail | null>(null);
+
+  selectionnerBail(bail: Bail): void {
+    this.bailSelectionne.set(bail);
+  }
 
   readonly bailForm = new FormGroup({
     locataireNom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -211,6 +231,7 @@ export class GestionnaireDashboardComponent implements OnInit {
         const selection = this.bienSelectionneId();
         if (selection && !biens.some((bien) => bien.id === selection)) {
           this.bienSelectionne.set(null);
+          this.bailSelectionne.set(null);
           this.baux.set([]);
         }
       },
@@ -221,6 +242,7 @@ export class GestionnaireDashboardComponent implements OnInit {
 
   selectionnerBien(bien: Bien): void {
     this.bienSelectionne.set(bien);
+    this.bailSelectionne.set(null);
     this.chargerBaux(bien.id);
   }
 

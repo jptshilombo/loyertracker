@@ -74,15 +74,18 @@ class S03PaiementsGarantiesIntegrationTest {
         // Bail de 3 mois civils consommés : 2026-01, 2026-02, 2026-03.
         creerBail(bailleur, bienId, "2026-01-01", "2026-03-31");
 
-        // 1er passage : 3 échéances créées (mois début → mois terme, sans prorata).
+        // 1er passage : 3 échéances créées (mois début → mois terme, sans prorata). Le déclenchement
+        // enchaîne génération PUIS marquage : ces 3 mois sont échus → 3 loyers passés EN_RETARD.
         mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(bailleur)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.echeancesCreees").value(3));
+                .andExpect(jsonPath("$.echeancesCreees").value(3))
+                .andExpect(jsonPath("$.loyersEnRetard").value(3));
 
-        // 2e passage : idempotent (uq_paiement_periode) → 0.
+        // 2e passage : idempotent (uq_paiement_periode) → 0 créée ; aucun IMPAYE restant → 0 retard.
         mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(bailleur)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.echeancesCreees").value(0));
+                .andExpect(jsonPath("$.echeancesCreees").value(0))
+                .andExpect(jsonPath("$.loyersEnRetard").value(0));
 
         // La plus récente période (tri desc) = 2026-03, exigible le 1er du mois suivant, montant = loyer CC.
         mockMvc.perform(get("/api/biens/{bienId}/paiements", bienId).with(bailleurJwt(bailleur)))
@@ -91,8 +94,56 @@ class S03PaiementsGarantiesIntegrationTest {
                 .andExpect(jsonPath("$[0].periode").value("2026-03"))
                 .andExpect(jsonPath("$[0].dateExigibilite").value("2026-04-01"))
                 .andExpect(jsonPath("$[0].montantAttendu").value(850.00))
-                .andExpect(jsonPath("$[0].statut").value("IMPAYE"))
+                .andExpect(jsonPath("$[0].statut").value("EN_RETARD"))
                 .andExpect(jsonPath("$[2].periode").value("2026-01"));
+    }
+
+    @Test
+    void pointageRecuInsuffisantRefuse() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "7 rue Coherence");
+        creerBail(bailleur, bienId, "2026-01-01", "2026-01-31");
+        genererEcheances(bailleur);
+
+        // RECU avec montant reçu < attendu : incohérent → 400 (symétrique au contrôle PARTIEL).
+        mockMvc.perform(pointer(bienId, "2026-01", bailleur, "100.00", "RECU"))
+                .andExpect(status().isBadRequest());
+        // RECU avec montant reçu = attendu : accepté, reste dû nul.
+        mockMvc.perform(pointer(bienId, "2026-01", bailleur, "850.00", "RECU"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resteDu").value(0.00));
+    }
+
+    @Test
+    void loyersEchusBasculentEnRetardSansToucherLesPointages() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "8 rue Retard");
+        creerBail(bailleur, bienId, "2026-01-01", "2026-02-28");
+
+        // Génération + marquage en un seul déclenchement : 2 échéances échues → 2 EN_RETARD.
+        mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.echeancesCreees").value(2))
+                .andExpect(jsonPath("$.loyersEnRetard").value(2));
+        mockMvc.perform(get("/api/biens/{bienId}/paiements", bienId).with(bailleurJwt(bailleur)))
+                .andExpect(jsonPath("$[0].statut").value("EN_RETARD"))
+                .andExpect(jsonPath("$[1].statut").value("EN_RETARD"));
+
+        // Un loyer pointé RECU ne doit pas être ré-altéré par un nouveau passage du batch.
+        mockMvc.perform(pointer(bienId, "2026-01", bailleur, "850.00", "RECU"))
+                .andExpect(status().isOk());
+
+        // 2e passage : rien à créer ; les échus sont déjà EN_RETARD, le RECU est ignoré → 0 bascule.
+        mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.echeancesCreees").value(0))
+                .andExpect(jsonPath("$.loyersEnRetard").value(0));
+        // Tri desc : [0] = 2026-02 (EN_RETARD), [1] = 2026-01 (RECU, préservé).
+        mockMvc.perform(get("/api/biens/{bienId}/paiements", bienId).with(bailleurJwt(bailleur)))
+                .andExpect(jsonPath("$[0].statut").value("EN_RETARD"))
+                .andExpect(jsonPath("$[1].statut").value("RECU"));
     }
 
     @Test
