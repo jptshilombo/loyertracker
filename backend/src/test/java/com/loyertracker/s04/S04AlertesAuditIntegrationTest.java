@@ -122,6 +122,30 @@ class S04AlertesAuditIntegrationTest {
     }
 
     @Test
+    void preavisGenereDansLaBandeExclusifDeFinBailEtAntiDoublon() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "6 rue Preavis");
+        // Terme dans la bande de préavis ]J+60 ; J+90] (date du jour ≈ 2026-06) → 1 PREAVIS, 0 FIN_BAIL.
+        // Aucune échéance générée → aucun loyer EN_RETARD : on isole le type PREAVIS.
+        creerBail(bailleur, bienId, "2026-06-01", "2026-09-01");
+
+        // 1er passage : 1 seule alerte PREAVIS (terme > J+60 → pas de FIN_BAIL).
+        mockMvc.perform(post("/api/batch/alertes").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alertesCreees").value(1));
+        // 2e passage : alerte déjà NON_LUE → anti-doublon (EF-65) → 0.
+        mockMvc.perform(post("/api/batch/alertes").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alertesCreees").value(0));
+
+        mockMvc.perform(get("/api/alertes").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].type").value("PREAVIS"));
+    }
+
+    @Test
     void gestionnaireNeVoitQueLesAlertesDeSesBiensAffectes() throws Exception {
         String bailleur = "kc-" + UUID.randomUUID();
         inscrireBailleur(bailleur);

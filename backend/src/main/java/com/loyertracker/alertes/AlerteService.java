@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -29,17 +30,23 @@ public class AlerteService {
     private final AlerteRepository alertes;
     private final TenantContext tenant;
     private final EntityManager em;
+    /** Bande de préavis en jours (US-50, EF-62) — passée à generer_alertes (V10). */
+    private final int preavisJours;
 
-    public AlerteService(AlerteRepository alertes, TenantContext tenant, EntityManager em) {
+    public AlerteService(AlerteRepository alertes, TenantContext tenant, EntityManager em,
+            @Value("${app.alertes.preavis.jours:90}") int preavisJours) {
         this.alertes = alertes;
         this.tenant = tenant;
         this.em = em;
+        this.preavisJours = preavisJours;
     }
 
     /** Génération batch multi-bailleur (idempotente). @return nombre d'alertes créées. */
     @Transactional
     public int genererBatch() {
-        return ((Number) em.createNativeQuery("SELECT generer_alertes()").getSingleResult())
+        return ((Number) em.createNativeQuery("SELECT generer_alertes(CAST(:j AS integer))")
+                .setParameter("j", preavisJours)
+                .getSingleResult())
                 .intValue();
     }
 
