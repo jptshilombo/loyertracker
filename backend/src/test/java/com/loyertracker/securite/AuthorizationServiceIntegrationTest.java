@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Import;
+import com.loyertracker.testsupport.RlsTestDataSourceConfig;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,6 +30,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @SpringBootTest
 @Testcontainers
+@Import(RlsTestDataSourceConfig.class)
 class AuthorizationServiceIntegrationTest {
 
     @Container
@@ -35,13 +39,14 @@ class AuthorizationServiceIntegrationTest {
     @Autowired
     AuthorizationService authz;
     @Autowired
+    @Qualifier("admin")
     JdbcTemplate jdbc;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
+        // Seule l'URL est dynamique : datasource applicatif sous loyertracker_api (creds statiques
+        // dans application.properties), Flyway en admin. On ne surcharge plus username/password.
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
                 () -> "https://localhost/auth/realms/loyertracker");
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri",

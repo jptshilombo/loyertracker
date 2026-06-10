@@ -39,9 +39,9 @@ class InvitationGenerationIntegrationTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
+        // Seule l'URL est dynamique : datasource applicatif sous loyertracker_api (creds statiques
+        // dans application.properties), Flyway en admin. On ne surcharge plus username/password.
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
                 () -> "https://localhost/auth/realms/loyertracker");
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
