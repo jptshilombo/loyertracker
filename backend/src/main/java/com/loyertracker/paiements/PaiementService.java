@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.loyertracker.audit.AuditService;
+import com.loyertracker.honoraires.HonoraireService;
 import com.loyertracker.securite.TenantContext;
 
 /**
@@ -22,11 +23,14 @@ public class PaiementService {
     private final PaiementRepository paiements;
     private final TenantContext tenant;
     private final AuditService audit;
+    private final HonoraireService honoraires;
 
-    public PaiementService(PaiementRepository paiements, TenantContext tenant, AuditService audit) {
+    public PaiementService(PaiementRepository paiements, TenantContext tenant, AuditService audit,
+            HonoraireService honoraires) {
         this.paiements = paiements;
         this.tenant = tenant;
         this.audit = audit;
+        this.honoraires = honoraires;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +61,9 @@ public class PaiementService {
         Paiement enregistre = paiements.save(paiement);
         audit.enregistrer(authentication, bailleurId, "POINTER_PAIEMENT", "paiement",
                 enregistre.getId());
+        // L'encaissement modifie l'assiette des honoraires POURCENTAGE du bien : recalcul synchrone
+        // (US-40, EF-51). Le gel à PAYE protège les honoraires déjà validés. Même transaction/tenant.
+        honoraires.recalculerPourBien(bienId);
         return PaiementDto.from(enregistre);
     }
 }
