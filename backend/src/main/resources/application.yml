@@ -79,6 +79,11 @@ app:
   invitation:
     # Base du lien d'acceptation transmis au gestionnaire (US-11). Front Angular derrière Nginx.
     base-url: ${APP_INVITATION_BASE_URL:https://localhost}
+  alertes:
+    preavis:
+      # Bande de préavis (US-50, EF-62) : un bail ACTIF dont le terme est à ≤ N jours (et > 60 j,
+      # au-delà de FIN_BAIL) déclenche une alerte PREAVIS. Arbitrage PO : 3 mois = 90 jours.
+      jours: ${APP_ALERTES_PREAVIS_JOURS:90}
 
 # Admin API Keycloak — création de compte gestionnaire (US-12, ADR-10, R6). Client confidentiel
 # dédié `loyertracker-admin` (service account, distinct du resource-server bearer-only

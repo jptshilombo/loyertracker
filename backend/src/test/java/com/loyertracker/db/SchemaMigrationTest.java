@@ -48,7 +48,8 @@ class SchemaMigrationTest {
         // + V4 (helpers S02 biens/baux/affectations) + V5 (rôle applicatif RLS)
         // + V6 (génération échéances loyers S03) + V7 (passage EN_RETARD S03)
         // + V8 (calcul honoraires S04) + V9 (génération alertes S04).
-        assertThat(result.migrationsExecuted).isEqualTo(9);
+        // + V10 (alerte PREAVIS S04).
+        assertThat(result.migrationsExecuted).isEqualTo(10);
         assertThat(result.success).isTrue();
     }
 
