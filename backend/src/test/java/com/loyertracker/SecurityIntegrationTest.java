@@ -20,6 +20,7 @@ import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
 import com.loyertracker.comptes.InvitationService;
 import com.loyertracker.garanties.GarantieService;
+import com.loyertracker.honoraires.HonoraireService;
 import com.loyertracker.paiements.PaiementService;
 import com.loyertracker.securite.AuthorizationService;
 import com.loyertracker.securite.TenantContext;
@@ -61,6 +62,9 @@ class SecurityIntegrationTest {
     GarantieService garantieService;
     @MockitoBean
     GenerationEcheancesService generationEcheancesService;
+    // Module honoraires S04 (dépendant de JPA) : neutralisé pour ce test de contrat sans BDD.
+    @MockitoBean
+    HonoraireService honoraireService;
     @MockitoBean
     AuditService auditService;
 
