@@ -1,5 +1,6 @@
 package com.loyertracker.bailleur;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -7,10 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -33,12 +37,35 @@ class BailleurInscriptionIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
+    // Datasource APPLICATIF (primaire) : doit etre le role restreint, pas le superutilisateur.
+    @Autowired
+    DataSource dataSource;
+
+    /**
+     * Verrou de fidelite RLS (ADR-01) : prouve que l'application se connecte sous le role restreint
+     * {@code loyertracker_api} (NOSUPERUSER NOBYPASSRLS), donc que la RLS FORCE est reellement
+     * exercee sur le chemin applicatif. Echoue si quelqu'un re-branche le datasource sur le
+     * superutilisateur (regression silencieuse que ce lot vise precisement a empecher).
+     */
+    @Test
+    void applicationConnecteeSousRoleRestreintNonBypassRls() {
+        JdbcTemplate appJdbc = new JdbcTemplate(dataSource);
+        String role = appJdbc.queryForObject("SELECT current_user", String.class);
+        assertThat(role).isEqualTo("loyertracker_api");
+        Boolean bypassRls = appJdbc.queryForObject(
+                "SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user", Boolean.class);
+        assertThat(bypassRls).as("le role applicatif ne doit pas contourner la RLS").isFalse();
+        Boolean superUser = appJdbc.queryForObject(
+                "SELECT rolsuper FROM pg_roles WHERE rolname = current_user", Boolean.class);
+        assertThat(superUser).as("le role applicatif ne doit pas etre superutilisateur").isFalse();
+    }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
+        // Seule l'URL est dynamique : le datasource applicatif se connecte sous loyertracker_api
+        // (identifiants statiques dans application.properties) ; Flyway migre en admin (creds fixes
+        // du conteneur). On ne surcharge donc PLUS username/password ici.
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
                 () -> "https://localhost/auth/realms/loyertracker");
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri",

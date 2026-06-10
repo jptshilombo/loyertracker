@@ -16,6 +16,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Import;
+import com.loyertracker.testsupport.RlsTestDataSourceConfig;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -36,6 +39,7 @@ import com.jayway.jsonpath.JsonPath;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
+@Import(RlsTestDataSourceConfig.class)
 class S04HonorairesIntegrationTest {
 
     @Container
@@ -44,6 +48,7 @@ class S04HonorairesIntegrationTest {
     @Autowired
     MockMvc mockMvc;
     @Autowired
+    @Qualifier("admin")
     JdbcTemplate jdbc;
 
     @BeforeEach
@@ -57,9 +62,9 @@ class S04HonorairesIntegrationTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
+        // Seule l'URL est dynamique : datasource applicatif sous loyertracker_api (creds statiques
+        // dans application.properties), Flyway en admin. On ne surcharge plus username/password.
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
                 () -> "https://localhost/auth/realms/loyertracker");
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
