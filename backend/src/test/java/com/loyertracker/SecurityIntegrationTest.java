@@ -12,6 +12,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import com.loyertracker.affectations.AffectationService;
+import com.loyertracker.alertes.AlerteService;
 import com.loyertracker.audit.AuditService;
 import com.loyertracker.bailleur.InscriptionService;
 import com.loyertracker.batch.GenerationEcheancesService;
@@ -62,9 +63,11 @@ class SecurityIntegrationTest {
     GarantieService garantieService;
     @MockitoBean
     GenerationEcheancesService generationEcheancesService;
-    // Module honoraires S04 (dépendant de JPA) : neutralisé pour ce test de contrat sans BDD.
+    // Modules S04 (dépendant de JPA) : neutralisés pour ce test de contrat sans BDD.
     @MockitoBean
     HonoraireService honoraireService;
+    @MockitoBean
+    AlerteService alerteService;
     @MockitoBean
     AuditService auditService;
 

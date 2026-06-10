@@ -47,8 +47,8 @@ class SchemaMigrationTest {
         // V1 (schéma US-03) + V2 (résolution tenant) + V3 (prédicats d'autorisation)
         // + V4 (helpers S02 biens/baux/affectations) + V5 (rôle applicatif RLS)
         // + V6 (génération échéances loyers S03) + V7 (passage EN_RETARD S03)
-        // + V8 (calcul honoraires S04).
-        assertThat(result.migrationsExecuted).isEqualTo(8);
+        // + V8 (calcul honoraires S04) + V9 (génération alertes S04).
+        assertThat(result.migrationsExecuted).isEqualTo(9);
         assertThat(result.success).isTrue();
     }
 
