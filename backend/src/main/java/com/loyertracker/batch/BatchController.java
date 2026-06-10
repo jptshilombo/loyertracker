@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.loyertracker.alertes.AlerteService;
 import com.loyertracker.honoraires.HonoraireService;
 
 /**
@@ -17,16 +18,22 @@ public class BatchController {
 
     private final GenerationEcheancesService generation;
     private final HonoraireService honoraires;
+    private final AlerteService alertes;
 
-    public BatchController(GenerationEcheancesService generation, HonoraireService honoraires) {
+    public BatchController(GenerationEcheancesService generation, HonoraireService honoraires,
+            AlerteService alertes) {
         this.generation = generation;
         this.honoraires = honoraires;
+        this.alertes = alertes;
     }
 
     public record DeclenchementDto(int echeancesCreees, int loyersEnRetard) {
     }
 
     public record HonorairesDto(int honorairesCalcules) {
+    }
+
+    public record AlertesDto(int alertesCreees) {
     }
 
     @PostMapping("/echeances")
@@ -41,5 +48,11 @@ public class BatchController {
     @PreAuthorize("hasRole('BAILLEUR')")
     public HonorairesDto calculerHonoraires() {
         return new HonorairesDto(honoraires.recalculerBatch());
+    }
+
+    @PostMapping("/alertes")
+    @PreAuthorize("hasRole('BAILLEUR')")
+    public AlertesDto genererAlertes() {
+        return new AlertesDto(alertes.genererBatch());
     }
 }

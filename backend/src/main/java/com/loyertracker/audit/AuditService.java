@@ -1,28 +1,45 @@
 package com.loyertracker.audit;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.loyertracker.securite.TenantContext;
 
 import jakarta.persistence.EntityManager;
 
 /**
- * Journalisation des actions d'écriture sensibles (BNF-05 / ENF-05).
+ * Journalisation des actions d'écriture sensibles (BNF-05 / ENF-05) et consultation du journal
+ * (US-62, EF-73).
  *
- * <p>Écrit une ligne {@code audit_log} dans la transaction de l'opération métier appelante : le
- * GUC {@code app.current_bailleur_id} y est déjà positionné (TenantContext), donc l'insertion
- * respecte la RLS (le {@code bailleur_id} journalisé est celui du tenant courant). La consultation
- * de l'audit est livrée séparément (US-62).</p>
+ * <p>L'écriture insère une ligne {@code audit_log} dans la transaction de l'opération métier
+ * appelante : le GUC {@code app.current_bailleur_id} y est déjà positionné (TenantContext), donc
+ * l'insertion respecte la RLS (le {@code bailleur_id} journalisé est celui du tenant courant). La
+ * consultation, réservée au bailleur (cf. {@code AuditController}), positionne elle-même le tenant
+ * puis lit sous RLS.</p>
  */
 @Service
 public class AuditService {
 
     private final EntityManager em;
+    private final TenantContext tenant;
+    private final AuditLogRepository journal;
 
-    public AuditService(EntityManager em) {
+    public AuditService(EntityManager em, TenantContext tenant, AuditLogRepository journal) {
         this.em = em;
+        this.tenant = tenant;
+        this.journal = journal;
+    }
+
+    /** Consultation du journal du bailleur courant (US-62), du plus récent au plus ancien. */
+    @Transactional(readOnly = true)
+    public List<AuditDto> consulter(Authentication authentication) {
+        tenant.activerDepuisKeycloak(((Jwt) authentication.getPrincipal()).getSubject());
+        return journal.findByOrderByHorodatageDesc().stream().map(AuditDto::from).toList();
     }
 
     /**
