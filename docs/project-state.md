@@ -6,15 +6,15 @@
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
 * Version actuelle : 0.1.0-SNAPSHOT
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active : `main` (frontend S03 + correctifs QA integres via PR #9, merge commit `a1f60dd`)
-* Derniere mise a jour : 2026-06-09
-* Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, synchronisation post-merge Frontend S03 (PR #9)
+* Branche active : `main` (S04 backend complet — honoraires via PR #11 merge `8ac0b49`, alertes & audit via PR #12 merge `0f4f47c`)
+* Derniere mise a jour : 2026-06-10
+* Agent ayant mis a jour le fichier : Claude Code — CGPA Governance Officer, synchronisation post-merge S04 backend (PR #11 + PR #12)
 
 ## 2. Resume executif
 
 LoyerTracker est un MVP de gestion locative structure par le CGPA. Le projet a ete demarre sous CGPA v1.0, puis enrichi avec des pratiques proches de CGPA v3.0 : gates documentes, DevSecOps, plan d'implementation, ADR, tests et CI. La migration cible est CGPA v3.0.1, dont l'ecart principal est l'obligation du Project State File et son maintien apres chaque etape significative.
 
-Le socle technique est operationnel ou tres avance : backend Spring Boot, frontend Angular, Keycloak, PostgreSQL, Flyway, RLS, Nginx, Docker Compose, CI GitHub Actions, CodeQL, lint, scans de securite. Les phases de cadrage et DevSecOps sont validees jusqu'au Gate 06. Le projet est en Phase 7 Developpement. S01 est cloture documentairement. S02 est realise en backend pour US-20 a US-24 et dispose d'un frontend minimal bailleur/gestionnaire pour exploiter biens, baux et affectations. S03 (paiements & garanties, US-30/31/32) est realise en backend et integre dans `main` via la PR #7 ; son frontend reste a cadrer.
+Le socle technique est operationnel ou tres avance : backend Spring Boot, frontend Angular, Keycloak, PostgreSQL, Flyway, RLS, Nginx, Docker Compose, CI GitHub Actions, CodeQL, lint, scans de securite. Les phases de cadrage et DevSecOps sont validees jusqu'au Gate 06. Le projet est en Phase 7 Developpement. S01 est cloture documentairement. S02 est realise en backend pour US-20 a US-24 et dispose d'un frontend minimal bailleur/gestionnaire pour exploiter biens, baux et affectations. S03 (paiements & garanties, US-30/31/32) est realise (backend + frontend) et clos. S04 backend est complet : lot 1 honoraires (US-40) integre via la PR #11 et lot 2 alertes & consultation d'audit (US-50/51/52, US-62) integre via la PR #12 ; le type d'alerte PREAVIS est volontairement reporte (critere d'acceptation a figer) et le frontend S04 reste a cadrer.
 
 ## 3. Phase CGPA actuelle
 
@@ -24,7 +24,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 * Dernier gate statue : Gate 06 — DevSecOps
 * Statut du dernier gate : Go, ratifie le 2026-06-06
 * Decision actuelle : GO sous reserve
-* Justification : les phases 0 a 6 disposent de livrables et decisions Go, le developpement est autorise. La resynchronisation documentaire minimale et la cloture S01 ont ete realisees le 2026-06-07. Le Plan d'Execution S02 backend a ete approuve, execute puis accepte en GO sous reserve. Le frontend S02 minimal a ete approuve, execute puis accepte en GO sous reserve le 2026-06-07. La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee et reexecutee avec succes le 2026-06-09 (client service account dedie, acceptation invitation 201, gestionnaire cree) : R6 est clotûree. Le Plan d'Execution S03 (Niveau 3) a ete approuve, execute (US-30/31/32, lot backend) puis integre dans `main` via la PR #7 (CI verte, merge commit `2f5c743`) le 2026-06-09. Le lot backend a ensuite passe une QA dediee (verdict GO, 44/44 verts) ; le Plan d'Execution Frontend S03 (Niveau 3) a ete approuve et execute le 2026-06-09 : volet IHM US-31/32 (pointage + garanties, bailleur et gestionnaire) plus deux correctifs backend issus de la QA (EN_RETARD automatise via V7, RECU >= attendu impose). Tests verts (backend 46, frontend 18) ; integre dans `main` via la PR #9 (CI verte, merge commit `a1f60dd`) le 2026-06-09. S03 (backend + frontend) est clos. La reserve residuelle porte sur la conversion des tests d'integration au double datasource et le smoke test runtime S03, a cadrer par un Plan d'Execution avant tout nouveau code.
+* Justification : les phases 0 a 6 disposent de livrables et decisions Go, le developpement est autorise. La resynchronisation documentaire minimale et la cloture S01 ont ete realisees le 2026-06-07. Le Plan d'Execution S02 backend a ete approuve, execute puis accepte en GO sous reserve. Le frontend S02 minimal a ete approuve, execute puis accepte en GO sous reserve le 2026-06-07. La reserve R6 (Admin API Keycloak gestionnaire) a ete corrigee et reexecutee avec succes le 2026-06-09 (client service account dedie, acceptation invitation 201, gestionnaire cree) : R6 est clotûree. Le Plan d'Execution S03 (Niveau 3) a ete approuve, execute (US-30/31/32, lot backend) puis integre dans `main` via la PR #7 (CI verte, merge commit `2f5c743`) le 2026-06-09. Le lot backend a ensuite passe une QA dediee (verdict GO, 44/44 verts) ; le Plan d'Execution Frontend S03 (Niveau 3) a ete approuve et execute le 2026-06-09 : volet IHM US-31/32 (pointage + garanties, bailleur et gestionnaire) plus deux correctifs backend issus de la QA (EN_RETARD automatise via V7, RECU >= attendu impose). Tests verts (backend 46, frontend 18) ; integre dans `main` via la PR #9 (CI verte, merge commit `a1f60dd`) le 2026-06-09. S03 (backend + frontend) est clos. Le Plan d'Execution S04 (Niveau 3) a ensuite ete approuve le 2026-06-10 avec les arbitrages A (backend d'abord, frontend S04 reporte), B (PREAVIS reporte), C (honoraires recalcules au pointage + batch) et D (2 PR). Lot 1 honoraires (US-40) execute et integre via la PR #11 (CI verte, merge commit `8ac0b49`) ; lot 2 alertes & consultation d'audit (US-50/51/52, US-62) execute et integre via la PR #12 (CI verte, merge commit `0f4f47c`). `mvn verify` vert a chaque lot (49 puis 53 tests). S04 backend est complet hors PREAVIS reporte. La reserve residuelle porte sur la conversion des tests d'integration au double datasource, le smoke test runtime sous le role `loyertracker_api`, l'arbitrage PREAVIS et le frontend S04 — chacun a cadrer par un Plan d'Execution avant tout nouveau code.
 
 ## 4. D'ou l'on vient
 
@@ -52,7 +52,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * stack Docker Compose ;
   * realm Keycloak ;
   * API Spring Boot securisee JWT ;
-  * schéma Flyway complet V1 a V4 ;
+  * schéma Flyway V1 a V9 (schema initial, resolution tenant, predicats, helpers S02, role applicatif RLS, echeances/EN_RETARD S03, honoraires S04, alertes S04) ;
   * inscription bailleur ;
   * invitation gestionnaire tokenisee 72h ;
   * acceptation d'invitation avec creation/reutilisation gestionnaire ;
@@ -85,18 +85,21 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * US-30 generation des loyers attendus a terme echu (batch idempotent, Annexe A.3) ;
   * US-31 pointage des loyers (RECU/PARTIEL/EN_RETARD/IMPAYE, reste du, historique ; EN_RETARD automatise via V7, controle RECU >= attendu) ;
   * US-32 depot et restitution de garantie (DETENU -> RESTITUE_PARTIEL -> RESTITUE_TOTAL, Annexe A.5) ;
-  * journalisation d'audit des ecritures financieres (BNF-05 ; consultation US-62 differee) ;
-  * frontend S03 : pointage des loyers et gestion des garanties (bailleur et gestionnaire affecte), declenchement batch reserve au bailleur.
+  * journalisation d'audit des ecritures financieres (BNF-05) ;
+  * frontend S03 : pointage des loyers et gestion des garanties (bailleur et gestionnaire affecte), declenchement batch reserve au bailleur ;
+  * US-40 honoraires de gestion (calcul POURCENTAGE sur loyer encaisse / FORFAIT via `calculer_honoraires()` V8, recalcul synchrone au pointage + batch, gel a PAYE, validation reservee au bailleur, audit `VALIDER_HONORAIRE`) ;
+  * US-50/51 alertes de pilotage (LOYER_EN_RETARD, FIN_BAIL, GARANTIE_NON_RESTITUEE via `generer_alertes()` V9, idempotente/anti-doublon ; PREAVIS reporte) + batch `@07:00` ;
+  * US-52 scoping des alertes (bailleur = tout son tenant ; gestionnaire = biens affectes actifs) + marquage « lue » ;
+  * US-62 consultation du journal d'audit reservee au bailleur (gestionnaire 403).
 * Fonctionnalites en cours :
   * conversion des tests d'integration au double datasource (suivi fidelite RLS, commun S02/S03) ;
   * smoke test runtime du flux S03 sous le role `loyertracker_api` (stack complete).
 * Reserve R6 clotûree le 2026-06-09 : Admin API Keycloak gestionnaire operationnelle (client confidentiel service account `loyertracker-admin`, secret hors depot, acceptation invitation validee en runtime 201).
 * Fonctionnalites non commencees :
   * interfaces frontend avancees pour biens, baux et affectations ;
-  * honoraires (US-40) ;
-  * alertes et batch ;
-  * dashboards metier ;
-  * audit log applicatif ;
+  * frontend S04 (consoles honoraires, alertes, audit) ;
+  * alerte PREAVIS (US-50, reportee — critere d'acceptation a figer) ;
+  * dashboards metier consolides ;
   * export/effacement RGPD ;
   * QA/recette, production readiness, exploitation.
 * Dette technique :
@@ -110,21 +113,23 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * R6 documentee partiellement : OIDC/PKCE/API OK, Admin API gestionnaire KO ;
   * rapport d'execution S01 separe non formalise ;
   * certains livrables historiques ne refletent pas encore S02, sauf Project State, rapport d'execution S02 backend et rapport frontend S02.
-* Blocages connus : aucun blocage technique ou de gouvernance actif. R6 (Admin API) clotûree le 2026-06-09 ; le Plan d'Execution S03 a ete approuve, execute et integre dans `main` (PR #7). Tout nouveau lot (frontend S03, S04) reste subordonne a un Plan d'Execution approuve.
+* Blocages connus : aucun blocage technique ou de gouvernance actif. R6 (Admin API) clotûree le 2026-06-09 ; S03 (backend + frontend) clos ; S04 backend complet (PR #11 + PR #12), hors PREAVIS reporte. Tout nouveau lot (frontend S04, PREAVIS, suivis double datasource/smoke test) reste subordonne a un Plan d'Execution approuve.
 
 
 ## 6. Ou l'on va
 
 * Prochaine phase : maintien en Phase 7 — Developpement.
-* Prochaine etape recommandee : cadrer le lot suivant (frontend S03 paiements/garanties, ou S04 honoraires US-40 + alertes/batch US-50..52) via un Plan d'Execution avant tout nouveau code.
-* Objectif du prochain Plan d'Execution : choisir et cadrer le lot suivant (frontend S03 ou S04) avant toute modification.
+* Prochaine etape recommandee : cadrer le lot suivant via un Plan d'Execution avant tout nouveau code — au choix du PO : frontend S04 (consoles honoraires/alertes/audit), arbitrage et implementation de l'alerte PREAVIS, ou les suivis techniques (double datasource / smoke test runtime).
+* Objectif du prochain Plan d'Execution : choisir et cadrer le lot suivant (frontend S04, PREAVIS, ou suivis) avant toute modification.
 * Priorites immediates :
-  * arbitrage PO du lot suivant (frontend S03 vs S04) ;
-  * convertir les tests d'integration au double datasource (suivi fidelite RLS, commun S02/S03) ;
-  * smoke test runtime du flux S03 sous le role `loyertracker_api` (stack complete) ;
+  * arbitrage PO du lot suivant (frontend S04 vs PREAVIS vs suivis techniques) ;
+  * figer le critere d'acceptation de l'alerte PREAVIS (US-50) ;
+  * convertir les tests d'integration au double datasource (suivi fidelite RLS, commun S02/S03/S04) ;
+  * smoke test runtime des flux sous le role `loyertracker_api` (stack complete) ;
   * maintenir le Project State apres chaque etape significative.
 * Dependances a lever :
   * decision PO sur le lot suivant et ses arbitrages ;
+  * critere d'acceptation PREAVIS ;
   * criteres Gate 07 cible.
 
 
@@ -132,7 +137,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 * Stack backend : Java 21, Spring Boot 3.5.14, Spring Security, OAuth2 Resource Server, JPA, Flyway, PostgreSQL driver, Testcontainers.
 * Stack frontend : Angular 20, keycloak-angular 20, keycloak-js, RxJS, Karma/Jasmine, ESLint.
-* Base de donnees : PostgreSQL 16, schema Flyway V1 a V4, RLS `FORCE`, index uniques metier.
+* Base de donnees : PostgreSQL 16, schema Flyway V1 a V9, RLS `FORCE`, index uniques metier, fonctions `SECURITY DEFINER` batch (echeances, EN_RETARD, honoraires, alertes) owned par `loyertracker_batch`.
 * IAM / Authentification : Keycloak 24, OIDC/PKCE, roles realm `BAILLEUR` et `GESTIONNAIRE`.
 * DevOps / CI-CD : GitHub Actions CI, CodeQL, Gitleaks, Trivy, OWASP Dependency-Check informatif, Docker build.
 * Hebergement cible : self-hosting conteneurise, staging/prod a definir.
@@ -169,7 +174,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 * Tests unitaires : backend et frontend presents.
 * Tests d'integration : backend avec PostgreSQL Testcontainers.
 * Tests securite : RLS, ReBAC, 401/403, cross-tenant/cross-affectation S02, scans secrets/dependances/images, CodeQL.
-* Couverture de test : `mvn verify` backend passe avec 38 tests verts (2026-06-08 : +1 cross-bailleur ecritures d'affectation, +2 RLS sous role applicatif/attributs du role) ; gate JaCoCo cible sur `com.loyertracker.securite` respecte ; frontend passe avec 14 tests Karma headless (non impacte).
+* Couverture de test : `mvn verify` backend passe avec 53 tests verts (S04 : +3 honoraires lot 1, +4 alertes/audit lot 2 ; `SchemaMigrationTest` valide 9 migrations) ; gate JaCoCo cible sur `com.loyertracker.securite` respecte ; Spotless vert ; frontend 18 tests Karma headless (non impacte par le backend S04).
 * Qualite du code : Spotless Maven, ESLint Angular, builds CI verts historiquement ; verification backend et frontend locale verte le 2026-06-07.
 * Observabilite : logs JSON ECS backend, access logs JSON Nginx, Actuator health/info ; pas encore de metriques ni alerting.
 
@@ -184,7 +189,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 * Exploitation : 1/4
 * Valeur metier : 3/4
 * Score global : 22/32
-* Commentaire : niveau Partiel avance. Le projet est solide pour poursuivre le developpement et dispose maintenant d'un premier lot metier S02 teste avec frontend minimal. Il n'est pas pret pour staging/prod et doit conserver la discipline CGPA : plan approuve avant S03.
+* Commentaire : niveau Partiel avance. Le socle couvre desormais les lots metier EP-03 (S02), EP-04 (S03 paiements/garanties) et EP-05 backend (S04 honoraires, alertes, audit), testes et integres. Le score global reste a 22/32 : l'axe Exploitation (1/4) demeure le frein principal (pas de staging/prod/CD/backup/observabilite centralisee). Le projet n'est pas pret pour staging/prod et doit conserver la discipline CGPA : plan approuve avant tout nouveau lot (frontend S04, PREAVIS, suivis).
 
 ## 11. Historique des decisions
 
@@ -206,6 +211,9 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-09 | Plan d'Execution S03 (Niveau 3) approuve puis execute | Lot metier EP-04 paiements/garanties (US-30/31/32) | jptshilombo@gmail.com | Lot backend livre + teste ; arbitrages A (backend seul), B (@Scheduled + trigger manuel), C (audit ecrit des maintenant) retenus |
 | 2026-06-09 | QA du lot backend S03 — verdict GO | Verification avant de cadrer le frontend | jptshilombo@gmail.com | 44/44 verts confirmes ; 3 arbitrages decides : EN_RETARD automatise, RECU >= attendu impose, frontend = pointage + garanties |
 | 2026-06-09 | Plan d'Execution Frontend S03 (Niveau 3) approuve puis execute | Volet IHM US-31/32 + correctifs QA backend | jptshilombo@gmail.com | Frontend pointage/garanties (bailleur + gestionnaire) + V7 EN_RETARD + controle RECU livres et testes (backend 46, frontend 18) |
+| 2026-06-10 | Plan d'Execution S04 (Niveau 3) approuve — defauts A–D | Lot metier EP-05 honoraires & pilotage (US-40, US-50/51/52, US-62) | jptshilombo@gmail.com | Arbitrages : A backend d'abord (frontend S04 reporte), B PREAVIS reporte, C honoraires recalcules au pointage + batch, D 2 PR (honoraires ; alertes+audit) |
+| 2026-06-10 | Lot 1 S04 honoraires execute et integre (PR #11) | Calcul des honoraires de gestion (US-40) | jptshilombo@gmail.com | V8 `calculer_honoraires()`, hook pointage, gel a PAYE, validation bailleur ; merge `8ac0b49` |
+| 2026-06-10 | Lot 2 S04 alertes & audit execute et integre (PR #12) | Alertes de pilotage (US-50/51/52) + consultation audit (US-62) | jptshilombo@gmail.com | V9 `generer_alertes()` (PREAVIS reporte), scoping gestionnaire, audit BAILLEUR-only ; merge `0f4f47c` |
 
 ## 12. Historique des etapes realisees
 
@@ -237,6 +245,10 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-09 | PR #8 mergee dans `main` (CI verte) | Branche `docs/project-state-post-merge-s03` -> `main` via PR #8 (synchronisation post-merge S03). Checks verts. **Mergee le 2026-06-09T12:23Z, merge commit `b5f201c`, branche supprimee.** | `main`, PR #8 | jptshilombo / Claude Code |
 | 2026-06-09 | Execution Frontend S03 + correctifs QA | Lot A (backend) : fonction SQL `marquer_loyers_en_retard()` (V7, SECURITY DEFINER owner batch, idempotente) + chainage batch (DTO `{echeancesCreees, loyersEnRetard}`) + controle `RECU >= attendu` (400). Lot B (frontend) : service `core/s03`, composants `paiements-bien` et `garanties-bail` standalone (signals) integres aux 2 dashboards, declenchement batch reserve bailleur. `mvn verify` vert 46 tests ; `ng lint`/`ng build`/`ng test` verts (18 tests). | `db/migration/V7__...sql`, `batch/*`, `paiements/PaiementService.java`, tests `s03/*` + `SchemaMigrationTest`, `frontend/src/app/core/s03/*`, `frontend/src/app/paiements/*`, `frontend/src/app/garanties/*`, `frontend/.../bailleur|gestionnaire/dashboard/*`, `docs/cgpa/06-planification-agile/rapport-execution-frontend-s03.md`, `docs/project-state.md` | Claude Code |
 | 2026-06-09 | PR #9 mergee dans `main` (CI verte) | Branche `feat/s03-frontend-paiements-garanties` -> `main` via PR #9 (frontend S03 paiements & garanties US-31/32 + correctifs QA backend). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL Java+TS, Packaging Docker. **Mergee le 2026-06-09T13:23Z, merge commit `a1f60dd`, branche supprimee.** | `main`, PR #9 | jptshilombo / Claude Code |
+| 2026-06-10 | Execution S04 lot 1 — honoraires de gestion | US-40 fonction SQL `calculer_honoraires(p_bien_id)` (V8, SECURITY DEFINER owner batch, upsert idempotent POURCENTAGE/FORFAIT, gel a PAYE) ; package `honoraires/` ; hook synchrone `PaiementService.pointer` ; `GET /api/biens/{bienId}/honoraires` (ReBAC) ; `PATCH /api/honoraires/{id}/statut` (BAILLEUR-only, audit `VALIDER_HONORAIRE`, garde de cloisonnement applicative) ; `POST /api/batch/honoraires` + recalcul quotidien. `mvn verify` vert : 49 tests (46 + 3 S04), `SchemaMigrationTest` 8 migrations. | `db/migration/V8__s04_honoraires.sql`, `honoraires/*`, `paiements/PaiementService.java`, `batch/BatchController.java`, `batch/EcheancesScheduler.java`, tests `s04/S04HonorairesIntegrationTest.java` + `SchemaMigrationTest` + `SecurityIntegrationTest`, `docs/cgpa/06-planification-agile/rapport-execution-s04-lot1-honoraires.md` | Claude Code |
+| 2026-06-10 | PR #11 mergee dans `main` (CI verte) | Branche `feat/s04-honoraires` -> `main` via PR #11 (lot 1 S04 honoraires US-40). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL Java+TS, Packaging Docker. **Mergee le 2026-06-10, merge commit `8ac0b49`, branche supprimee.** | `main`, PR #11 | jptshilombo / Claude Code |
+| 2026-06-10 | Execution S04 lot 2 — alertes & consultation audit | US-50/51 fonction SQL `generer_alertes()` (V9, SECURITY DEFINER owner batch, idempotente ON CONFLICT, periode derivee non-nulle ; LOYER_EN_RETARD, FIN_BAIL, GARANTIE_NON_RESTITUEE ; PREAVIS reporte) ; fonctions `alertes_gestionnaire`/`alerte_bailleur_pour_gestionnaire` (scoping US-52) ; package `alertes/` (`GET /api/alertes`, `PATCH /api/alertes/{id}/lecture`) ; audit US-62 (`AuditLog`, `GET /api/audit` BAILLEUR-only) ; `POST /api/batch/alertes` + `AlertesScheduler @07:00`. `mvn verify` vert : 53 tests (49 + 4 S04), `SchemaMigrationTest` 9 migrations. | `db/migration/V9__s04_alertes.sql`, `alertes/*`, `audit/AuditLog.java`+`AuditLogRepository.java`+`AuditDto.java`+`AuditController.java`+`AuditService.java`, `batch/AlertesScheduler.java`, `batch/BatchController.java`, tests `s04/S04AlertesAuditIntegrationTest.java` + `SchemaMigrationTest` + `SecurityIntegrationTest`, `docs/cgpa/06-planification-agile/rapport-execution-s04-lot2-alertes-audit.md` | Claude Code |
+| 2026-06-10 | PR #12 mergee dans `main` (CI verte) | Branche `feat/s04-alertes-audit` -> `main` via PR #12 (lot 2 S04 alertes US-50/51/52 + audit US-62). Tous les checks verts : Backend, Frontend, Securite (gitleaks+SCA+Trivy), CodeQL Java+TS, Packaging Docker. **Mergee le 2026-06-10T07:52Z, merge commit `0f4f47c`, branche supprimee.** | `main`, PR #12 | jptshilombo / Claude Code |
 
 ## 13. Risques ouverts
 
@@ -248,11 +260,13 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | Faille cross-bailleur sur `POST /affectations/{id}/revocation` (200 au lieu de 404/403) | Critique | Un bailleur pouvait revoquer l'affectation d'un autre bailleur | Corrige le 2026-06-08 (controle de propriete applicatif dans `AffectationService.revoquer`) + test de non-regression | Ferme |
 | RLS contournee : l'API se connectait en SUPERUTILISATEUR (`POSTGRES_USER`) en test et en runtime | Majeur | Defense en profondeur (2e couche RLS, ADR-01) totalement inerte sur le chemin applicatif ; seule l'autorisation applicative cloisonnait | Diagnostic 2026-06-08 (cause = role superuser, pas la propagation du GUC). Corrige par migration V5 : role `loyertracker_api` LOGIN NOSUPERUSER NOBYPASSRLS + Flyway admin separe ; RLS prouvee sous ce role (`SchemaMigrationTest`) | Ferme (code + tests) |
 | Comportement runtime sous le role restreint non verifie end-to-end | Mineur | Les tests `@SpringBootTest` tournent encore en superuser (harnais TRUNCATE/seed admin) ; un flux applicatif dependant implicitement du superuser passerait inapercu | Smoke test runtime 2026-06-08 : app bootee en `loyertracker_api` (health UP, pool Hikari sur le role restreint), Flyway en admin, TRUNCATE/DDL refuses, isolation RLS par tenant verifiee live. Reste : flux API authentifie complet (Keycloak) + automatisation via tests double datasource | En reduction (suivi) |
-| Pas de Plan d'Execution pour le lot suivant (frontend S03 / S04) | Critique gouvernance | Codage non conforme CGPA v3.0.1 | Produire et faire approuver un Plan d'Execution avant tout nouveau code ; S03 a ete couvert et integre (PR #7) | Ouvert (preventif) |
+| Pas de Plan d'Execution pour le lot suivant (frontend S04 / PREAVIS / suivis) | Critique gouvernance | Codage non conforme CGPA v3.0.1 | Produire et faire approuver un Plan d'Execution avant tout nouveau code ; S03 (PR #7/#9) et S04 backend (PR #11/#12) ont ete couverts et integres | Ouvert (preventif) |
+| Alerte PREAVIS (US-50) reportee : critere d'acceptation ambigu | Mineur produit | Couverture fonctionnelle des alertes incomplete | Figer la regle d'echeance/declenchement avec le PO, puis implementer dans un lot ulterieur (memes patrons que V9) | Ouvert |
+| Frontend S04 non realise (honoraires/alertes/audit en backend seul) | Mineur produit | Fonctions S04 non exposees a l'IHM | Cadrer un Plan d'Execution Frontend S04 (consoles honoraires, alertes, audit) | Ouvert |
 | Pas de staging/prod/CD/backup | Majeur | Non readiness production | Traiter en phase production readiness | Differe |
 | Interfaces frontend S02 minimales seulement | Mineur produit | Ergonomie suffisante pour reprise mais pas pour recette large | Prevoir ameliorations UX avant beta | Ouvert |
 | OpenAPI S02 absent | Mineur | Contrat API moins explicite | Generer/documenter OpenAPI avant recette large | Ouvert |
 
 ## 14. Prochaine action claire
 
-Le lot **Frontend S03 + correctifs QA** (volet IHM US-31/32 + EN_RETARD automatise via V7 + controle `RECU >= attendu`) a ete execute, accepte par le PO (GO) puis **integre dans `main` via la PR #9** (CI verte, merge commit `a1f60dd`, branche supprimee) le 2026-06-09. Tests verts : backend 46, frontend 18 + lint/build. Cette synchronisation post-merge consigne la cloture complete de S03 (backend + frontend). Prochaines etapes recommandees, par priorite : (1) convertir les tests d'integration au double datasource (suivi fidelite RLS, commun S02/S03) ; (2) smoke test runtime du flux S03 sous le role `loyertracker_api` sur la stack complete ; (3) cadrer S04 (honoraires US-40 + alertes/batch US-50..52 + consultation audit US-62) via un Plan d'Execution avant tout nouveau code. Aucun nouveau developpement metier ne doit demarrer sans un Plan d'Execution approuve.
+Le lot **S04 backend** a ete execute en deux lots conformes au Plan d'Execution S04 (defauts A–D) et integre dans `main` : lot 1 honoraires (US-40) via **PR #11** (merge commit `8ac0b49`) et lot 2 alertes & consultation d'audit (US-50/51/52, US-62) via **PR #12** (CI verte, merge commit `0f4f47c`, branche supprimee) le 2026-06-10. Tests verts : backend 53, `SchemaMigrationTest` 9 migrations, Spotless et couverture JaCoCo OK. Cette synchronisation post-merge consigne la cloture du **backend S04** (hors PREAVIS reporte). Prochaines etapes recommandees, par priorite (chacune subordonnee a un Plan d'Execution approuve) : (1) arbitrer le lot suivant avec le PO — frontend S04 (consoles honoraires/alertes/audit), arbitrage et implementation de l'alerte PREAVIS, ou suivis techniques ; (2) figer le critere d'acceptation PREAVIS (US-50) ; (3) convertir les tests d'integration au double datasource (suivi fidelite RLS, commun S02/S03/S04) ; (4) smoke test runtime des flux sous le role `loyertracker_api` sur la stack complete. Aucun nouveau developpement metier ne doit demarrer sans un Plan d'Execution approuve.
