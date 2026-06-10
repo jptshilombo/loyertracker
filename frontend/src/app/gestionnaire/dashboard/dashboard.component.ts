@@ -4,12 +4,20 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { AuthService } from '../../core/auth/auth.service';
 import { Bail, BailPayload, Bien, S02ApiService } from '../../core/s02/s02-api.service';
+import { AlertesListeComponent } from '../../alertes/alertes-liste.component';
 import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
+import { HonorairesBienComponent } from '../../honoraires/honoraires-bien.component';
 import { PaiementsBienComponent } from '../../paiements/paiements-bien.component';
 
 @Component({
   selector: 'app-gestionnaire-dashboard',
-  imports: [ReactiveFormsModule, PaiementsBienComponent, GarantiesBailComponent],
+  imports: [
+    ReactiveFormsModule,
+    PaiementsBienComponent,
+    GarantiesBailComponent,
+    HonorairesBienComponent,
+    AlertesListeComponent,
+  ],
   template: `
     <header class="page-head">
       <div>
@@ -113,7 +121,15 @@ import { PaiementsBienComponent } from '../../paiements/paiements-bien.component
           </div>
         }
       </section>
+
+      <section class="detail">
+        <app-honoraires-bien [bienId]="bien.id" [peutValider]="false" />
+      </section>
     }
+
+    <section class="detail">
+      <app-alertes-liste [peutGenerer]="false" />
+    </section>
   `,
   styles: [
     `
