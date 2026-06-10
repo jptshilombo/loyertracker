@@ -14,13 +14,23 @@ import {
   StatutBien,
   TypeHonoraires,
 } from '../../core/s02/s02-api.service';
+import { AlertesListeComponent } from '../../alertes/alertes-liste.component';
+import { AuditJournalComponent } from '../../audit/audit-journal.component';
 import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
+import { HonorairesBienComponent } from '../../honoraires/honoraires-bien.component';
 import { PaiementsBienComponent } from '../../paiements/paiements-bien.component';
 import { BailleurInscriptionService } from '../inscription/bailleur-inscription.service';
 
 @Component({
   selector: 'app-bailleur-dashboard',
-  imports: [ReactiveFormsModule, PaiementsBienComponent, GarantiesBailComponent],
+  imports: [
+    ReactiveFormsModule,
+    PaiementsBienComponent,
+    GarantiesBailComponent,
+    HonorairesBienComponent,
+    AlertesListeComponent,
+    AuditJournalComponent,
+  ],
   template: `
     <header class="page-head">
       <div>
@@ -152,6 +162,10 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         }
       </section>
 
+      <section class="detail">
+        <app-honoraires-bien [bienId]="bien.id" [peutValider]="true" />
+      </section>
+
       <section class="grid two detail">
         <form [formGroup]="affectationForm" (ngSubmit)="creerAffectation()" class="panel">
           <h2>Affectation</h2>
@@ -209,6 +223,11 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         </div>
       </section>
     }
+
+    <section class="grid two detail">
+      <app-alertes-liste [peutGenerer]="true" />
+      <app-audit-journal />
+    </section>
   `,
   styles: [
     `
