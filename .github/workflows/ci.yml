@@ -151,13 +151,37 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
+      # 5. Scan de l'image conteneur Web (Nginx + assets SPA) — même politique que l'API.
+      #    Les deux images publiées au registry (job docker-build) sont ainsi toutes deux
+      #    couvertes par le gate image avant tout push.
+      - name: Build de l'image Web (pour le scan)
+        run: docker build -f frontend/Dockerfile -t loyertracker-web:ci .
+
+      - name: Trivy (scan image Web)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: loyertracker-web:ci
+          scanners: "vuln,secret"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+          ignore-unfixed: true
+
   # ----------------------------------------------------------------------------------
-  # Packaging : build des deux images Docker une fois la qualité validée.
+  # Packaging + livraison : build des deux images Docker une fois la qualité validée,
+  # puis push vers GHCR sur la branche principale uniquement (chaîne de livraison,
+  # lot Production Readiness 1). Tags IMMUABLES `sha-<8>` (déploiement et rollback par
+  # tag explicite) + alias `latest` (repère, jamais utilisé pour déployer).
   # ----------------------------------------------------------------------------------
   docker-build:
     name: Packaging Docker
     needs: [backend, frontend, security]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push GHCR via GITHUB_TOKEN (aucun secret supplémentaire)
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_BASE: ghcr.io/${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v6
 
@@ -173,4 +197,23 @@ jobs:
       - name: Build image Web
         run: docker build -f frontend/Dockerfile -t loyertracker-web:${{ steps.meta.outputs.tag }} .
 
-      # Push vers un registry : hors scope MVP (images buildées et validées localement / en CI).
+      # Livraison : uniquement sur push de la branche principale (jamais depuis une PR,
+      # dont le GITHUB_TOKEN reste en lecture seule). La qualité est déjà validée par
+      # `needs` (backend + frontend + sécurité, scans Trivy des deux images inclus).
+      - name: Connexion à GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push des images vers GHCR (sha + latest)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          for img in loyertracker-api loyertracker-web; do
+            docker tag "$img:${{ steps.meta.outputs.tag }}" "$IMAGE_BASE/$img:${{ steps.meta.outputs.tag }}"
+            docker tag "$img:${{ steps.meta.outputs.tag }}" "$IMAGE_BASE/$img:latest"
+            docker push "$IMAGE_BASE/$img:${{ steps.meta.outputs.tag }}"
+            docker push "$IMAGE_BASE/$img:latest"
+          done

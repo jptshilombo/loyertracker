@@ -14,6 +14,9 @@ RUN npm run build -- --configuration production
 
 # ---- Étape run : Nginx servant les assets + config reverse-proxy ----
 FROM nginx:1.27-alpine
+# Patche les paquets OS au-delà de l'image de base (gate Trivy HIGH/CRITICAL en CI),
+# même approche que l'image API : ne pas attendre la reconstruction upstream.
+RUN apk -U upgrade --no-cache
 # Assets statiques de la SPA (sortie du builder application : dist/<projet>/browser).
 COPY --from=build /app/dist/loyertracker/browser /usr/share/nginx/html
 # Configuration Nginx unique (TLS, en-têtes de sécurité, proxy /api et /auth, fallback SPA).
