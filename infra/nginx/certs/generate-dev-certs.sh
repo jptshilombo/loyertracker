@@ -16,4 +16,8 @@ openssl req -x509 -nodes -newkey rsa:2048 \
     -subj "/C=FR/ST=Dev/L=Dev/O=LoyerTracker/CN=localhost" \
     -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 
+# Le conteneur Nginx tourne non-root (uid 101) : la clé doit lui être lisible via le mont :ro.
+# Acceptable ici : certificat de DEV auto-signé uniquement (jamais un vrai certificat).
+chmod 644 "${DIR}/localhost-key.pem" "${DIR}/localhost.pem"
+
 echo "Certificats de dev générés dans ${DIR} (localhost.pem / localhost-key.pem)."

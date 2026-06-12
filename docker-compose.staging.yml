@@ -1,7 +1,19 @@
-name: loyertracker
+name: loyertracker-staging
 
-# Stack de développement — point d'entrée unique Nginx (443).
-# api, keycloak et postgres ne sont PAS publiés sur l'hôte (réseau interne). Cf. DAT ADR-08.
+# Stack STAGING (lot Production Readiness 2) — mêmes services et même topologie que la stack
+# de dev (point d'entrée unique Nginx TLS, ports internes non publiés — ADR-08), avec les
+# différences suivantes :
+#   - AUCUN build local : les images applicatives (api, nginx) sont tirées du registry GHCR,
+#     publiées par la CI sur `main` (lot 1). Déploiement et rollback se font EXCLUSIVEMENT
+#     par tag immuable `sha-<8>` : LOYERTRACKER_TAG est obligatoire, jamais `latest`.
+#   - Limites de ressources (deploy.resources) et politiques de redémarrage explicites.
+#   - L'image web embarque la SPA buildée et la conf Nginx : seuls les certificats TLS
+#     (secrets, non versionnés) sont montés au runtime — lisibles par l'uid 101 (non-root).
+#
+# Usage (depuis la racine du dépôt, .env de staging en place) :
+#   docker compose -f docker-compose.staging.yml up -d
+#   LOYERTRACKER_TAG=sha-xxxxxxxx (exporté ou dans .env)
+# Rollback : redéployer avec le LOYERTRACKER_TAG précédent.
 
 services:
   postgres:
@@ -19,6 +31,11 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
@@ -30,35 +47,32 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      # Derrière le reverse proxy Nginx (terminaison TLS) — cf. ADR-08
-      # KC 24 (hostname v1) : KC_HOSTNAME = hôte seul (pas une URL). Le scheme https
-      # + le chemin relatif /auth donnent l'issuer https://localhost/auth/realms/loyertracker.
+      # Derrière le reverse proxy Nginx (terminaison TLS) — cf. ADR-08, identique au dev.
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME: localhost
+      KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
       KC_HOSTNAME_STRICT_HTTPS: "true"
       KC_HEALTH_ENABLED: "true"
     volumes:
-      # Realm versionné (sans secret) importé au démarrage. Mont du seul fichier
-      # JSON : le répertoire d'import ne doit contenir que des realms.
       - ./infra/keycloak/realm-loyertracker.json:/opt/keycloak/data/import/realm-loyertracker.json:ro
     depends_on:
       postgres:
         condition: service_healthy
     networks: [loyertracker-net]
     healthcheck:
-      # L'image Keycloak (UBI minimal) n'a ni curl ni wget : on sonde /health/ready via bash/dev-tcp.
-      # KC 24 sert l'endpoint santé sur le port HTTP principal (8080) sous le chemin relatif /auth
-      # (le port de management dédié 9000 n'est par défaut qu'à partir de KC 25).
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 15s
       timeout: 5s
       retries: 10
       start_period: 60s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
 
-  # One-shot : injecte le mot de passe du compte de test DEV (depuis .env) après l'import
-  # du realm. Aucun secret n'est ainsi versionné dans realm-loyertracker.json. Idempotent.
+  # One-shot : injecte les secrets de comptes/clients (depuis .env) après l'import du realm.
   keycloak-init:
     image: quay.io/keycloak/keycloak:24.0
     entrypoint: ["bash", "/opt/keycloak/data/bootstrap-test-account.sh"]
@@ -66,7 +80,6 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_TEST_BAILLEUR_PASSWORD: ${KEYCLOAK_TEST_BAILLEUR_PASSWORD}
-      # Secret injecté post-import dans le client Admin API loyertracker-admin (R6).
       KEYCLOAK_API_CLIENT_SECRET: ${KEYCLOAK_API_CLIENT_SECRET}
     volumes:
       - ./infra/keycloak/bootstrap-test-account.sh:/opt/keycloak/data/bootstrap-test-account.sh:ro
@@ -75,26 +88,26 @@ services:
         condition: service_healthy
     networks: [loyertracker-net]
     restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   api:
-    build:
-      context: ./backend
+    # Image publiée par la CI (lot 1) — tag immuable obligatoire, jamais `latest`.
+    image: ${REGISTRY_BASE:-ghcr.io/jptshilombo}/loyertracker-api:${LOYERTRACKER_TAG:?Définir LOYERTRACKER_TAG=sha-xxxxxxxx (tag immuable, jamais latest)}
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      # Runtime : rôle applicatif à privilèges minimaux (NOSUPERUSER/NOBYPASSRLS) → la RLS FORCE
-      # s'applique réellement (ADR-01). Créé par la migration V5.
+      # Runtime : rôle applicatif à privilèges minimaux (RLS FORCE effective — ADR-01).
       DB_USER: ${DB_APP_USER}
       DB_PASSWORD: ${DB_APP_PASSWORD}
-      # Migrations : rôle administrateur (propriétaire) distinct, capable de DDL et CREATE ROLE.
       DB_ADMIN_USER: ${POSTGRES_USER}
       DB_ADMIN_PASSWORD: ${POSTGRES_PASSWORD}
       DB_BATCH_USER: ${DB_BATCH_USER}
       DB_BATCH_PASSWORD: ${DB_BATCH_PASSWORD}
-      # iss validé contre l'URL publique ; JWKS récupéré en interne (cf. application.yml)
       KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI}
       KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI}
-      # Admin API Keycloak (US-12, ADR-10, R6) : client confidentiel à service account.
-      # base-url inclut le chemin relatif /auth (KC démarré avec --http-relative-path=/auth).
       KEYCLOAK_ADMIN_BASE_URL: ${KEYCLOAK_ADMIN_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID}
@@ -112,22 +125,21 @@ services:
       retries: 10
       start_period: 60s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
 
   nginx:
-    # Image web du projet (SPA Angular buildée + Nginx non-root, lot Production Readiness 2).
-    # Build depuis la racine du dépôt (ADR-08) ; en staging, la même image est tirée du
-    # registry GHCR par tag immuable (cf. docker-compose.staging.yml).
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
+    # Image web publiée par la CI (SPA buildée + Nginx non-root) — même tag que l'API.
+    image: ${REGISTRY_BASE:-ghcr.io/jptshilombo}/loyertracker-web:${LOYERTRACKER_TAG:?Définir LOYERTRACKER_TAG=sha-xxxxxxxx (tag immuable, jamais latest)}
     ports:
       # Remap ports privilégiés hôte → ports non privilégiés du conteneur (Nginx non-root).
       - "80:8080"
       - "443:8443"
     volumes:
-      # Conf montée en dev pour itérer sans rebuild (même fichier que celui embarqué à l'image).
-      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Certificats lisibles par l'uid 101 (utilisateur nginx du conteneur non-root).
+      # Seuls les certificats sont montés (lisibles par l'uid 101) ; conf et SPA sont dans l'image.
       - ./infra/nginx/certs:/etc/nginx/certs:ro
     depends_on:
       api:
@@ -136,6 +148,11 @@ services:
         condition: service_started
     networks: [loyertracker-net]
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
 
 networks:
   loyertracker-net:

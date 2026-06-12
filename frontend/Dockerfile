@@ -22,4 +22,8 @@ COPY --from=build /app/dist/loyertracker/browser /usr/share/nginx/html
 # Configuration Nginx unique (TLS, en-têtes de sécurité, proxy /api et /auth, fallback SPA).
 # Les certificats TLS ne sont PAS embarqués (secrets) : montés au runtime sous /etc/nginx/certs.
 COPY infra/nginx/nginx.conf /etc/nginx/nginx.conf
-EXPOSE 80 443
+# Exécution non-root (lot Production Readiness 2) : utilisateur `nginx` (uid 101) fourni par
+# l'image de base ; la conf écoute sur des ports non privilégiés et écrit pid/temp sous /tmp.
+# Prérequis runtime : les certificats montés doivent être lisibles par cet uid.
+USER nginx
+EXPOSE 8080 8443
