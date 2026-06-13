@@ -135,6 +135,13 @@ services:
       keycloak:
         condition: service_started
     networks: [loyertracker-net]
+    healthcheck:
+      # Sonde la vivacité Nginx via /healthz (200, port HTTP interne) — cf. nginx.conf.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz | grep -q ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 networks:

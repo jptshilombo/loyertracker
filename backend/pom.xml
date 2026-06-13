@@ -51,6 +51,15 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Métriques Prometheus (observabilité minimale, lot Production Readiness 4).
+             Active l'endpoint /api/actuator/prometheus, scrappé en interne sur le réseau
+             Docker (api:8080) — JAMAIS exposé via Nginx (bloqué dans infra/nginx/nginx.conf).
+             Version gérée par le BOM spring-boot-starter-parent. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- Validation des entrées (Bean Validation) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
