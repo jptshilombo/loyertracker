@@ -29,8 +29,11 @@ cd "$REPO_ROOT"
 # shellcheck disable=SC1091
 source .env
 
-BASE="https://localhost"
-CACERT="infra/nginx/certs/localhost.pem"
+# Cible paramétrable (lot Production Readiness 4b) : défaut = stack locale en 443.
+# Sur un hôte partagé où Nginx est publié sur un port alternatif, surcharger BASE,
+# p. ex. : BASE=https://localhost:18443 COMPOSE_FILE=docker-compose.staging.yml ./infra/smoke/smoke-stack.sh
+BASE="${BASE:-https://localhost}"
+CACERT="${CACERT:-infra/nginx/certs/localhost.pem}"
 CURL=(curl -sS --cacert "$CACERT")
 RUN_ID="$(date +%s)"
 REALM="loyertracker"
@@ -209,8 +212,10 @@ NB=$(echo "$BODY" | jq 'length')
 
 note "8. Garde-fous AuthN/ports"
 expect_status 401 "GET /api/biens sans token -> 401" "$BASE/api/biens"
-if curl -sS -m 3 -o /dev/null http://localhost:8080/api/actuator/health 2>/dev/null; then
-  ko "port API interne 8080 joignable depuis l'hôte (devrait être interne)"
+# Vérifie que le service api de CE projet compose n'expose aucun port sur l'hôte
+# (robuste sur un hôte partagé où d'autres conteneurs peuvent occuper 8080 — lot 4b).
+if [[ -n "$(docker compose port api 8080 2>/dev/null)" ]]; then
+  ko "port API interne 8080 publié sur l'hôte (devrait rester interne)"
 else
   ok "ports internes non publiés (API joignable uniquement via Nginx)"
 fi
