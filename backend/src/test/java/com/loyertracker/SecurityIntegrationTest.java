@@ -1,5 +1,6 @@
 package com.loyertracker;
 
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
@@ -75,6 +77,18 @@ class SecurityIntegrationTest {
     void health_estPublic() throws Exception {
         mockMvc.perform(get("/api/actuator/health"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void prometheus_nEstPasBloqueParLaSecurite() throws Exception {
+        // Métriques en liste blanche (scrape interne sans jeton, lot 4a — accès public bloqué par
+        // Nginx). Le contrat sous test ici est la SÉCURITÉ : une requête anonyme ne doit jamais
+        // être rejetée par l'authentification (401). Sans permitAll, `.anyRequest().authenticated()`
+        // renverrait 401 avant le dispatcher. Selon le câblage Actuator du contexte la réponse est
+        // 200 (endpoint présent) ou 404 (slice sans registre métriques), mais jamais 401 ; la
+        // présence réelle des métriques est validée en staging.
+        mockMvc.perform(get("/api/actuator/prometheus"))
+                .andExpect(status().is(not(HttpStatus.UNAUTHORIZED.value())));
     }
 
     @Test

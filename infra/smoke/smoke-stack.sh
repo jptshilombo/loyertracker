@@ -29,8 +29,11 @@ cd "$REPO_ROOT"
 # shellcheck disable=SC1091
 source .env
 
-BASE="https://localhost"
-CACERT="infra/nginx/certs/localhost.pem"
+# Cible paramétrable (lot Production Readiness 4b) : défaut = stack locale en 443.
+# Sur un hôte partagé où Nginx est publié sur un port alternatif, surcharger BASE,
+# p. ex. : BASE=https://localhost:18443 COMPOSE_FILE=docker-compose.staging.yml ./infra/smoke/smoke-stack.sh
+BASE="${BASE:-https://localhost}"
+CACERT="${CACERT:-infra/nginx/certs/localhost.pem}"
 CURL=(curl -sS --cacert "$CACERT")
 RUN_ID="$(date +%s)"
 REALM="loyertracker"
@@ -104,7 +107,10 @@ note "1. JWT réel Keycloak (bailleur de test) via Nginx"
 T_B1=$(token "bailleur-test@test.local" "$KEYCLOAK_TEST_BAILLEUR_PASSWORD")
 [[ "$T_B1" != "null" && -n "$T_B1" ]] && ok "JWT bailleur obtenu" || { ko "JWT bailleur KO"; exit 1; }
 ISS=$(python3 -c "import base64,json,sys; p=sys.argv[1].split('.')[1]; p+='='*(-len(p)%4); print(json.loads(base64.urlsafe_b64decode(p))['iss'])" "$T_B1")
-[[ "$ISS" == "$BASE/auth/realms/$REALM" ]] && ok "issuer = $ISS" || ko "issuer inattendu : $ISS"
+# L'issuer est canonique (KC_HOSTNAME=localhost, sans port) et c'est précisément l'URI que l'API
+# valide : on le compare à KEYCLOAK_ISSUER_URI (.env), pas à BASE — qui peut porter un port
+# alternatif sur un hôte partagé (lot 4b) alors que l'issuer, lui, reste portless.
+[[ "$ISS" == "$KEYCLOAK_ISSUER_URI" ]] && ok "issuer = $ISS" || ko "issuer inattendu : $ISS (attendu $KEYCLOAK_ISSUER_URI)"
 H_B1=(-H "Authorization: Bearer $T_B1")
 
 note "2. Parcours bailleur : inscription, bien, bail"
@@ -209,8 +215,14 @@ NB=$(echo "$BODY" | jq 'length')
 
 note "8. Garde-fous AuthN/ports"
 expect_status 401 "GET /api/biens sans token -> 401" "$BASE/api/biens"
-if curl -sS -m 3 -o /dev/null http://localhost:8080/api/actuator/health 2>/dev/null; then
-  ko "port API interne 8080 joignable depuis l'hôte (devrait être interne)"
+# Vérifie que le service api de CE projet compose n'expose aucun port sur l'hôte
+# (robuste sur un hôte partagé où d'autres conteneurs peuvent occuper 8080 — lot 4b).
+# Selon la version de Compose, `port` renvoie soit du vide, soit "invalid IP:0" quand
+# aucune publication n'existe : on extrait le port hôte (dernier champ) et on considère
+# 0 ou vide comme "non publié". Une vraie publication donnerait "0.0.0.0:<port>".
+API_HOSTPORT=$(docker compose port api 8080 2>/dev/null | awk -F: 'NF{print $NF}')
+if [[ -n "$API_HOSTPORT" && "$API_HOSTPORT" != "0" ]]; then
+  ko "port API interne 8080 publié sur l'hôte:$API_HOSTPORT (devrait rester interne)"
 else
   ok "ports internes non publiés (API joignable uniquement via Nginx)"
 fi

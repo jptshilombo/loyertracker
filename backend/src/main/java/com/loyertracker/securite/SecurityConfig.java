@@ -23,7 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * <ul>
  *   <li>Stateless : aucune session, authentification par JWT (Bearer) émis par Keycloak.</li>
  *   <li>Rôles extraits du claim {@code realm_access.roles} ({@link KeycloakRealmRoleConverter}).</li>
- *   <li>Liste blanche : health/info Actuator et l'acceptation d'invitation (non authentifiée).</li>
+ *   <li>Liste blanche : health/info/prometheus Actuator et l'acceptation d'invitation (non authentifiée).</li>
  *   <li>CORS limité à l'origine de la SPA ; CSRF désactivé (API stateless à jeton).</li>
  *   <li>{@code @EnableMethodSecurity} active {@code @PreAuthorize} pour l'autorisation fine.</li>
  * </ul>
@@ -44,6 +44,10 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/actuator/health", "/api/actuator/health/**", "/api/actuator/info").permitAll()
+                // Métriques Prometheus : exposition interne uniquement (lot Production Readiness 4a).
+                // Le port 8080 n'est pas publié sur l'hôte et Nginx renvoie 404 publiquement
+                // (cf. infra/nginx/nginx.conf) : seul un scrapeur du réseau Docker y accède, sans jeton.
+                .requestMatchers("/api/actuator/prometheus").permitAll()
                 // Acceptation d'invitation via lien tokenisé : pas encore de compte → non authentifié.
                 .requestMatchers(HttpMethod.POST, "/api/invitations/*/acceptation").permitAll()
                 .anyRequest().authenticated())
