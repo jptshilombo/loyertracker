@@ -217,8 +217,12 @@ note "8. Garde-fous AuthN/ports"
 expect_status 401 "GET /api/biens sans token -> 401" "$BASE/api/biens"
 # Vérifie que le service api de CE projet compose n'expose aucun port sur l'hôte
 # (robuste sur un hôte partagé où d'autres conteneurs peuvent occuper 8080 — lot 4b).
-if [[ -n "$(docker compose port api 8080 2>/dev/null)" ]]; then
-  ko "port API interne 8080 publié sur l'hôte (devrait rester interne)"
+# Selon la version de Compose, `port` renvoie soit du vide, soit "invalid IP:0" quand
+# aucune publication n'existe : on extrait le port hôte (dernier champ) et on considère
+# 0 ou vide comme "non publié". Une vraie publication donnerait "0.0.0.0:<port>".
+API_HOSTPORT=$(docker compose port api 8080 2>/dev/null | awk -F: 'NF{print $NF}')
+if [[ -n "$API_HOSTPORT" && "$API_HOSTPORT" != "0" ]]; then
+  ko "port API interne 8080 publié sur l'hôte:$API_HOSTPORT (devrait rester interne)"
 else
   ok "ports internes non publiés (API joignable uniquement via Nginx)"
 fi
