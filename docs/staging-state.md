@@ -24,7 +24,7 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | `sha-4e0d3995` (= `main` HEAD au moment du déploiement) |
+| `LOYERTRACKER_TAG` | **`sha-26f16caa`** (= `main` HEAD courant) — historique des redéploiements en §8 ; gate prononcé sur `sha-4e0d3995` |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
 | Issuer Keycloak | `https://localhost/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=localhost`) |
@@ -103,32 +103,32 @@ Le déploiement réel sur hôte partagé a révélé quatre écarts, tous corrig
    `/api/actuator/prometheus` au `permitAll`, avec test de régression sécurité.
    *`backend/.../SecurityConfig.java`, `SecurityIntegrationTest.java`.*
 
-### Résidu (non bloquant) — confirmation live du correctif #4
+### Résidu (non bloquant) — confirmation live du correctif #4 → **levé**
 
 Le correctif #4 touche l'image **api**, or les images ne sont publiées sur GHCR que sur push
-`main` (ci.yml). La stack staging tourne donc encore `sha-4e0d3995` (pré-correctif) : le scrape
-interne renverra 200 (métriques) **après** le passage par la chaîne de livraison standard
-(merge `main` → CI publie le nouveau `sha-<8>` → redéploiement staging avec ce tag → re-run du
-contrôle interne). Le correctif est validé au niveau unitaire (`SecurityIntegrationTest` vert).
-Aucun impact sécurité : l'endpoint reste bloqué publiquement (404) sur l'image déployée.
+`main` (ci.yml). Au moment du gate, la stack tournait encore `sha-4e0d3995` (pré-correctif).
+**Résidu levé** après le passage par la chaîne de livraison standard : redéploiement sur
+`sha-e7067215` (post-merge PR #29) puis sur `sha-26f16caa` (HEAD courant), avec scrape interne
+Prometheus **200** (tag `application="loyertracker-api"`) et public **404** confirmés live à
+chaque redéploiement (cf. §8). Le correctif était déjà validé au niveau unitaire
+(`SecurityIntegrationTest` vert).
 
 ## 6. Gate Staging Readiness (CGPA v4.0) — clôture R-4
 
 | Critère | Verdict |
 |---|---|
-| 1. Déploiement par image GHCR, tag immuable (jamais `latest`) | ✅ `sha-4e0d3995` |
+| 1. Déploiement par image GHCR, tag immuable (jamais `latest`) | ✅ `sha-26f16caa` (courant ; gate prononcé sur `sha-4e0d3995`) |
 | 2. Stack complète `healthy` (4/4) | ✅ |
 | 3. Point d'entrée unique Nginx TLS ; ports internes non publiés | ✅ |
 | 4. Issuer OIDC correct (canonique, portless) | ✅ |
 | 5. RLS `FORCE` réellement exercée (pool sous rôle restreint) | ✅ |
 | 6. Isolation cross-tenant prouvée en live | ✅ 0 fuite |
 | 7. Parcours métier S01→S04 de bout en bout | ✅ 46/46 |
-| 8. Observabilité : `/healthz` OK, Prometheus bloqué publiquement | ✅ (scrape interne : §5 résidu) |
+| 8. Observabilité : `/healthz` OK, Prometheus bloqué publiquement | ✅ scrape interne 200 confirmé live (résidu §5 levé, cf. §8) |
 | 9. Smoke contre staging rejouable et versionné | ✅ `infra/smoke/smoke-stack.sh` |
 
-**Verdict : GO (avec un résidu non bloquant)** — réserve **R-4** levée. Le seul résidu est la
-confirmation *live* du correctif sécurité #4, subordonnée au redéploiement post-merge (chaîne
-de livraison standard) ; il n'affecte ni la sécurité publique ni le smoke.
+**Verdict : GO** — réserve **R-4** levée, **zéro résidu**. Le résidu de confirmation *live* du
+correctif sécurité #4 a été levé par les redéploiements post-merge (cf. §8).
 
 ## 7. Procédure de redéploiement / rollback
 
@@ -138,3 +138,17 @@ de livraison standard) ; il n'affecte ni la sécurité publique ni le smoke.
 - **Re-vérification observabilité** après redéploiement post-merge :
   `docker compose -f docker-compose.staging.yml exec nginx wget -qO- http://api:8080/api/actuator/prometheus | head` <!-- gitleaks:allow (URL de service interne, aucun secret) -->
   (attendu : métriques, 200) ; `curl -sk -o /dev/null -w '%{http_code}' https://localhost:18443/api/actuator/prometheus` (attendu : 404).
+
+## 8. Historique des redéploiements
+
+Chaîne de livraison standard : merge `main` → CI publie `sha-<8>` sur GHCR → redéploiement
+staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + smoke.
+
+| Date | Tag déployé | Origine | Healthy | Smoke | Scrape Prometheus interne / public | Note |
+|---|---|---|---|---|---|---|
+| 2026-06-14 | `sha-4e0d3995` | `main` HEAD au lot 4b | 4/4 | 46/0 | — / 404 | Déploiement initial (gate Staging GO) ; correctif #4 pas encore dans l'image → scrape interne 401 (résidu §5) |
+| 2026-06-14 | `sha-e7067215` | post-merge PR #29 | 4/4 | 46/0 | **200** / 404 | Correctif sécurité #4 embarqué → scrape interne confirmé live ; résidu §5 levé |
+| 2026-06-14 | `sha-26f16caa` | `main` HEAD courant (post PR #31/#32) | 4/4 | 46/0 | **200** / 404 | Réalignement du tag déployé sur `main` HEAD. Delta depuis `sha-e7067215` = **documentation uniquement** (`runbook-exploitation.md`, `project-state.md`) : images api/web fonctionnellement identiques |
+
+> Le réalignement sur `sha-26f16caa` n'apporte aucun changement fonctionnel (delta doc-only
+> depuis l'image précédente) ; il maintient la traçabilité « tag déployé = `main` HEAD ».
