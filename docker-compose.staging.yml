@@ -152,7 +152,10 @@ services:
     networks: [loyertracker-net]
     healthcheck:
       # Sonde la vivacité Nginx via /healthz (200, port HTTP interne) — cf. nginx.conf.
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz | grep -q ok"]
+      # 127.0.0.1 (et non localhost) : Nginx n'écoute qu'en IPv4 (`listen 8080;`) ; or sur
+      # certains hôtes /etc/hosts résout localhost en ::1 d'abord et le wget busybox (alpine)
+      # tente l'IPv6 → connection refused. L'IPv4 loopback explicite est déterministe.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q ok"]
       interval: 15s
       timeout: 5s
       retries: 5
