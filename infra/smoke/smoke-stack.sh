@@ -107,7 +107,10 @@ note "1. JWT réel Keycloak (bailleur de test) via Nginx"
 T_B1=$(token "bailleur-test@test.local" "$KEYCLOAK_TEST_BAILLEUR_PASSWORD")
 [[ "$T_B1" != "null" && -n "$T_B1" ]] && ok "JWT bailleur obtenu" || { ko "JWT bailleur KO"; exit 1; }
 ISS=$(python3 -c "import base64,json,sys; p=sys.argv[1].split('.')[1]; p+='='*(-len(p)%4); print(json.loads(base64.urlsafe_b64decode(p))['iss'])" "$T_B1")
-[[ "$ISS" == "$BASE/auth/realms/$REALM" ]] && ok "issuer = $ISS" || ko "issuer inattendu : $ISS"
+# L'issuer est canonique (KC_HOSTNAME=localhost, sans port) et c'est précisément l'URI que l'API
+# valide : on le compare à KEYCLOAK_ISSUER_URI (.env), pas à BASE — qui peut porter un port
+# alternatif sur un hôte partagé (lot 4b) alors que l'issuer, lui, reste portless.
+[[ "$ISS" == "$KEYCLOAK_ISSUER_URI" ]] && ok "issuer = $ISS" || ko "issuer inattendu : $ISS (attendu $KEYCLOAK_ISSUER_URI)"
 H_B1=(-H "Authorization: Bearer $T_B1")
 
 note "2. Parcours bailleur : inscription, bien, bail"
