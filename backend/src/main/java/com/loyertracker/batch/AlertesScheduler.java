@@ -18,14 +18,17 @@ public class AlertesScheduler {
     private static final Logger log = LoggerFactory.getLogger(AlertesScheduler.class);
 
     private final AlerteService alertes;
+    private final BatchMetrics metrics;
 
-    public AlertesScheduler(AlerteService alertes) {
+    public AlertesScheduler(AlerteService alertes, BatchMetrics metrics) {
         this.alertes = alertes;
+        this.metrics = metrics;
     }
 
     @Scheduled(cron = "${app.batch.alertes.cron:0 0 7 * * *}", zone = "${app.batch.zone:Europe/Paris}")
     public void genererAlertesQuotidiennes() {
         int crees = alertes.genererBatch();
+        metrics.markSuccess(BatchMetrics.JOB_ALERTES);
         log.info("Batch alertes de pilotage : {} alerte(s) créée(s).", crees);
     }
 }

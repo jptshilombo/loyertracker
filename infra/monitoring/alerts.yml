@@ -1,0 +1,94 @@
+# Règles d'alerte LoyerTracker — composants critiques (OBS-02/03).
+# Couvre : API, base de données, service d'identité (Keycloak), jobs planifiés, sauvegarde.
+groups:
+  - name: loyertracker-critical
+    rules:
+      # --- API ---
+      - alert: ApiDown
+        expr: up{job="loyertracker-api"} == 0
+        for: 2m
+        labels: { severity: critical, component: api }
+        annotations:
+          summary: "API LoyerTracker indisponible"
+          description: "Prometheus ne parvient plus à scraper l'API (job loyertracker-api) depuis 2 min."
+
+      - alert: ApiHighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="loyertracker-api",status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count{job="loyertracker-api"}[5m])) > 0.05
+        for: 5m
+        labels: { severity: critical, component: api }
+        annotations:
+          summary: "Taux d'erreur 5xx de l'API > 5%"
+          description: "Plus de 5% des requêtes API renvoient une erreur 5xx sur les 5 dernières minutes."
+
+      - alert: ApiHighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket{job="loyertracker-api"}[5m])) by (le)) > 2
+        for: 5m
+        labels: { severity: warning, component: api }
+        annotations:
+          summary: "Latence API p99 > 2 s"
+          description: "La latence p99 des requêtes API dépasse 2 s sur 5 min."
+
+      # --- Authentification (proxy via 401 côté API) ---
+      - alert: AuthErrorSurge
+        expr: sum(rate(http_server_requests_seconds_count{job="loyertracker-api",status="401"}[5m])) > 1
+        for: 5m
+        labels: { severity: warning, component: auth }
+        annotations:
+          summary: "Pic d'erreurs d'authentification (401)"
+          description: "Plus d'une réponse 401/s en moyenne sur 5 min — possible panne IdP ou attaque."
+
+      # --- Base de données ---
+      - alert: PostgresProbeDown
+        expr: probe_success{job="blackbox-postgres"} == 0
+        for: 2m
+        labels: { severity: critical, component: database }
+        annotations:
+          summary: "PostgreSQL injoignable"
+          description: "La sonde TCP blackbox vers postgres:5432 échoue depuis 2 min."
+
+      - alert: DbPoolPendingConnections
+        expr: hikaricp_connections_pending{job="loyertracker-api"} > 0
+        for: 5m
+        labels: { severity: critical, component: database }
+        annotations:
+          summary: "Threads en attente de connexion DB"
+          description: "Des threads attendent une connexion PostgreSQL depuis 5 min (DB lente ou saturée)."
+
+      # --- Service d'identité (Keycloak) ---
+      - alert: KeycloakProbeDown
+        expr: probe_success{job="blackbox-keycloak"} == 0
+        for: 2m
+        labels: { severity: critical, component: identity }
+        annotations:
+          summary: "Keycloak (service d'identité) indisponible"
+          description: "La sonde HTTP blackbox vers le health Keycloak (/auth/health/ready) échoue depuis 2 min."
+
+      # --- Jobs planifiés in-app (échéances/honoraires, alertes) ---
+      - alert: BatchJobStale
+        expr: time() - loyertracker_batch_last_success_epoch > 93600
+        for: 10m
+        labels: { severity: warning, component: batch }
+        annotations:
+          summary: "Job planifié {{ $labels.job }} non exécuté"
+          description: "Le job planifié {{ $labels.job }} n'a pas réussi depuis plus de 26 h."
+
+      # --- Sauvegarde PostgreSQL (cron hôte via Pushgateway) ---
+      - alert: BackupHeartbeatStale
+        expr: time() - loyertracker_backup_last_success_epoch > 93600
+        for: 10m
+        labels: { severity: critical, component: backup }
+        annotations:
+          summary: "Sauvegarde PostgreSQL en échec"
+          description: "Dernière sauvegarde réussie (heartbeat Pushgateway) il y a plus de 26 h."
+
+      - alert: BackupHeartbeatMissing
+        expr: absent(loyertracker_backup_last_success_epoch)
+        for: 30m
+        labels: { severity: critical, component: backup }
+        annotations:
+          summary: "Aucun heartbeat de sauvegarde"
+          description: "Aucune métrique de sauvegarde reçue par le Pushgateway (cron de backup absent ou jamais exécuté)."

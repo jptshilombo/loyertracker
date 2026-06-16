@@ -147,9 +147,60 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  # --- Observabilité (OBS-01/02/03) — profil opt-in « monitoring ». ---
+  # Ports NON publiés (réseau interne, comme api/keycloak/postgres). Activation :
+  #   COMPOSE_PROFILES=monitoring docker compose up -d   (ou --profile monitoring)
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    profiles: [monitoring]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    networks: [loyertracker-net]
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    profiles: [monitoring]
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      # Résout ${ALERTMANAGER_WEBHOOK_URL} dans la conf au démarrage (secret hors dépôt).
+      - --config.expand-environment-variables
+    environment:
+      ALERTMANAGER_WEBHOOK_URL: ${ALERTMANAGER_WEBHOOK_URL:-}
+    volumes:
+      - ./infra/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks: [loyertracker-net]
+    restart: unless-stopped
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.25.0
+    profiles: [monitoring]
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    volumes:
+      - ./infra/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    networks: [loyertracker-net]
+    restart: unless-stopped
+
+  # Reçoit le heartbeat des jobs cron de l'hôte (sauvegarde PostgreSQL).
+  # Exposé sur la loopback uniquement (127.0.0.1) : joignable par le cron de l'hôte,
+  # jamais public. Scrapé en interne par Prometheus via le réseau Docker.
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    profiles: [monitoring]
+    ports:
+      - "127.0.0.1:9091:9091"
+    networks: [loyertracker-net]
+    restart: unless-stopped
+
 networks:
   loyertracker-net:
     driver: bridge
 
 volumes:
   postgres-data:
+  prometheus-data:
