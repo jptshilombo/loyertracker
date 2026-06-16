@@ -40,6 +40,14 @@ jobs:
       - name: Build, tests et couverture
         run: mvn -B verify
 
+      # Analyse statique SonarQube — lit le jacoco.xml déjà produit par mvn verify.
+      # sonar.qualitygate.wait=true (pom.xml) : bloquant si le gate SonarQube échoue.
+      - name: Analyse SonarQube
+        run: mvn -B sonar:sonar -DskipTests
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonar.loyerpro.org
+
       - name: Publier le rapport de couverture JaCoCo
         if: always()
         uses: actions/upload-artifact@v7
@@ -79,8 +87,23 @@ jobs:
 
       # Chrome est préinstallé sur ubuntu-latest ; le launcher NoSandbox (karma.conf.js)
       # est requis car le bac à sable Chrome n'est pas disponible sur les runners.
+      # --code-coverage : génère coverage/loyertracker/lcov.info (lcovonly, karma.conf.js)
+      # pour l'analyse SonarQube ci-dessous.
       - name: Tests unitaires (Chrome headless)
-        run: npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox
+        run: npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage
+
+      # Analyse statique SonarQube — lit le lcov.info produit par l'étape de tests.
+      # sonar-project.properties : clé projet, sources, exclusions, chemin lcov.
+      # sonar.qualitygate.wait=true : bloquant si le gate SonarQube échoue.
+      # sonarqube-scan-action exige la variable SONAR_TOKEN (nom fixe) :
+      # on mappe le secret SONAR_TOKEN_FRONTEND sur ce nom attendu par l'action.
+      - name: Analyse SonarQube
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          projectBaseDir: frontend/
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          SONAR_HOST_URL: https://sonar.loyerpro.org
 
   # ----------------------------------------------------------------------------------
   # Sécurité : scan de secrets, analyse de composition (SCA) et scan d'image conteneur.

@@ -13,6 +13,12 @@ module.exports = function (config) {
       require('@angular-devkit/build-angular/plugins/karma'),
     ],
     reporters: ['progress'],
+    coverageReporter: {
+      reporters: [
+        { type: 'lcovonly' },
+        { type: 'text-summary' },
+      ],
+    },
     browsers: ['ChromeHeadless'],
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
