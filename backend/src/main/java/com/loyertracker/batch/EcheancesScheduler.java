@@ -19,10 +19,13 @@ public class EcheancesScheduler {
 
     private final GenerationEcheancesService generation;
     private final HonoraireService honoraires;
+    private final BatchMetrics metrics;
 
-    public EcheancesScheduler(GenerationEcheancesService generation, HonoraireService honoraires) {
+    public EcheancesScheduler(GenerationEcheancesService generation, HonoraireService honoraires,
+            BatchMetrics metrics) {
         this.generation = generation;
         this.honoraires = honoraires;
+        this.metrics = metrics;
     }
 
     @Scheduled(cron = "${app.batch.echeances.cron:0 30 6 * * *}", zone = "${app.batch.zone:Europe/Paris}")
@@ -31,6 +34,7 @@ public class EcheancesScheduler {
         int enRetard = generation.marquerEnRetard();
         // Filet de sécurité : le recalcul des honoraires est aussi déclenché à chaque pointage (hook).
         int honorairesCalcules = honoraires.recalculerBatch();
+        metrics.markSuccess(BatchMetrics.JOB_LOYERS);
         log.info("Batch loyers : {} échéance(s) créée(s), {} passée(s) EN_RETARD ; {} honoraire(s) calculé(s).",
                 crees, enRetard, honorairesCalcules);
     }

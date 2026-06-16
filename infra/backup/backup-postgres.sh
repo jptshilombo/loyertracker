@@ -71,3 +71,18 @@ find "$DAILY_DIR"  -name 'loyertracker-*' -mtime +7  -delete
 find "$WEEKLY_DIR" -name 'loyertracker-*' -mtime +28 -delete
 
 echo "== Sauvegarde terminée — rétention appliquée (quotidien 7 j, hebdo 28 j) =="
+
+# 6. Heartbeat d'observabilité (OBS-03) : pousse l'instant de succès vers le Pushgateway si
+#    le profil monitoring est actif (PUSHGATEWAY_URL défini, défaut loopback). Non bloquant :
+#    une sauvegarde réussie ne doit pas échouer parce que la supervision est absente.
+#    L'absence durable de ce heartbeat déclenche l'alerte BackupHeartbeatStale/Missing.
+PUSHGATEWAY_URL="${PUSHGATEWAY_URL:-http://127.0.0.1:9091}"
+if command -v curl >/dev/null 2>&1; then
+    if printf 'loyertracker_backup_last_success_epoch %s\n' "$(date +%s)" \
+        | curl -fsS --max-time 5 --data-binary @- \
+            "${PUSHGATEWAY_URL}/metrics/job/loyertracker-backup" >/dev/null 2>&1; then
+        echo "OK  heartbeat de sauvegarde poussé vers ${PUSHGATEWAY_URL}"
+    else
+        echo "INFO  heartbeat Pushgateway non poussé (supervision absente ?) — non bloquant"
+    fi
+fi

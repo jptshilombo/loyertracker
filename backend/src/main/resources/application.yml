@@ -64,6 +64,11 @@ management:
     tags:
       # Étiquette commune à toutes les métriques (filtrage par application côté scraper).
       application: loyertracker-api
+    distribution:
+      # Publie les buckets d'histogramme pour les requêtes HTTP serveur : permet à Prometheus de
+      # calculer la latence p99 (histogram_quantile) et d'alerter dessus (OBS-02, alerte ApiHighLatency).
+      percentiles-histogram:
+        http.server.requests: true
 
 # Observabilité (Étape 09). Journalisation structurée JSON (ECS) native Spring Boot 3.5 :
 # logs émis sur stdout (12-factor), parsables par un agrégateur, cohérents avec l'access log
