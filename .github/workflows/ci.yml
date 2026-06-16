@@ -100,7 +100,7 @@ jobs:
         with:
           projectBaseDir: frontend/
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           SONAR_HOST_URL: https://sonar.loyerpro.org
 
   # ----------------------------------------------------------------------------------
