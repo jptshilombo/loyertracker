@@ -1,6 +1,6 @@
 {
   "name": "loyertracker",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "SPA Angular — LoyerTracker (OIDC PKCE via Keycloak)",
   "scripts": {
     "ng": "ng",
