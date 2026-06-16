@@ -152,3 +152,40 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 
 > Le réalignement sur `sha-26f16caa` n'apporte aucun changement fonctionnel (delta doc-only
 > depuis l'image précédente) ; il maintient la traçabilité « tag déployé = `main` HEAD ».
+
+## 9. Exposition publique (URL dédiée) — **EN COURS**
+
+> Plan d'Exécution approuvé le 2026-06-14 (Niveau 3). Arbitrages PO : sous-domaine
+> `loyertracker.staging.loyerpro.org` ; **accès restreint au niveau nginx-proxy-manager**
+> (Access List) en plus du login Keycloak ; exécution partagée (repo/DNS côté Claude Code,
+> `.env` hôte + npm côté exploitant). **Aucune reconstruction d'image** : le SPA est agnostique
+> à l'origine (`url: '/auth'`, `redirectUri: window.location.origin`) et le backend/Keycloak
+> sont pilotés par variables d'environnement. L'image `sha-26f16caa` est réutilisée telle quelle.
+
+**URL cible :** `https://loyertracker.staging.loyerpro.org` (point d'entrée unique : SPA + `/api` + `/auth`).
+
+État d'avancement :
+
+| Étape | Responsable | Statut |
+|---|---|---|
+| Route 53 — `A loyertracker.staging.loyerpro.org → 51.102.234.232` (TTL 300) | Claude Code | ✅ créé (résout) |
+| Realm — `redirectUris`/`webOrigins`/`post.logout` du client `loyertracker-spa` + domaine public (localhost conservé) | Claude Code | ✅ commité (`infra/keycloak/realm-loyertracker.json`) — à appliquer au Keycloak vivant (Console/Admin API, sans reimport) |
+| `.env` hôte — `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`, `APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL` = domaine public (`KEYCLOAK_JWK_SET_URI` reste interne) | Exploitant | ⏳ en attente |
+| nginx-proxy-manager — *Proxy Host* → `https://127.0.0.1:18443` (Websockets, ignore invalid SSL amont), cert Let's Encrypt, **+ Access List** (allowlist IP / basic-auth) | Exploitant | ⏳ en attente |
+| Redéploiement (`up -d`, restart `keycloak`) + vérifs + smoke ciblé | Exploitant / Claude Code | ⏳ en attente |
+
+**⚠️ L'application n'est PAS encore joignable publiquement** : tant que le *Proxy Host* npm
+(+ Access List) et le `.env` hôte ne sont pas en place, le sous-domaine résout vers l'hôte mais
+n'est routé vers aucune stack. À ne marquer « exposée » qu'après validation des critères ci-dessous.
+
+**Critères d'acceptation (à vérifier une fois en place) :**
+1. `https://.../healthz` → 200 `ok` (cert Let's Encrypt valide).
+2. Découverte OIDC publique → `issuer = https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker`.
+3. `/api/actuator/prometheus` **public → 404** (régression sécurité maintenue).
+4. Parcours navigateur : login OIDC/PKCE bailleur → dashboard → appel `/api` authentifié OK.
+5. `BASE=https://loyertracker.staging.loyerpro.org ./infra/smoke/smoke-stack.sh` → 46/0.
+6. Access List npm effective (accès refusé hors allowlist) ; stacks voisines (LoyerPro) inchangées.
+
+**Rollback :** supprimer le *Proxy Host* npm + l'enregistrement Route 53 ; restaurer `.env`
+(`KC_HOSTNAME=localhost`, issuer/CORS/invitation `https://localhost`), `up -d`, restart Keycloak ;
+`git revert` de l'édit realm. Aucune donnée détruite (pas de reimport realm).

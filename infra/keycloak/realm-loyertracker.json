@@ -62,14 +62,16 @@
       "rootUrl": "https://localhost",
       "baseUrl": "https://localhost/",
       "redirectUris": [
-        "https://localhost/*"
+        "https://localhost/*",
+        "https://loyertracker.staging.loyerpro.org/*"
       ],
       "webOrigins": [
-        "https://localhost"
+        "https://localhost",
+        "https://loyertracker.staging.loyerpro.org"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "https://localhost/*"
+        "post.logout.redirect.uris": "https://localhost/* https://loyertracker.staging.loyerpro.org/*"
       },
       "protocolMappers": [
         {
