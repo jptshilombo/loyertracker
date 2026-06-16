@@ -95,6 +95,8 @@ jobs:
       # Analyse statique SonarQube — lit le lcov.info produit par l'étape de tests.
       # sonar-project.properties : clé projet, sources, exclusions, chemin lcov.
       # sonar.qualitygate.wait=true : bloquant si le gate SonarQube échoue.
+      # sonarqube-scan-action exige la variable SONAR_TOKEN (nom fixe) :
+      # on mappe le secret SONAR_TOKEN_FRONTEND sur ce nom attendu par l'action.
       - name: Analyse SonarQube
         uses: SonarSource/sonarqube-scan-action@v6
         with:
