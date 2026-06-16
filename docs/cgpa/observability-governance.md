@@ -47,8 +47,9 @@ l'architecture MVP).*
 
 Détection : automatique (Prometheus/Alertmanager) **et** manuelle (runbook §7/§8,
 `docker compose ps`, logs). Procédures d'incident et **validation par simulation** : runbook
-`docs/cgpa/07-devsecops/runbook-exploitation.md` §7. Activation : profil `monitoring`
-(opt-in), notification injectée par `.env` (`ALERTMANAGER_WEBHOOK_URL`, jamais versionnée).
+`docs/cgpa/07-devsecops/runbook-exploitation.md` §7. Activation : overlay
+`docker-compose.monitoring.yml` (profil `monitoring`, opt-in), combinable avec le compose de base
+(dev) ou de staging ; notification injectée par `.env` (`ALERTMANAGER_WEBHOOK_URL`, jamais versionnée).
 
 ## Lien avec les gates
 
