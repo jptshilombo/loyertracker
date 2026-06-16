@@ -96,7 +96,7 @@ jobs:
       # sonar-project.properties : clé projet, sources, exclusions, chemin lcov.
       # sonar.qualitygate.wait=true : bloquant si le gate SonarQube échoue.
       - name: Analyse SonarQube
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         with:
           projectBaseDir: frontend/
         env:
