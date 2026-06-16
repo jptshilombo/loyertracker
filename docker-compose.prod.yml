@@ -2,8 +2,12 @@ name: loyertracker
 
 # Overrides production : à utiliser avec
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-# Différences clés : images buildées (SPA Angular intégrée à Nginx), Keycloak en mode
-# production (start), volumes nommés persistants, aucun montage de code source.
+# Différences clés : images consommées depuis GHCR par tag IMMUABLE `sha-<8>` (jamais `latest`,
+# jamais buildées localement — ADR-08, Environment Promotion Model), Keycloak en mode production
+# (start --optimized), volumes nommés persistants, aucun montage de code source.
+#
+# Comme en staging, définir LOYERTRACKER_TAG sur un tag immuable :
+#   LOYERTRACKER_TAG=sha-xxxxxxxx docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 services:
   postgres:
@@ -15,17 +19,15 @@ services:
     restart: always
 
   api:
-    image: loyertracker/api:${IMAGE_TAG:-latest}
-    build:
-      context: ./backend
+    # GHCR, tag immuable — jamais `latest`, jamais de build local en production (parité staging).
+    image: ${REGISTRY_BASE:-ghcr.io/jptshilombo}/loyertracker-api:${LOYERTRACKER_TAG:?Définir LOYERTRACKER_TAG=sha-xxxxxxxx (tag immuable, jamais latest)}
+    build: !reset null
     restart: always
 
   nginx:
-    # En production, Nginx est buildé avec les assets Angular (dist) intégrés (cf. Étape 07).
-    image: loyertracker/web:${IMAGE_TAG:-latest}
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
+    # Image web (SPA Angular intégrée à Nginx) tirée de GHCR par tag immuable.
+    image: ${REGISTRY_BASE:-ghcr.io/jptshilombo}/loyertracker-web:${LOYERTRACKER_TAG:?Définir LOYERTRACKER_TAG=sha-xxxxxxxx (tag immuable, jamais latest)}
+    build: !reset null
     volumes:
       # On ne monte plus le code : seuls la conf et les certificats sont injectés.
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
