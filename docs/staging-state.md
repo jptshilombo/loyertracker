@@ -24,7 +24,7 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | **déployé : `sha-26f16caa`** ; **`main` HEAD courant : `sha-73359c5c`** (correctif CVE Angular PR #36, à redéployer — cf. §8) ; gate prononcé sur `sha-4e0d3995` |
+| `LOYERTRACKER_TAG` | **déployé : `sha-73359c5c`** (correctif CVE Angular PR #36, redéployé le 2026-06-16 — cf. §8) ; `main` HEAD courant `b095eff` (delta = doc-only PR #37) ; gate prononcé sur `sha-4e0d3995` |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
 | Issuer Keycloak | `https://localhost/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=localhost`) |
@@ -150,11 +150,12 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-14 | `sha-e7067215` | post-merge PR #29 | 4/4 | 46/0 | **200** / 404 | Correctif sécurité #4 embarqué → scrape interne confirmé live ; résidu §5 levé |
 | 2026-06-14 | `sha-26f16caa` | `main` HEAD courant (post PR #31/#32) | 4/4 | 46/0 | **200** / 404 | Réalignement du tag déployé sur `main` HEAD. Delta depuis `sha-e7067215` = **documentation uniquement** (`runbook-exploitation.md`, `project-state.md`) : images api/web fonctionnellement identiques |
 | 2026-06-16 | _(aucune image)_ | merges PR #34 + #35 | — | — | — | **Chaîne de livraison interrompue** : gate Sécurité (Trivy scan npm) rouge en post-merge sur 3 CVE HIGH Angular (CVE-2026-54266/54268 `@angular/common`, CVE-2026-54267 `@angular/core`) → `Packaging Docker` `skipped`, **aucune image GHCR publiée** pour `sha-8a7fc86f` ni `sha-9cf412ac`. Staging reste sur `sha-26f16caa` |
-| 2026-06-16 | `sha-73359c5c` _(publiée, non encore déployée)_ | correctif CVE Angular PR #36 (merge `73359c5`) | — | — | — | Bump framework Angular 20.3.24 → **20.3.25** (3 CVE corrigées). CI post-merge `main` **verte** (Sécurité pass, `Packaging Docker` exécuté) → **image GHCR `sha-73359c5c` republiée** (+ `latest`). **À redéployer sur staging** (puis re-vérifs observabilité + smoke 46/0) — delta vs `sha-26f16caa` = dépendances frontend (correctif sécurité), aucun changement fonctionnel applicatif |
+| 2026-06-16 | `sha-73359c5c` | correctif CVE Angular PR #36 (merge `73359c5`) | **4/4** | **46/0** | **200** / 404 | **Redéployé sur l'hôte staging** `ai-test-server` (api + web sur `sha-73359c5c`, 4/4 healthy). Bump framework Angular 20.3.24 → **20.3.25** (3 CVE corrigées). Re-vérifs live : `/healthz` 200, scrape Prometheus interne **200** (tag `application="loyertracker-api"`) / public **404**, issuer portless `https://localhost/auth/realms/loyertracker`. **Smoke contre staging 46 PASS / 0 FAIL**. Delta fonctionnel vs `sha-26f16caa`/`sha-e7067215` = dépendances frontend (correctif sécurité) uniquement. Dépôt hôte sur `main` HEAD `b095eff` (delta `73359c5`→`b095eff` = doc-only) |
 
 > Réalignements doc-only (`sha-26f16caa`) : aucun changement fonctionnel, traçabilité « tag déployé
-> = `main` HEAD ». Le `sha-73359c5c` (PR #36) embarque le correctif des CVE Angular et redevient le
-> `main` HEAD courant à déployer ; les merges #34/#35 n'ont produit aucune image (gate Trivy).
+> = `main` HEAD ». Le `sha-73359c5c` (PR #36) embarque le correctif des CVE Angular et est **désormais
+> le tag déployé** ; les merges #34/#35 n'ont produit aucune image (gate Trivy). Delta `sha-73359c5c`
+> → `main` HEAD `b095eff` (PR #37) = documentation uniquement (images fonctionnellement identiques).
 
 ## 9. Exposition publique (URL dédiée) — **EN COURS**
 
