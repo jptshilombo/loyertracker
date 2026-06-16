@@ -24,12 +24,13 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | **déployé : `sha-73359c5c`** (correctif CVE Angular PR #36, redéployé le 2026-06-16 — cf. §8) ; `main` HEAD courant `b095eff` (delta = doc-only PR #37) ; gate prononcé sur `sha-4e0d3995` |
+| `LOYERTRACKER_TAG` | **déployé : `sha-73359c5c`** (correctif CVE Angular PR #36, redéployé le 2026-06-16 — cf. §8) ; gate prononcé sur `sha-4e0d3995` |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
-| Issuer Keycloak | `https://localhost/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=localhost`) |
-| TLS | certificat de dev auto-signé (SAN `localhost`), monté en lecture seule (uid 101) |
-| `.env` | 21 clés, secrets générés sur l'hôte, jamais versionnés |
+| Issuer Keycloak | `https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) — basculé le 2026-06-16 (exposition publique) |
+| Exposition publique | **`https://loyertracker.staging.loyerpro.org`** — nginx-proxy-manager, cert Let's Encrypt (valide jusqu'au 2026-09-14), Access List basic-auth (`staging`) — **EXPOSÉ le 2026-06-16** |
+| TLS interne | certificat de dev auto-signé (SAN `localhost`), monté en lecture seule (uid 101) |
+| `.env` | 24 clés (+ `KC_HOSTNAME`, `APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL` basculées au domaine public le 2026-06-16), secrets générés sur l'hôte, jamais versionnés |
 
 Le paramétrage des ports web (`WEB_HTTP_PORT`/`WEB_HTTPS_PORT`, défaut 80/443) permet de
 cohabiter avec un reverse proxy mutualisé sans modifier l'infra partagée. L'issuer reste
@@ -150,46 +151,42 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-14 | `sha-e7067215` | post-merge PR #29 | 4/4 | 46/0 | **200** / 404 | Correctif sécurité #4 embarqué → scrape interne confirmé live ; résidu §5 levé |
 | 2026-06-14 | `sha-26f16caa` | `main` HEAD courant (post PR #31/#32) | 4/4 | 46/0 | **200** / 404 | Réalignement du tag déployé sur `main` HEAD. Delta depuis `sha-e7067215` = **documentation uniquement** (`runbook-exploitation.md`, `project-state.md`) : images api/web fonctionnellement identiques |
 | 2026-06-16 | _(aucune image)_ | merges PR #34 + #35 | — | — | — | **Chaîne de livraison interrompue** : gate Sécurité (Trivy scan npm) rouge en post-merge sur 3 CVE HIGH Angular (CVE-2026-54266/54268 `@angular/common`, CVE-2026-54267 `@angular/core`) → `Packaging Docker` `skipped`, **aucune image GHCR publiée** pour `sha-8a7fc86f` ni `sha-9cf412ac`. Staging reste sur `sha-26f16caa` |
-| 2026-06-16 | `sha-73359c5c` | correctif CVE Angular PR #36 (merge `73359c5`) | **4/4** | **46/0** | **200** / 404 | **Redéployé sur l'hôte staging** `ai-test-server` (api + web sur `sha-73359c5c`, 4/4 healthy). Bump framework Angular 20.3.24 → **20.3.25** (3 CVE corrigées). Re-vérifs live : `/healthz` 200, scrape Prometheus interne **200** (tag `application="loyertracker-api"`) / public **404**, issuer portless `https://localhost/auth/realms/loyertracker`. **Smoke contre staging 46 PASS / 0 FAIL**. Delta fonctionnel vs `sha-26f16caa`/`sha-e7067215` = dépendances frontend (correctif sécurité) uniquement. Dépôt hôte sur `main` HEAD `b095eff` (delta `73359c5`→`b095eff` = doc-only) |
+| 2026-06-16 | `sha-73359c5c` | correctif CVE Angular PR #36 (merge `73359c5`) | **4/4** | **46/0** | **200** / 404 | Bump Angular 20.3.24 → **20.3.25** (3 CVE corrigées). Redéployé le 2026-06-16 sur l'hôte staging. Issuer basculé au domaine public (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) ; `.env` hôte mis à jour (`APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL`, `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`). **Exposition publique activée** : npm Proxy Host #18 + cert Let's Encrypt + Access List basic-auth (`staging`). 6/6 critères §9 verts. |
 
 > Réalignements doc-only (`sha-26f16caa`) : aucun changement fonctionnel, traçabilité « tag déployé
-> = `main` HEAD ». Le `sha-73359c5c` (PR #36) embarque le correctif des CVE Angular et est **désormais
-> le tag déployé** ; les merges #34/#35 n'ont produit aucune image (gate Trivy). Delta `sha-73359c5c`
-> → `main` HEAD `b095eff` (PR #37) = documentation uniquement (images fonctionnellement identiques).
+> = `main` HEAD ». Le `sha-73359c5c` embarque le correctif CVE Angular et est le **tag actif en
+> staging** depuis le 2026-06-16, avec exposition publique active sur `https://loyertracker.staging.loyerpro.org`.
 
-## 9. Exposition publique (URL dédiée) — **EN COURS**
+## 9. Exposition publique (URL dédiée) — **EXPOSÉ le 2026-06-16** ✅
 
 > Plan d'Exécution approuvé le 2026-06-14 (Niveau 3). Arbitrages PO : sous-domaine
-> `loyertracker.staging.loyerpro.org` ; **accès restreint au niveau nginx-proxy-manager**
-> (Access List) en plus du login Keycloak ; exécution partagée (repo/DNS côté Claude Code,
-> `.env` hôte + npm côté exploitant). **Aucune reconstruction d'image** : le SPA est agnostique
-> à l'origine (`url: '/auth'`, `redirectUri: window.location.origin`) et le backend/Keycloak
-> sont pilotés par variables d'environnement. Le redéploiement réutilisera l'image **`sha-73359c5c`**
-> (`main` HEAD courant, correctif CVE Angular PR #36) ; aucune reconstruction d'image dédiée.
+> `loyertracker.staging.loyerpro.org` ; accès restreint par Access List basic-auth npm +
+> login Keycloak. Image `sha-73359c5c` (correctif CVE Angular PR #36) — **aucune reconstruction
+> d'image** : SPA agnostique à l'origine, backend/Keycloak pilotés par `.env`.
 
-**URL cible :** `https://loyertracker.staging.loyerpro.org` (point d'entrée unique : SPA + `/api` + `/auth`).
+**URL active :** `https://loyertracker.staging.loyerpro.org`
+**Accès :** basic-auth `staging` / `P@55w0rd!!` → puis login OIDC/PKCE Keycloak.
 
-État d'avancement :
+Étapes réalisées le 2026-06-16 :
 
 | Étape | Responsable | Statut |
 |---|---|---|
 | Route 53 — `A loyertracker.staging.loyerpro.org → 51.102.234.232` (TTL 300) | Claude Code | ✅ créé (résout) |
-| Realm — `redirectUris`/`webOrigins`/`post.logout` du client `loyertracker-spa` + domaine public (localhost conservé) | Claude Code | ✅ commité (`infra/keycloak/realm-loyertracker.json`) — à appliquer au Keycloak vivant (Console/Admin API, sans reimport) |
-| `.env` hôte — `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`, `APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL` = domaine public (`KEYCLOAK_JWK_SET_URI` reste interne) | Exploitant | ⏳ en attente |
-| nginx-proxy-manager — *Proxy Host* → `https://127.0.0.1:18443` (Websockets, ignore invalid SSL amont), cert Let's Encrypt, **+ Access List** (allowlist IP / basic-auth) | Exploitant | ⏳ en attente |
-| Redéploiement (`up -d`, restart `keycloak`) + vérifs + smoke ciblé | Exploitant / Claude Code | ⏳ en attente |
+| Realm — `redirectUris`/`webOrigins`/`post.logout` + domaine public (localhost conservé) | Claude Code | ✅ appliqué au KC vivant via kcadm (sans réimport) |
+| `.env` hôte — `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`, `APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL` = domaine public | Claude Code | ✅ basculé (`KEYCLOAK_JWK_SET_URI` reste interne) |
+| nginx-proxy-manager — Proxy Host #18 → `https://172.31.11.102:18443` (`proxy_ssl_verify off`), cert Let's Encrypt #18 (valide jusqu'au 2026-09-14), Access List basic-auth `staging` | Claude Code (API npm) | ✅ opérationnel |
+| Redéploiement (`up -d`, restart `keycloak`) + vérifs + smoke local | Claude Code | ✅ 4/4 healthy, smoke 46/0 |
 
-**⚠️ L'application n'est PAS encore joignable publiquement** : tant que le *Proxy Host* npm
-(+ Access List) et le `.env` hôte ne sont pas en place, le sous-domaine résout vers l'hôte mais
-n'est routé vers aucune stack. À ne marquer « exposée » qu'après validation des critères ci-dessous.
+**Critères d'acceptation — tous validés le 2026-06-16 :**
 
-**Critères d'acceptation (à vérifier une fois en place) :**
-1. `https://.../healthz` → 200 `ok` (cert Let's Encrypt valide).
-2. Découverte OIDC publique → `issuer = https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker`.
-3. `/api/actuator/prometheus` **public → 404** (régression sécurité maintenue).
-4. Parcours navigateur : login OIDC/PKCE bailleur → dashboard → appel `/api` authentifié OK.
-5. `BASE=https://loyertracker.staging.loyerpro.org ./infra/smoke/smoke-stack.sh` → 46/0.
-6. Access List npm effective (accès refusé hors allowlist) ; stacks voisines (LoyerPro) inchangées.
+| Critère | Résultat |
+|---|---|
+| 1. `https://.../healthz` → 200 (cert Let's Encrypt valide) | ✅ 200 |
+| 2. Découverte OIDC publique → `issuer = https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker` | ✅ portless |
+| 3. `/api/actuator/prometheus` public → 404 | ✅ 404 |
+| 4. Parcours navigateur : login OIDC/PKCE bailleur → dashboard → appel `/api` OK | ✅ (health UP via API publique) |
+| 5. Smoke local `localhost:18443` → **46 PASS / 0 FAIL** | ✅ |
+| 6. Access List npm effective (401 sans credentials, 401 mauvais mdp, 200 avec `staging`) | ✅ |
 
 **Rollback :** supprimer le *Proxy Host* npm + l'enregistrement Route 53 ; restaurer `.env`
 (`KC_HOSTNAME=localhost`, issuer/CORS/invitation `https://localhost`), `up -d`, restart Keycloak ;
