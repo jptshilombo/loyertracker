@@ -26,14 +26,19 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    # v0.28+ requis : le flag `--config.expand-environment-variables` (injection du secret
-    # webhook depuis .env, ci-dessous) n'existe pas avant v0.28.0.
     image: prom/alertmanager:v0.28.1
     profiles: [monitoring]
+    # Alertmanager n'étend PAS les variables d'environnement dans sa conf (aucun flag
+    # `--config.expand-environment-variables` ; contrairement à Prometheus). Le secret de
+    # notification est donc matérialisé au démarrage depuis .env vers un fichier (writable
+    # /tmp), lu par `url_file` dans alertmanager.yml. Le secret ne quitte jamais .env et n'est
+    # ni versionné ni inscrit dans la conf. `$$` échappe l'interpolation Compose (expansion par
+    # le shell du conteneur, depuis l'environnement injecté ci-dessous).
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - --config.file=/etc/alertmanager/alertmanager.yml
-      # Résout ${ALERTMANAGER_WEBHOOK_URL} dans la conf au démarrage (secret hors dépôt).
-      - --config.expand-environment-variables
+      - >-
+        printf '%s' "$${ALERTMANAGER_WEBHOOK_URL:?ALERTMANAGER_WEBHOOK_URL requis dans .env}" > /tmp/webhook_url
+        && exec /bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/alertmanager
     environment:
       ALERTMANAGER_WEBHOOK_URL: ${ALERTMANAGER_WEBHOOK_URL:-}
     volumes:

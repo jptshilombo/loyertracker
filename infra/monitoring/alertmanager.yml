@@ -1,7 +1,7 @@
 # Alertmanager — routage et notification des alertes critiques (OBS-02).
-# Les variables ${...} sont résolues au démarrage via le flag
-# `--config.expand-environment-variables` (cf. docker-compose.yml, service alertmanager).
-# Le secret de notification (URL webhook avec jeton) est injecté par .env, jamais versionné.
+# Le secret de notification (URL webhook avec jeton) n'est PAS en clair ici : il est lu via
+# `url_file` depuis /tmp/webhook_url, écrit au démarrage depuis .env par l'entrypoint du service
+# (cf. docker-compose.monitoring.yml). Le secret reste dans .env, jamais versionné.
 global:
   resolve_timeout: 5m
 
@@ -20,5 +20,6 @@ route:
 receivers:
   - name: default
     webhook_configs:
-      - url: "${ALERTMANAGER_WEBHOOK_URL}"
+      # URL lue depuis un fichier (secret hors dépôt et hors conf) — cf. en-tête.
+      - url_file: /tmp/webhook_url
         send_resolved: true
