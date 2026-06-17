@@ -1,8 +1,11 @@
-name: loyertracker
-
 # Overlay d'observabilité (OBS-01/02/03) — profil opt-in « monitoring ».
-# Réutilisable : se combine avec le compose de base (dev) OU avec celui de staging, en
-# rejoignant le même projet/réseau (`loyertracker-net`) que la stack applicative :
+# PAS de `name:` ici (à dessein) : l'overlay HÉRITE du nom de projet du fichier de base avec
+# lequel il est combiné (clé `name:` du DERNIER fichier `-f` l'emporte). Le pin nuirait à la
+# réutilisabilité — il rattacherait par erreur l'overlay à un projet `loyertracker` distinct du
+# projet `loyertracker-staging`, créant une stack en double et un conflit de ports (cf. nginx 18080).
+# Réutilisable : se combine avec le compose de base (dev → projet `loyertracker`) OU avec celui de
+# staging (→ projet `loyertracker-staging`), en rejoignant le même projet/réseau (`loyertracker-net`)
+# que la stack applicative :
 #   docker compose -f docker-compose.yml          -f docker-compose.monitoring.yml --profile monitoring up -d
 #   docker compose -f docker-compose.staging.yml  -f docker-compose.monitoring.yml --profile monitoring up -d
 # Pré-requis : renseigner ALERTMANAGER_WEBHOOK_URL dans .env (secret de notification, jamais versionné).
