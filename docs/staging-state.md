@@ -191,3 +191,48 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 **Rollback :** supprimer le *Proxy Host* npm + l'enregistrement Route 53 ; restaurer `.env`
 (`KC_HOSTNAME=localhost`, issuer/CORS/invitation `https://localhost`), `up -d`, restart Keycloak ;
 `git revert` de l'édit realm. Aucune donnée détruite (pas de reimport realm).
+
+## 10. Validation de l'alerting (RR-1) — Gate Staging enrichi (CGPA v5.2) — **GO le 2026-06-19** ✅
+
+> Plan d'Exécution RR-1 approuvé le 2026-06-19 (Niveau 2, sans code applicatif). Arbitrages PO :
+> A récepteur de notification **local jetable** (conteneur `am-sink` sur le réseau interne, aucune
+> donnée hors infra) ; D statuer le **Gate 07A** dans la même passe. Tag staging : `sha-73359c5c`.
+> Lève la réserve **RR-1** du dossier Gate 07A et clôt **OBS-02/03**.
+
+Objectif : prouver en conditions réelles sur staging que chaque composant critique lève une alerte
+**FIRING**, la **notifie** (bout-en-bout) et la **résorbe**. Overlay `monitoring` combiné à la stack
+staging (`docker compose -f docker-compose.staging.yml -f docker-compose.monitoring.yml --profile monitoring`).
+
+**Cibles Prometheus scrapées :** 4/4 `up` (`loyertracker-api`, `blackbox-postgres`, `blackbox-keycloak`, `pushgateway`).
+
+| Composant critique | Alerte | FIRING (≥ seuil `for`) | Notifié | Résorbé |
+|---|---|---|---|---|
+| API | `ApiDown` | ✅ (stop `api`, ~3 min) | (chaîne prouvée) | ✅ (start `api`) |
+| Base de données | `PostgresProbeDown` | ✅ (stop `postgres`, 200 s) | (chaîne prouvée) | ✅ (start `postgres`) |
+| Identité (Keycloak) | `KeycloakProbeDown` | ✅ (stop `keycloak`, 200 s) | (chaîne prouvée) | ✅ (start `keycloak`) |
+| Sauvegarde | `BackupHeartbeatMissing` | ✅ (heartbeat absent > 30 min) | ✅ **payload Alertmanager capturé** | ✅ (run `backup-postgres.sh` → heartbeat poussé au Pushgateway) |
+
+**Notification bout-en-bout prouvée** : la chaîne `Prometheus → règle → Alertmanager (v0.28.1) →
+webhook via url_file → récepteur` a livré la notification `BackupHeartbeatMissing`
+(`receiver:"default"`, `status:"firing"`, `component:"backup"`, `severity:"critical"`, annotations
+incluses). Secret de notification hors dépôt (`ALERTMANAGER_WEBHOOK_URL` dans `.env`, lu via
+`url_file`) ; endpoints monitoring non publiés (Pushgateway loopback uniquement).
+
+**Non-régression** : après remise en service, `infra/smoke/smoke-stack.sh` (BASE `localhost:18443`)
+→ **46 PASS / 0 FAIL** ; 4/4 services applicatifs `healthy` ; échafaudage `directAccessGrants`
+révoqué automatiquement.
+
+**Gate Staging enrichi (v4.0 + observabilité) — verdict GO :**
+
+| Critère enrichi | Verdict |
+|---|---|
+| Logs disponibles | ✅ JSON ECS (api + Nginx), §3/runbook §7 |
+| Monitoring actif | ✅ Prometheus scrape 4/4 cibles `up` (live) |
+| Alertes critiques définies & exercées | ✅ 10 règles ; 4/4 composants critiques FIRING→resolved + notification livrée |
+
+**Réserve résiduelle :** **RR-2** (renseigner la traçabilité production des release notes §5) — portée
+au **go-live réel** (Gate 09/10), hors périmètre staging.
+
+**Récepteur jetable :** `am-sink` supprimé après collecte des preuves (`docker rm -f am-sink`,
+ligne `ALERTMANAGER_WEBHOOK_URL` de test retirée de `.env`). Overlay `monitoring` laissé actif
+(supervision continue du staging).
