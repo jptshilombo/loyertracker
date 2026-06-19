@@ -1,6 +1,8 @@
 # Alertmanager — routage et notification des alertes critiques (OBS-02).
-# Le secret de notification (URL webhook avec jeton) n'est PAS en clair ici : il est lu via
-# `url_file` depuis /tmp/webhook_url, écrit au démarrage depuis .env par l'entrypoint du service
+# Notification via le receiver NATIF Discord (`discord_configs`) : un webhook Discord brut rejette
+# le JSON natif d'Alertmanager, ce receiver émet donc un payload formaté pour Discord.
+# Le secret de notification (URL du webhook Discord, avec jeton) n'est PAS en clair ici : il est lu via
+# `webhook_url_file` depuis /tmp/webhook_url, écrit au démarrage depuis .env par l'entrypoint du service
 # (cf. docker-compose.monitoring.yml). Le secret reste dans .env, jamais versionné.
 global:
   resolve_timeout: 5m
@@ -19,7 +21,7 @@ route:
 
 receivers:
   - name: default
-    webhook_configs:
-      # URL lue depuis un fichier (secret hors dépôt et hors conf) — cf. en-tête.
-      - url_file: /tmp/webhook_url
+    discord_configs:
+      # URL du webhook Discord lue depuis un fichier (secret hors dépôt et hors conf) — cf. en-tête.
+      - webhook_url_file: /tmp/webhook_url
         send_resolved: true
