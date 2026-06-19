@@ -28,6 +28,13 @@ services:
     # Image web (SPA Angular intégrée à Nginx) tirée de GHCR par tag immuable.
     image: ${REGISTRY_BASE:-ghcr.io/jptshilombo}/loyertracker-web:${LOYERTRACKER_TAG:?Définir LOYERTRACKER_TAG=sha-xxxxxxxx (tag immuable, jamais latest)}
     build: !reset null
+    # Ports hôte paramétrables (parité staging, lot Production Readiness 4b) pour cohabiter avec un
+    # reverse-proxy mutualisé qui termine le TLS public (ex. Nginx hôte + certbot sur 80/443 →
+    # conteneur sur 18080/18443). `!override` REMPLACE la liste de base (sinon Compose la concatène
+    # et 80/443 subsisteraient, entrant en conflit avec le proxy hôte).
+    ports: !override
+      - "${WEB_HTTP_PORT:-80}:8080"
+      - "${WEB_HTTPS_PORT:-443}:8443"
     volumes:
       # On ne monte plus le code : seuls la conf et les certificats sont injectés.
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
