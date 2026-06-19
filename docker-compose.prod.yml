@@ -14,8 +14,16 @@ services:
     restart: always
 
   keycloak:
-    # Mode production : nécessite HTTPS géré en amont (Nginx) et hostname fixe.
-    command: ["start", "--import-realm", "--http-relative-path=/auth", "--optimized"]
+    # Mode production réel (`start`, SANS `--optimized`) : HTTPS/hostname gérés en amont (Nginx).
+    # `--optimized` supposerait une image pré-`kc.sh build` pour Postgres ; or l'image GHCR officielle
+    # est buildée par défaut sur H2 → sous `--optimized`, KC IGNORE KC_DB/KC_HEALTH_ENABLED/
+    # KC_HTTP_RELATIVE_PATH au runtime et retombe sur H2 (échec JDBC observé au go-live Gate 10).
+    # Sans `--optimized`, `start` ré-augmente au démarrage en honorant ces options build-time.
+    command: ["start", "--import-realm", "--http-relative-path=/auth"]
+    environment:
+      # Le compose de base fige KC_HOSTNAME=localhost (dev). En prod : hostname public réel, sinon
+      # l'issuer serait https://localhost/... et l'API rejetterait les tokens (iss ≠ ISSUER_URI).
+      KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
     restart: always
 
   api:
