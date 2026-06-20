@@ -13,7 +13,7 @@
 | Tag déployé | **`sha-73359c5c`** (immuable GHCR, correctif CVE Angular PR #36 — identique staging) |
 | Opérateur | Claude Code (CGPA Chief Delivery Officer), sous PO `jptshilombo@gmail.com` |
 | Hôte | **Production dédié** `loyertracker-prod-server` — EC2 `t3.medium` (2 vCPU / 4 GiB / 40 GiB gp3 chiffré), Ubuntu 24.04, `eu-central-1a`, instance `i-032524e6a47b72e05` |
-| Réseau | EIP `18.158.70.88` ; domaine `loyertracker.loyerpro.org` (Route53) ; SG `loyertracker-prod-sg` ouvre `22/80/443` ; UFW + fail2ban actifs |
+| Réseau | EIP `18.158.70.88` ; domaine `loyertracker.loyerpro.org` (Route53) ; SG `loyertracker-prod-sg` : `80/443` publics, **`22` restreint** (`52.29.80.119/32` admin + `172.31.30.45/32` dev privé, depuis le 2026-06-20) ; UFW + fail2ban actifs |
 | Isolation | Hôte **distinct** de staging (`ai-test-server`, ENV-01 strict — Staging ≠ Production), stack Compose `loyertracker` dédiée |
 
 La stack est déployée de façon **isolée** sur un hôte qui lui est propre (aucune mutualisation avec staging
@@ -170,6 +170,10 @@ Plus un ajustement hôte non versionné (spécifique machine) : permissions du c
 Décision : `docs/cgpa/10-mise-en-production/gate-10-decision.md` — 12/12 critères ✅, réserves **RR-2 /
 RG-09-1 / RG-09-2 levées**. Production **LIVE** sur `https://loyertracker.loyerpro.org`.
 
-**Suite (exploitation, hors gate)** : restreindre le SG SSH à l'IP d'admin (signalé) ; revue de capacité en
-exploitation ; drill de rollback à la prochaine release ; realm de production sans compte de test (état
-« excellent », non bloquant).
+**SG SSH restreint le 2026-06-20** : port 22 limité à `52.29.80.119/32` (admin, host Claude Code) +
+`172.31.30.45/32` (serveur de dev `loyerpro-ci-server`, **IP privée** même VPC `vpc-01a99b76679b8e92e`) ;
+`0.0.0.0/0` retiré. Le serveur de dev se connecte à la prod par son **IP privée** `172.31.22.90` (pas l'EIP
+publique : le hairpin sourcerait depuis l'IP publique `3.77.128.72`, non autorisée).
+
+**Suite (exploitation, hors gate)** : revue de capacité en exploitation ; drill de rollback à la prochaine
+release ; realm de production sans compte de test (état « excellent », non bloquant).

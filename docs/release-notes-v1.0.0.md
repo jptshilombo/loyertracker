@@ -69,7 +69,8 @@ Détail complet : `docs/prod-state.md`. Décision : `docs/cgpa/10-mise-en-produc
 - OpenAPI non produit ; UX S02 minimale.
 - Realm de production embarquant le compte de test (désactivé) — état « excellent » = realm prod dédié
   (suivi exploitation, non bloquant).
-- SG SSH de l'hôte prod ouvert (à restreindre à l'IP d'admin — suivi exploitation).
+- SG SSH de l'hôte prod **restreint le 2026-06-20** : port 22 limité à `52.29.80.119/32` (admin) +
+  `172.31.30.45/32` (serveur de dev `loyerpro-ci-server`, IP privée même VPC) ; `0.0.0.0/0` retiré.
 
 ---
 *Livrable CGPA v5.2 — Release Governance (D-REL-001/003/004). Réf. :

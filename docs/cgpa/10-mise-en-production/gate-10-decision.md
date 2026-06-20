@@ -82,8 +82,9 @@ Plus un ajustement hôte (non versionné, spécifique machine) : permissions du 
   (5/5 cibles `up`), alerting Discord prouvé, sauvegarde opérationnelle, rollback disponible.
 - **Réserves Gate 09 levées** : RR-2 (traçabilité), RG-09-1 (capacity, surveillance continue),
   RG-09-2 (support). Aucune réserve bloquante résiduelle.
-- **Suite (exploitation, hors gate)** : revue de capacité en exploitation, restriction du SG SSH à l'IP
-  d'admin (signalée), drill de rollback significatif possible à la prochaine release.
+- **Suite (exploitation, hors gate)** : revue de capacité en exploitation, drill de rollback significatif
+  possible à la prochaine release. **SG SSH restreint le 2026-06-20** (port 22 : `52.29.80.119/32` admin +
+  `172.31.30.45/32` dev `loyerpro-ci-server` IP privée ; `0.0.0.0/0` retiré).
 
 > ✅ **Statué GO.** Décision consignée ici, dans `docs/prod-state.md`, `docs/release-notes-v1.0.0.md` §5
 > et `docs/project-state.md` (§3, §11, §12, §13, §14).
