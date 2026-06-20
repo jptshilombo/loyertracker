@@ -73,7 +73,7 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "https://localhost https://localhost/* https://loyertracker.staging.loyerpro.org https://loyertracker.staging.loyerpro.org/* https://loyertracker.loyerpro.org https://loyertracker.loyerpro.org/*"
+        "post.logout.redirect.uris": "https://localhost##https://localhost/*##https://loyertracker.staging.loyerpro.org##https://loyertracker.staging.loyerpro.org/*##https://loyertracker.loyerpro.org##https://loyertracker.loyerpro.org/*"
       },
       "protocolMappers": [
         {
