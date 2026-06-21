@@ -7,6 +7,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Documentation — Patrimoine (Sprint 2, plan approuvé)
+
+- **Plan d'exécution Sprint 2 Patrimoine** : GO PO Option A confirmé pour un démarrage
+  backend-first, couvrant les affectations au niveau patrimoine, l'héritage dynamique gestionnaire,
+  la priorité de résolution avec les affectations bien existantes et la garde RS-06 avant archivage
+  patrimoine. Document : `docs/cgpa/06-planification-agile/sprint-2-patrimoine-plan-execution.md`.
+
 ### Ajouts — Patrimoine (Sprint 1, modèle de données, PR #72)
 
 - **Patrimoines bailleur** : nouveau niveau `Patrimoine` entre bailleur et bien, avec endpoints
