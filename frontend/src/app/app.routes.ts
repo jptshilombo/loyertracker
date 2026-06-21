@@ -11,6 +11,12 @@ export const routes: Routes = [
       import('./bailleur/dashboard/dashboard.component').then((m) => m.BailleurDashboardComponent),
   },
   {
+    path: 'bailleur/profil',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./bailleur/profil/profil.component').then((m) => m.ProfilComponent),
+  },
+  {
     path: 'gestionnaire',
     canActivate: [authGuard],
     loadComponent: () =>

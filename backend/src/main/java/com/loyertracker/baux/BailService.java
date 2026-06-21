@@ -45,8 +45,8 @@ public class BailService {
                     "Un bail actif existe déjà sur ce bien.");
         }
         Bail bail = new Bail(UUID.randomUUID(), bailleurId, bienId, requete.locataireNom(),
-                requete.locataireEmail(), requete.loyerCc(), requete.depotGarantie(),
-                requete.dateDebut(), requete.dateFin());
+                requete.locataireEmail(), requete.loyerHc(), requete.provisionCharges(),
+                requete.depotGarantie(), requete.dateDebut(), requete.dateFin());
         try {
             Bail enregistre = baux.saveAndFlush(bail);
             bien.louer();

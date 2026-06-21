@@ -67,9 +67,15 @@ import { PaiementsBienComponent } from '../../paiements/paiements-bien.component
           </label>
           <div class="fields">
             <label>
-              Loyer CC
-              <input type="number" formControlName="loyerCc" min="0" step="0.01" />
+              Loyer hors charges
+              <input type="number" formControlName="loyerHc" min="0" step="0.01" />
             </label>
+            <label>
+              Provision charges
+              <input type="number" formControlName="provisionCharges" min="0" step="0.01" />
+            </label>
+          </div>
+          <div class="fields">
             <label>
               Dépôt
               <input type="number" formControlName="depotGarantie" min="0" step="0.01" />
@@ -227,7 +233,8 @@ export class GestionnaireDashboardComponent implements OnInit {
   readonly bailForm = new FormGroup({
     locataireNom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     locataireEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
-    loyerCc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    loyerHc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    provisionCharges: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
@@ -275,7 +282,8 @@ export class GestionnaireDashboardComponent implements OnInit {
         this.bailForm.reset({
           locataireNom: '',
           locataireEmail: '',
-          loyerCc: 0,
+          loyerHc: 0,
+          provisionCharges: 0,
           depotGarantie: 0,
           dateDebut: '',
           dateFin: '',

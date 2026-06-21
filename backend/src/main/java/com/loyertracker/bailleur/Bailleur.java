@@ -41,6 +41,10 @@ public class Bailleur {
     @Column(name = "date_creation", nullable = false, updatable = false, insertable = false)
     private OffsetDateTime dateCreation;
 
+    /** Adresse postale — mention obligatoire de la quittance de loyer (V11). Renseignée a posteriori. */
+    @Column(length = 500)
+    private String adresse;
+
     protected Bailleur() {
         // requis par JPA
     }
@@ -75,5 +79,14 @@ public class Bailleur {
 
     public OffsetDateTime getDateCreation() {
         return dateCreation;
+    }
+
+    public String getAdresse() {
+        return adresse;
+    }
+
+    /** Met à jour l'adresse postale (profil bailleur, V11). */
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
     }
 }

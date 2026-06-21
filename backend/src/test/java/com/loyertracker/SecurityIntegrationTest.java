@@ -17,6 +17,7 @@ import com.loyertracker.affectations.AffectationService;
 import com.loyertracker.alertes.AlerteService;
 import com.loyertracker.audit.AuditService;
 import com.loyertracker.bailleur.InscriptionService;
+import com.loyertracker.bailleur.ProfilService;
 import com.loyertracker.batch.GenerationEcheancesService;
 import com.loyertracker.baux.BailService;
 import com.loyertracker.biens.BienService;
@@ -42,6 +43,9 @@ class SecurityIntegrationTest {
     MockMvc mockMvc;
     @MockitoBean
     InscriptionService inscriptionService;
+    // Profil bailleur (V11) : dépend de BailleurRepository (JPA), neutralisé comme les autres.
+    @MockitoBean
+    ProfilService profilService;
     @MockitoBean
     BienService bienService;
     @MockitoBean

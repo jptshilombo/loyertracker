@@ -7,6 +7,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Quittances de loyer (socle données, lot post-go-live, PR1)
+
+- **Ventilation du loyer** : le bail distingue désormais le loyer hors charges (`loyer_hc`) et la
+  provision de charges (`provision_charges`) ; le « charges comprises » (`loyer_cc`) en est dérivé
+  et la cohérence `loyer_cc = loyer_hc + provision_charges` est imposée en base (migration V11).
+  Formulaires de bail (bailleur + gestionnaire) mis à jour.
+- **Profil bailleur** : adresse postale (`bailleur.adresse`), endpoint `GET`/`PUT /api/bailleurs/profil`
+  et écran « Mon profil » — mention obligatoire de la future quittance.
+
+### Suivi (déjà réalisé, consigné a posteriori)
+
 - Validation staging par simulation d'incident de l'alerting (OBS-02/03) et re-validation du
   Gate Staging enrichi.
 - Ratification du Gate 07A — Release Readiness.

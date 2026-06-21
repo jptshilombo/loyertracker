@@ -25,6 +25,8 @@ export interface Bail {
   bienId: string;
   locataireNom: string;
   locataireEmail: string | null;
+  loyerHc: number;
+  provisionCharges: number;
   loyerCc: number;
   depotGarantie: number;
   dateDebut: string;
@@ -35,7 +37,8 @@ export interface Bail {
 export interface BailPayload {
   locataireNom: string;
   locataireEmail: string | null;
-  loyerCc: number;
+  loyerHc: number;
+  provisionCharges: number;
   depotGarantie: number;
   dateDebut: string;
   dateFin: string | null;

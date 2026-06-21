@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import {
@@ -25,6 +26,7 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
   selector: 'app-bailleur-dashboard',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     PaiementsBienComponent,
     GarantiesBailComponent,
     HonorairesBienComponent,
@@ -37,7 +39,10 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         <h1>Espace bailleur</h1>
         <p>{{ username }} · {{ roles.join(', ') || 'aucun rôle' }}</p>
       </div>
-      <div class="status">Inscription : {{ inscriptionStatus() }}</div>
+      <div class="status">
+        <a routerLink="/bailleur/profil">Mon profil</a>
+        <span>Inscription : {{ inscriptionStatus() }}</span>
+      </div>
     </header>
 
     <section class="toolbar">
@@ -114,9 +119,15 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
           </label>
           <div class="fields">
             <label>
-              Loyer CC
-              <input type="number" formControlName="loyerCc" min="0" step="0.01" />
+              Loyer hors charges
+              <input type="number" formControlName="loyerHc" min="0" step="0.01" />
             </label>
+            <label>
+              Provision charges
+              <input type="number" formControlName="provisionCharges" min="0" step="0.01" />
+            </label>
+          </div>
+          <div class="fields">
             <label>
               Dépôt
               <input type="number" formControlName="depotGarantie" min="0" step="0.01" />
@@ -338,7 +349,8 @@ export class BailleurDashboardComponent implements OnInit {
   readonly bailForm = new FormGroup({
     locataireNom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     locataireEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
-    loyerCc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    loyerHc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    provisionCharges: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
@@ -457,7 +469,8 @@ export class BailleurDashboardComponent implements OnInit {
           this.bailForm.reset({
             locataireNom: '',
             locataireEmail: '',
-            loyerCc: 0,
+            loyerHc: 0,
+            provisionCharges: 0,
             depotGarantie: 0,
             dateDebut: '',
             dateFin: '',

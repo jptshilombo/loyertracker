@@ -49,7 +49,8 @@ class SchemaMigrationTest {
         // + V6 (génération échéances loyers S03) + V7 (passage EN_RETARD S03)
         // + V8 (calcul honoraires S04) + V9 (génération alertes S04).
         // + V10 (alerte PREAVIS S04).
-        assertThat(result.migrationsExecuted).isEqualTo(10);
+        // + V11 (ventilation loyer HC/charges + adresse bailleur — socle quittances).
+        assertThat(result.migrationsExecuted).isEqualTo(11);
         assertThat(result.success).isTrue();
     }
 
