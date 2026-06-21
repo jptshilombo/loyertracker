@@ -31,6 +31,10 @@ npm-debug.log*
 # ===== IDE / OS =====
 .idea/
 .vscode/
+.claude/
+.codex/
+.hermes/
+.trivy-cache/
 *.iml
 .DS_Store
 Thumbs.db
