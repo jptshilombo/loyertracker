@@ -1,6 +1,7 @@
-// Configuration Karma. Le builder Angular fournit des valeurs par défaut ; on ne surcharge
-// ici que le nécessaire pour une exécution déterministe en CI (Chrome headless sans bac à
-// sable — requis sur les runners GitHub Actions où le sandbox Chrome n'est pas disponible).
+const path = require('path');
+
+// Configuration Karma. Le rapport LCOV est écrit au chemin déclaré dans
+// sonar-project.properties ; le launcher sans sandbox est requis sur les runners CI.
 module.exports = function (config) {
   config.set({
     basePath: '',
@@ -14,6 +15,8 @@ module.exports = function (config) {
     ],
     reporters: ['progress'],
     coverageReporter: {
+      dir: path.join(__dirname, 'coverage', 'loyertracker'),
+      subdir: '.',
       reporters: [
         { type: 'lcovonly' },
         { type: 'text-summary' },
