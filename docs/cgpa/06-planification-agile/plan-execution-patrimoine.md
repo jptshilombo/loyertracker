@@ -18,12 +18,12 @@
 
 | Élément | Détail |
 |---------|--------|
-| Statut | **✅ Kickoff confirmé par le PO le 2026-06-21 — GO sans réserve.** Sprint démarré sur son périmètre complet (US-80/81/82) |
+| Statut | **✅ Implémenté et mergé via PR #72 ; clôture technique préparée le 2026-06-21 — GO technique / sprint clôturable.** Kickoff confirmé par le PO le 2026-06-21 — GO sans réserve. |
 | Stories couvertes | US-80 (patrimoines), US-81 (typologie), US-82 (rattachement bien→patrimoine) |
 | Livrables | Entité/table `Patrimoine` + RLS ; référentiel `TypeBien` administrable ; `Bien.patrimoineId` NOT NULL ; migration de données (patrimoine par défaut par bailleur + rattachement + mapping des `Bien.type` libres existants) ; endpoints `/api/patrimoines`, `/api/types-biens` ; tests unitaires + intégration ; non-régression complète des endpoints `biens` existants |
 | Dépendances | Aucune dépendance externe ; nécessite la liste des valeurs distinctes actuellement présentes dans `Bien.type` (à extraire en base avant de cadrer le mapping, hors périmètre de cette analyse documentaire) |
 | Risques | Migration de données irréversible si mal cadrée (cf. ADR-11 §Risques, addendum CDC §4.5) ; valeurs de `type` non mappables nécessitant un arbitrage manuel |
-| Critères GO (fin de sprint) | ✅ 100 % des biens existants rattachés à un patrimoine, 0 orphelin · ✅ 100 % des `Bien.type` migrés ou liste des cas non mappables arbitrée par le PO · ✅ Suite de tests existante (US-20→24) verte sans régression · ✅ RLS `ENABLE`+`FORCE` vérifiée sur `Patrimoine` (test de verrou de fidélité, même patron que PR #18) |
+| Critères GO (fin de sprint) | ✅ 100 % des biens existants rattachés à un patrimoine, 0 orphelin · ✅ 100 % des `Bien.type` migrés ou liste des cas non mappables arbitrée par le PO · ✅ Suite de tests existante verte sans régression (`mvn verify` 78 tests, frontend Karma 41 tests le 2026-06-21) · ✅ RLS `ENABLE`+`FORCE` vérifiée sur `Patrimoine` (test de verrou de fidélité, même patron que PR #18) · Décision de clôture : `sprint-1-patrimoine-cloture.md` |
 
 ---
 

@@ -17,6 +17,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
   avec patrimoine par défaut par bailleur et rattachement des biens existants.
 - **Sécurité / non-régression** : RLS activée/forcée sur les nouvelles tables et tests
   d’intégration Patrimoine + adaptations S02/S03/S04/documents.
+- **Clôture Sprint 1 préparée** : validations complètes backend/frontend/sécurité rejouées le
+  2026-06-21 (backend 78 tests, frontend 41 tests, Gitleaks/Trivy OK) ; décision documentaire
+  `docs/cgpa/06-planification-agile/sprint-1-patrimoine-cloture.md`.
 
 ### Ajouts — Quittances de loyer (documents, lot post-go-live, PR2)
 
