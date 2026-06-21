@@ -27,7 +27,7 @@
 | Dépendances | Aucune (peut démarrer dès l'approbation du Plan d'Exécution) ; bloque US-82 |
 | Priorité | Must |
 | Points | 3 |
-| Risques | Migration des biens existants vers un patrimoine par défaut (cf. addendum CDC §4.5) — à traiter dans cette story, pas dans une story séparée |
+| Risques | Migration des biens existants vers un patrimoine par défaut (cf. addendum CDC §4.5) — à traiter dans cette story, pas dans une story séparée ; l'endpoint d'archivage devra être étendu en Sprint 2 (US-84) avec la garde RS-06 (rejet 400 si affectation patrimoine `ACTIVE`), une fois `Affectation.patrimoineId` disponible |
 | Source | EF-90, RM-90/91 |
 
 ---
@@ -86,11 +86,11 @@
 
 | Champ | Détail |
 |-------|--------|
-| Critères d'acceptation (GWT) | **G** un bailleur et un gestionnaire invité **W** il crée une affectation portant un `patrimoineId` (pas de `bienId`) **T** affectation `ACTIVE` persistée ; le gestionnaire accède en lecture/écriture (selon matrice de rôles) à tous les biens actuels du patrimoine. **G** un nouveau bien ajouté au patrimoine après l'affectation **W** le gestionnaire consulte son périmètre **T** le nouveau bien est accessible sans nouvelle affectation (héritage dynamique, pas de duplication). |
+| Critères d'acceptation (GWT) | **G** un bailleur et un gestionnaire invité **W** il crée une affectation portant un `patrimoineId` (pas de `bienId`) **T** affectation `ACTIVE` persistée ; le gestionnaire accède en lecture/écriture (selon matrice de rôles) à tous les biens actuels du patrimoine. **G** un nouveau bien ajouté au patrimoine après l'affectation **W** le gestionnaire consulte son périmètre **T** le nouveau bien est accessible sans nouvelle affectation (héritage dynamique, pas de duplication). **G** un patrimoine avec au moins une affectation patrimoine `ACTIVE` **W** le bailleur tente d'archiver ce patrimoine (endpoint US-80) **T** la requête est rejetée (400, **RS-06**) ; le bailleur doit d'abord révoquer explicitement ces affectations (cohérent EF-22). |
 | Dépendances | Bloquée par US-80 et US-82 ; bloque US-85 (la priorité bien/patrimoine ne peut être testée sans affectation patrimoine fonctionnelle) |
 | Priorité | Must |
 | Points | 5 |
-| Risques | Extension d'`AuthorizationService` (ADR-02) — zone de risque sécurité prioritaire ; **dépend de la validation PO de l'algorithme RM-98** avant codage |
+| Risques | Extension d'`AuthorizationService` (ADR-02) — zone de risque sécurité prioritaire ; **dépend de la validation PO de l'algorithme RM-98** avant codage *(acquis le 2026-06-21)* ; nécessite d'étendre l'endpoint d'archivage déjà livré en Sprint 1 (US-80) avec la garde RS-06 — risque d'oubli si traité comme un simple ajout de modèle |
 | Source | EF-93, RM-95 |
 
 ---

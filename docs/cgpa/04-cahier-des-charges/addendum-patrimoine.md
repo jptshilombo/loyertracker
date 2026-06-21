@@ -17,7 +17,7 @@
 
 | ID | Exigence | Critère d'acceptation | Priorité | Source |
 |----|----------|------------------------|----------|--------|
-| EF-90 | Gestion des patrimoines (CRUD) | ED un bailleur authentifié · Q il crée/renomme/archive un patrimoine · A le patrimoine est persisté, rattaché à son `bailleurId`, visible uniquement par lui (et les gestionnaires affectés à ce patrimoine). | Must | BF-90 |
+| EF-90 | Gestion des patrimoines (CRUD) | ED un bailleur authentifié · Q il crée/renomme/archive un patrimoine · A le patrimoine est persisté, rattaché à son `bailleurId`, visible uniquement par lui (et les gestionnaires affectés à ce patrimoine). ED un patrimoine avec au moins une affectation patrimoine `ACTIVE` · Q le bailleur tente de l'archiver · A la requête est rejetée (400, **RS-06**, validé par le PO le 2026-06-21) ; révocation explicite préalable requise (cohérent EF-22). | Must | BF-90 |
 | EF-91 | Typologie administrable des biens | ED un bailleur · Q il crée ou modifie un bien · A le `type` est choisi parmi une liste administrable (`Appartement`, `Boutique`, `Bureau`, `Villa`, `Terrain`, `Entrepôt`, `Autre`) ; une valeur hors liste est rejetée (400). | Must | BF-91 |
 | EF-92 | Rattachement obligatoire Bien → Patrimoine | ED un bailleur · Q il crée un bien · A le bien est obligatoirement rattaché à un patrimoine existant de ce bailleur ; un `patrimoineId` d'un autre bailleur est rejeté (404/403). | Must | BF-92 |
 
@@ -139,7 +139,7 @@ TypeBien (référentiel administrable) ◄──── Bien.type
 
 | Besoin (EB) | Exigence (CDC) | Règle métier | Cas de test prévu |
 |-------------|------------------|---------------|---------------------|
-| BF-90 | EF-90 | RM-90/91 | TC-92 CRUD patrimoine + cloisonnement bailleur |
+| BF-90 | EF-90 | RM-90/91 | TC-92 CRUD patrimoine + cloisonnement bailleur + rejet archivage si affectation patrimoine `ACTIVE` (RS-06) |
 | BF-91 | EF-91 | RM-93 | TC-93 rejet type hors liste administrable (400) |
 | BF-92 | EF-92 | RM-92 | TC-94 rattachement obligatoire + rejet patrimoine d'un autre bailleur (404/403) |
 | BF-93 | EF-93 | RM-95 | TC-95 affectation patrimoine → accès hérité à tous les biens |
@@ -154,7 +154,7 @@ TypeBien (référentiel administrable) ◄──── Bien.type
 |-----|-----------|-------------|
 | Complétude | 4 | RM-98 (algorithme de résolution) validé par le PO le 2026-06-21 |
 | Qualité | 4 | Critères ED/Q/A testables sur chaque EF |
-| Sécurité | 3 | Extension ReBAC validée sur le papier (RM-98/RS-04) mais non encore testée en code (zone de risque prioritaire, cf. `securite-patrimoine.md`) |
+| Sécurité | 3 | Extension ReBAC validée sur le papier (RM-98/RS-04/RS-06) mais non encore testée en code (zone de risque prioritaire, cf. `securite-patrimoine.md`) |
 | Traçabilité | 4 | Matrice BF→EF→RM→TC complète, numérotation sans collision (90+) |
 | Automatisation | 0 | Aucun code, aucune migration — conforme à la contrainte « ne rien coder » de cette analyse |
 | **Total** | **15/20** | « Solide » — RM-98 validé par le PO (réserve Sprint 2 levée) ; **ne constitue pas un Gate**, ce score qualifie uniquement la maturité documentaire de l'addendum avant Plan d'Exécution |

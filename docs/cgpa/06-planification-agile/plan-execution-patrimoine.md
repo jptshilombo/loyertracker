@@ -8,7 +8,7 @@
 | Backlog couvert | EP-09, US-80→85 (`addendum-patrimoine-backlog.md`) |
 | Niveau | Niveau 3 (changement structurant du modèle de données + sécurité) |
 
-> Conformément à la règle CGPA v3.0, **« Codage suspendu : Plan d'Exécution requis avant modification du code »** : ce plan a reçu l'**approbation explicite du PO le 2026-06-21**, sprint par sprint (chaque sprint reste un point de contrôle GO/NO GO — le franchissement du Sprint 1 ne vaut pas approbation automatique des Sprints 2/3, dont les critères GO de fin de sprint conditionnent la poursuite). RM-98 (réserve bloquante Sprint 2) et RS-05 (administration de la typologie, rôle BAILLEUR existant, aucun nouveau rôle Keycloak) ont également été tranchés par le PO le 2026-06-21.
+> Conformément à la règle CGPA v3.0, **« Codage suspendu : Plan d'Exécution requis avant modification du code »** : ce plan a reçu l'**approbation explicite du PO le 2026-06-21**, sprint par sprint (chaque sprint reste un point de contrôle GO/NO GO — le franchissement du Sprint 1 ne vaut pas approbation automatique des Sprints 2/3, dont les critères GO de fin de sprint conditionnent la poursuite). RM-98 (réserve bloquante Sprint 2), RS-05 (administration de la typologie, rôle BAILLEUR existant, aucun nouveau rôle Keycloak) et RS-06 (archivage d'un patrimoine avec affectations actives, bloqué en 400) ont également été tranchés par le PO le 2026-06-21.
 
 ---
 
@@ -34,10 +34,10 @@
 |---------|--------|
 | Stories couvertes | US-84 (affectation patrimoine), début US-85 (priorité — partie résolution) |
 | Pré-requis bloquant | ~~Validation explicite du PO sur l'algorithme RM-98~~ **✅ Levé — validé par le PO le 2026-06-21** (résolution patrimoine ∪ inclusion − exclusion confirmée telle que proposée ; RS-04 rejet 400 `EXCLUSION` orpheline ; `INCLUSION` redondante tolérée). Détail : ADR-11 §Décision point 5, `securite-patrimoine.md` §3/§7/§9. Pré-requis restant avant code : approbation du présent Plan d'Exécution par le PO (statut global, cf. bandeau) |
-| Livrables | `Affectation.patrimoineId` (nullable, exclusif de `bienId`) + `typeException` ; extension `AuthorizationService` (nouveau prédicat `estGestionnaireAffectePatrimoineActif`, fonction `SECURITY DEFINER` associée) ; endpoint `/api/affectations` étendu (validation 400 si patrimoineId+bienId simultanés ou absents) ; `/api/patrimoines/{id}/affectations` |
+| Livrables | `Affectation.patrimoineId` (nullable, exclusif de `bienId`) + `typeException` ; extension `AuthorizationService` (nouveau prédicat `estGestionnaireAffectePatrimoineActif`, fonction `SECURITY DEFINER` associée) ; endpoint `/api/affectations` étendu (validation 400 si patrimoineId+bienId simultanés ou absents) ; `/api/patrimoines/{id}/affectations` ; extension de l'endpoint d'archivage livré en Sprint 1 (US-80, `PUT/DELETE /api/patrimoines/{id}`) pour y intégrer la garde **RS-06** (rejet 400 si affectation patrimoine `ACTIVE`), dès que le modèle `Affectation.patrimoineId` existe |
 | Dépendances | Sprint 1 (Patrimoine et rattachement biens doivent exister) |
-| Risques | Algorithme validé (2026-06-21) — risque résiduel : implémentation non conforme à RM-98/RS-04 tel que validé (cf. RS-01→RS-04, `securite-patrimoine.md`), à couvrir par les tests d'autorisation dédiés avant fusion ; jointure supplémentaire sur les dashboards (ENF-06) |
-| Critères GO (fin de sprint) | ✅ Algorithme RM-98 validé par le PO et documenté avant tout commit applicatif **(acquis le 2026-06-21)** · ✅ Affectation patrimoine fonctionnelle avec héritage dynamique vérifié (ajout d'un bien après affectation → accès immédiat) · ✅ 0 régression sur la suite d'autorisation existante · ✅ Performance dashboard < 2 s maintenue (ENF-06) sur un jeu de test ≥ 50 biens |
+| Risques | Algorithme validé (2026-06-21) — risque résiduel : implémentation non conforme à RM-98/RS-04 tel que validé (cf. RS-01→RS-04, `securite-patrimoine.md`), à couvrir par les tests d'autorisation dédiés avant fusion ; jointure supplémentaire sur les dashboards (ENF-06) ; ne pas oublier de rétrofitter la garde RS-06 sur l'endpoint d'archivage déjà mergé en Sprint 1 |
+| Critères GO (fin de sprint) | ✅ Algorithme RM-98 validé par le PO et documenté avant tout commit applicatif **(acquis le 2026-06-21)** · ✅ Affectation patrimoine fonctionnelle avec héritage dynamique vérifié (ajout d'un bien après affectation → accès immédiat) · ✅ 0 régression sur la suite d'autorisation existante · ✅ Performance dashboard < 2 s maintenue (ENF-06) sur un jeu de test ≥ 50 biens · ✅ Archivage d'un patrimoine avec affectation patrimoine `ACTIVE` rejeté en 400 (RS-06, **validé par le PO le 2026-06-21**) |
 
 ---
 
@@ -62,7 +62,7 @@
 | Arbitrage des valeurs `Bien.type` non mappables | Fin Sprint 1 | Oui |
 | Validation de l'algorithme RM-98 (résolution priorité/exception) | Début Sprint 2 | **✅ Validé par le PO le 2026-06-21** — formule confirmée, RS-04 (rejet 400 `EXCLUSION` orpheline) et tolérance `INCLUSION` redondante actées |
 | Confirmation du rôle autorisé à administrer la typologie (RS-05) | Début Sprint 1 | **✅ Validé par le PO le 2026-06-21** — rôle `BAILLEUR` existant, aucun nouveau rôle Keycloak créé |
-| Comportement d'archivage d'un patrimoine avec affectations actives (RS-06) | Avant Sprint 3 | Non bloquant pour US-80→85, mais à trancher avant mise en production du lot |
+| Comportement d'archivage d'un patrimoine avec affectations actives (RS-06) | Avant Sprint 3 | **✅ Validé par le PO le 2026-06-21** — archivage bloqué (400) tant qu'une affectation patrimoine `ACTIVE` existe ; révocation explicite préalable requise (cohérent EF-22) |
 
 ## Ce que ce plan ne couvre pas (hors périmètre, par construction de cette analyse)
 

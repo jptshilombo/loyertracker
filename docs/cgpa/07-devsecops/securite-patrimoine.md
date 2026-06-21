@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **Validé — Plan d'Exécution Patrimoine approuvé (GO) par le PO le 2026-06-21** (RS-04/RS-05 confirmées) ; aucun code produit à ce stade |
+| Statut | **Validé — Plan d'Exécution Patrimoine approuvé (GO) par le PO le 2026-06-21** (RS-04/RS-05/RS-06 confirmées) ; aucun code produit à ce stade |
 | Date | 2026-06-21 |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Périmètre touché | `securite/AuthorizationService.java`, `securite/TenantContext.java`, RLS PostgreSQL (ADR-01), `affectations/*`, `biens/*` |
@@ -60,7 +60,7 @@ L'héritage est **dynamique et non dénormalisé** : aucune table de jonction ma
 |--------|----------|--------------------------|
 | Court-circuit incorrect : une `EXCLUSION` mal résolue (ex. bug d'ordre d'évaluation) accorde l'accès au lieu de le refuser | **Critique** | Tests d'autorisation dédiés couvrant explicitement les 4 combinaisons (§5 du présent document) avant toute fusion ; principe **fail-closed** si les deux niveaux sont indéterminés |
 | RLS non étendue à `patrimoine` (oubli au moment de l'implémentation) | Critique | Checklist de migration : `ENABLE`+`FORCE` RLS sur `patrimoine` dès sa création, test de verrou de fidélité RLS (même patron que PR #18, double datasource) |
-| Affectation patrimoine orpheline (patrimoine archivé mais affectation toujours `ACTIVE`) | Moyen | Règle à trancher : archiver un patrimoine révoque-t-il en cascade les affectations patrimoine ? *(hypothèse ouverte, non tranchée par la décision source)* |
+| Affectation patrimoine orpheline (patrimoine archivé mais affectation toujours `ACTIVE`) | Moyen | **Tranché par le PO le 2026-06-21 (RS-06)** : l'archivage est **bloqué (400)** tant qu'une affectation patrimoine `ACTIVE` existe pour ce patrimoine — aucune cascade, donc aucun orphelin possible. Révocation explicite préalable requise (cohérent EF-22). |
 | Désynchronisation lors de la migration des biens existants (US-82) si un bien reste temporairement sans patrimoine pendant le déploiement | Moyen | Migration transactionnelle unique (patrimoine par défaut + rattachement) avant d'activer la contrainte `NOT NULL` |
 | Confusion UI bailleur entre « affectation patrimoine » et « affectation bien » menant à une délégation involontairement trop large | Faible (UX, pas sécurité technique) | Affichage explicite du périmètre effectif résultant avant confirmation de toute affectation (recommandation produit, hors périmètre technique) |
 
@@ -71,4 +71,4 @@ L'héritage est **dynamique et non dénormalisé** : aucune table de jonction ma
 3. **RS-03** — La suite de tests d'autorisation existante (`SecurityIntegrationTest`, esprit US-71/ex-US-71 du backlog déjà validé) est étendue avec un test par combinaison du tableau §5, avant toute fusion en `main`.
 4. **RS-04** — Toute création d'affectation `EXCLUSION` sans affectation patrimoine active correspondante est rejetée en 400 (cohérence métier, pas seulement documentaire). **Validé par le PO le 2026-06-21**, avec tolérance symétrique pour une `INCLUSION` redondante (idempotente, non rejetée) — cf. §3/§7.
 5. **RS-05** — Aucun nouveau rôle Keycloak n'est créé pour l'administration de la typologie de biens ; elle reste portée par le rôle `BAILLEUR` existant. **Validé par le PO le 2026-06-21.**
-6. **RS-06** — Le comportement d'archivage d'un patrimoine sur les affectations patrimoine actives doit être explicitement tranché par le PO avant le Sprint 2 (cf. Plan d'Exécution) — à défaut, comportement par défaut proposé : archivage bloqué si au moins une affectation patrimoine `ACTIVE` existe (cohérent avec EF-22, qui exige une révocation explicite plutôt qu'un effet de bord).
+6. **RS-06** — Toute tentative d'archivage d'un patrimoine ayant au moins une affectation patrimoine `ACTIVE` est **rejetée en validation applicative (400)** ; le bailleur doit d'abord révoquer explicitement ces affectations (cohérent avec EF-22, qui exige une révocation explicite plutôt qu'un effet de bord). **Validé par le PO le 2026-06-21** — options alternatives écartées : cascade de révocation automatique (effet de bord implicite, contraire à EF-22) et archivage libre avec affectations orphelines (risque de confusion/fuite résiduel). Implémentation à porter par l'endpoint `PUT/DELETE /api/patrimoines/{id}` (US-80, Sprint 1), avec garde effective dès que `Affectation.patrimoineId` existe (US-84, Sprint 2).
