@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |-------|--------|
 | Document de référence | `expression-besoin.md` v1.2 (✅ Validé — Gate 1 Go, 2026-06-04) — **non modifié** |
-| Statut de l'addendum | Proposé — en attente d'approbation PO, aucun codage engagé |
+| Statut de l'addendum | **Accepté — Plan d'Exécution Patrimoine approuvé (GO) par le PO le 2026-06-21** ; aucun codage engagé à ce stade (Sprint 1 autorisé à démarrer, `plan-execution-patrimoine.md`) |
 | Date | 2026-06-21 |
 | Décision liée | D-PAT-001 (`docs/cgpa/05-architecture-conception/adr/ADR-11-introduction-patrimoine.md`) |
 | Principe | Additif — n'invalide, ne rejoue ni ne modifie le Gate 1 Go déjà statué |

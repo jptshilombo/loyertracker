@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |-------|--------|
 | Code de décision | **D-PAT-001** |
-| Statut | Proposée — en attente d'approbation PO (Plan d'Exécution non démarré, aucun code produit) |
+| Statut | **Acceptée — Plan d'Exécution approuvé (GO) le 2026-06-21**, Sprint 1 autorisé à démarrer (`plan-execution-patrimoine.md`). Aucun code produit à ce stade (documentation uniquement). |
 | Date | 2026-06-21 |
 | Phase | 07 — Développement (lot post-go-live, sous Phase 7 continue) |
 | Exigences couvertes | EF-90→EF-96, ENF-90, RM-90→RM-99 (addendum CDC) |

@@ -4,7 +4,7 @@
 |-------|--------|
 | Document de référence | `cahier-des-charges.md` (✅ Validé — Gate 3 Go, 2026-06-04) — **non modifié** |
 | Document de référence | `dossier-architecture.md` (✅ Validé — Gate 4 Go, 2026-06-04) — **non modifié** |
-| Statut de l'addendum | Proposé — en attente d'approbation PO, aucun codage ni migration SQL engagé |
+| Statut de l'addendum | **Accepté — Plan d'Exécution Patrimoine approuvé (GO) par le PO le 2026-06-21** ; aucun codage ni migration SQL engagé à ce stade (Sprint 1 autorisé à démarrer, `plan-execution-patrimoine.md`) |
 | Date | 2026-06-21 |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Base besoin | `docs/cgpa/02-expression-besoin/addendum-patrimoine.md` (BF-90→BF-96) |

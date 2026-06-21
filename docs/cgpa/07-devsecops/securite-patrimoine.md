@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | Proposé — analyse de risque, aucun code produit |
+| Statut | **Validé — Plan d'Exécution Patrimoine approuvé (GO) par le PO le 2026-06-21** (RS-04/RS-05 confirmées) ; aucun code produit à ce stade |
 | Date | 2026-06-21 |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Périmètre touché | `securite/AuthorizationService.java`, `securite/TenantContext.java`, RLS PostgreSQL (ADR-01), `affectations/*`, `biens/*` |
@@ -13,7 +13,7 @@ Défense en profondeur à 3 couches (ADR-01) : service layer (filtre `bailleurId
 
 ## 2. Impact RBAC (rôles Keycloak)
 
-**Aucun impact.** Les rôles realm restent `BAILLEUR`/`GESTIONNAIRE` (ADR-02 : Keycloak ne porte jamais de droits par bien ni par patrimoine). L'hypothèse ouverte sur un rôle « Administrateur de la typologie » (EB addendum §4) ne nécessite pas un nouveau rôle Keycloak si elle est tranchée « réservée au bailleur » — recommandation : **ne pas créer de rôle Keycloak supplémentaire**, conserver le principe ADR-02 (toute granularité fine reste applicative).
+**Aucun impact.** Les rôles realm restent `BAILLEUR`/`GESTIONNAIRE` (ADR-02 : Keycloak ne porte jamais de droits par bien ni par patrimoine). ✅ **RS-05 validé par le PO le 2026-06-21** : l'administration de la typologie de biens reste portée par le rôle `BAILLEUR` existant — **aucun rôle Keycloak supplémentaire créé**, conforme au principe ADR-02 (toute granularité fine reste applicative).
 
 ## 3. Impact ReBAC (autorisation fine applicative)
 
@@ -70,5 +70,5 @@ L'héritage est **dynamique et non dénormalisé** : aucune table de jonction ma
 2. **RS-02** — `Patrimoine` est soumis à la RLS PostgreSQL au même titre que les autres tables métier (ADR-01), dès sa création, sans phase intermédiaire « sans RLS ».
 3. **RS-03** — La suite de tests d'autorisation existante (`SecurityIntegrationTest`, esprit US-71/ex-US-71 du backlog déjà validé) est étendue avec un test par combinaison du tableau §5, avant toute fusion en `main`.
 4. **RS-04** — Toute création d'affectation `EXCLUSION` sans affectation patrimoine active correspondante est rejetée en 400 (cohérence métier, pas seulement documentaire). **Validé par le PO le 2026-06-21**, avec tolérance symétrique pour une `INCLUSION` redondante (idempotente, non rejetée) — cf. §3/§7.
-5. **RS-05** — Aucun nouveau rôle Keycloak n'est créé pour l'administration de la typologie de biens ; elle reste portée par le rôle `BAILLEUR` existant (sauf décision contraire explicite du PO).
+5. **RS-05** — Aucun nouveau rôle Keycloak n'est créé pour l'administration de la typologie de biens ; elle reste portée par le rôle `BAILLEUR` existant. **Validé par le PO le 2026-06-21.**
 6. **RS-06** — Le comportement d'archivage d'un patrimoine sur les affectations patrimoine actives doit être explicitement tranché par le PO avant le Sprint 2 (cf. Plan d'Exécution) — à défaut, comportement par défaut proposé : archivage bloqué si au moins une affectation patrimoine `ACTIVE` existe (cohérent avec EF-22, qui exige une révocation explicite plutôt qu'un effet de bord).

@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |-------|--------|
 | Document de référence | `product-backlog.md` (✅ Validé — Gate 5 Go, 2026-06-04) — **non modifié** |
-| Statut | Proposé — en attente d'approbation PO, aucun développement engagé |
+| Statut | **Accepté — Plan d'Exécution Patrimoine approuvé (GO) par le PO le 2026-06-21** ; développement autorisé à démarrer (Sprint 1, `plan-execution-patrimoine.md`) |
 | Date | 2026-06-21 |
 | Décision liée | D-PAT-001 / ADR-11, addendum CDC (EF-90→96, RM-90→99) |
 

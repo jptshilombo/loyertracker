@@ -2,13 +2,13 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **Proposé — non approuvé**. Aucune exécution, aucun codage, aucune migration tant que le PO n'a pas validé ce plan (verrou CGPA v3.0). |
-| Date | 2026-06-21 |
+| Statut | **✅ Approuvé — GO, le 2026-06-21**. Sprint 1 (Patrimoines & modèle de données) autorisé à démarrer. Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
+| Date | 2026-06-21 (proposé) — **approuvé le 2026-06-21** |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Backlog couvert | EP-09, US-80→85 (`addendum-patrimoine-backlog.md`) |
 | Niveau | Niveau 3 (changement structurant du modèle de données + sécurité) |
 
-> Conformément à la règle CGPA v3.0, **« Codage suspendu : Plan d'Exécution requis avant modification du code »** s'applique : ce document est une proposition de planification, pas une autorisation d'exécution. Il devient exécutable seulement après approbation explicite du PO, sprint par sprint (chaque sprint est un point de contrôle GO/NO GO).
+> Conformément à la règle CGPA v3.0, **« Codage suspendu : Plan d'Exécution requis avant modification du code »** : ce plan a reçu l'**approbation explicite du PO le 2026-06-21**, sprint par sprint (chaque sprint reste un point de contrôle GO/NO GO — le franchissement du Sprint 1 ne vaut pas approbation automatique des Sprints 2/3, dont les critères GO de fin de sprint conditionnent la poursuite). RM-98 (réserve bloquante Sprint 2) et RS-05 (administration de la typologie, rôle BAILLEUR existant, aucun nouveau rôle Keycloak) ont également été tranchés par le PO le 2026-06-21.
 
 ---
 
@@ -61,7 +61,7 @@
 |---------------------|-----------|----------|
 | Arbitrage des valeurs `Bien.type` non mappables | Fin Sprint 1 | Oui |
 | Validation de l'algorithme RM-98 (résolution priorité/exception) | Début Sprint 2 | **✅ Validé par le PO le 2026-06-21** — formule confirmée, RS-04 (rejet 400 `EXCLUSION` orpheline) et tolérance `INCLUSION` redondante actées |
-| Confirmation du rôle autorisé à administrer la typologie (RS-05) | Début Sprint 1 | Non bloquant pour le code, mais à trancher avant la livraison de `/api/types-biens` en écriture |
+| Confirmation du rôle autorisé à administrer la typologie (RS-05) | Début Sprint 1 | **✅ Validé par le PO le 2026-06-21** — rôle `BAILLEUR` existant, aucun nouveau rôle Keycloak créé |
 | Comportement d'archivage d'un patrimoine avec affectations actives (RS-06) | Avant Sprint 3 | Non bloquant pour US-80→85, mais à trancher avant mise en production du lot |
 
 ## Ce que ce plan ne couvre pas (hors périmètre, par construction de cette analyse)
