@@ -1,6 +1,8 @@
 package com.loyertracker.securite;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.UUID;
@@ -88,6 +90,45 @@ class AuthorizationServiceIntegrationTest {
         assertThat(authz.peutAccederBien(f.bienId, jwtAuth("kc-anon", "ROLE_USER"))).isFalse();
     }
 
+    @Test
+    void migrationV13AutoriseAffectationPatrimoineEtImposeUnSeulPerimetre() {
+        UUID bailleurId = UUID.randomUUID();
+        jdbc.update("INSERT INTO bailleur (id, keycloak_id, email, nom, prenom) VALUES (?,?,?,?,?)",
+                bailleurId, "kc-" + bailleurId, bailleurId + "@test.local", "N", "P");
+        UUID patrimoineId = insertPatrimoine(bailleurId);
+        UUID bienId = insertBienDansPatrimoine(bailleurId, patrimoineId);
+        UUID gestionnaireId = UUID.randomUUID();
+        jdbc.update("INSERT INTO gestionnaire (id, keycloak_id, email, nom, prenom) VALUES (?,?,?,?,?)",
+                gestionnaireId, "kc-g-" + gestionnaireId, gestionnaireId + "@test.local", "N", "P");
+
+        assertThatCode(() -> jdbc.update("INSERT INTO affectation (id, bailleur_id, bien_id, patrimoine_id, gestionnaire_id, "
+                        + "type_honoraires, montant_honoraires, date_debut, statut) "
+                        + "VALUES (?,?,?,?,?, 'POURCENTAGE', 10, CURRENT_DATE, 'ACTIVE')",
+                UUID.randomUUID(), bailleurId, null, patrimoineId, gestionnaireId))
+                .doesNotThrowAnyException();
+
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO affectation (id, bailleur_id, bien_id, patrimoine_id, gestionnaire_id, "
+                        + "type_honoraires, montant_honoraires, date_debut, statut) "
+                        + "VALUES (?,?,?,?,?, 'POURCENTAGE', 10, CURRENT_DATE, 'ACTIVE')",
+                UUID.randomUUID(), bailleurId, null, null, gestionnaireId))
+                .hasMessageContaining("affectation_un_seul_perimetre");
+
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO affectation (id, bailleur_id, bien_id, patrimoine_id, gestionnaire_id, "
+                        + "type_honoraires, montant_honoraires, date_debut, statut) "
+                        + "VALUES (?,?,?,?,?, 'POURCENTAGE', 10, CURRENT_DATE, 'ACTIVE')",
+                UUID.randomUUID(), bailleurId, bienId, patrimoineId, gestionnaireId))
+                .hasMessageContaining("affectation_un_seul_perimetre");
+
+        UUID autreGestionnaireId = UUID.randomUUID();
+        jdbc.update("INSERT INTO gestionnaire (id, keycloak_id, email, nom, prenom) VALUES (?,?,?,?,?)",
+                autreGestionnaireId, "kc-g-" + autreGestionnaireId, autreGestionnaireId + "@test.local", "N", "P");
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO affectation (id, bailleur_id, bien_id, patrimoine_id, gestionnaire_id, "
+                        + "type_honoraires, montant_honoraires, date_debut, statut) "
+                        + "VALUES (?,?,?,?,?, 'POURCENTAGE', 10, CURRENT_DATE, 'ACTIVE')",
+                UUID.randomUUID(), bailleurId, null, patrimoineId, autreGestionnaireId))
+                .hasMessageContaining("uq_affectation_patrimoine_active");
+    }
+
     // --- Fixture & helpers -----------------------------------------------------------
 
     private record Fixture(UUID bailleurId, String bailleurKc, UUID bienId, UUID bienAutreId,
@@ -121,9 +162,18 @@ class AuthorizationServiceIntegrationTest {
     }
 
     private UUID insertBien(UUID bailleurId) {
+        UUID patrimoineId = insertPatrimoine(bailleurId);
+        return insertBienDansPatrimoine(bailleurId, patrimoineId);
+    }
+
+    private UUID insertPatrimoine(UUID bailleurId) {
         UUID patrimoineId = UUID.randomUUID();
         jdbc.update("INSERT INTO patrimoine (id, bailleur_id, nom) VALUES (?,?, 'Patrimoine test')",
                 patrimoineId, bailleurId);
+        return patrimoineId;
+    }
+
+    private UUID insertBienDansPatrimoine(UUID bailleurId, UUID patrimoineId) {
         UUID bienId = UUID.randomUUID();
         jdbc.update("INSERT INTO bien (id, bailleur_id, adresse, type, patrimoine_id) "
                         + "VALUES (?,?,?, 'APPARTEMENT', ?)",
