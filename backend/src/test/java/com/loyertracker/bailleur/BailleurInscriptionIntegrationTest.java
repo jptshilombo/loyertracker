@@ -2,7 +2,9 @@ package com.loyertracker.bailleur;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -112,6 +115,58 @@ class BailleurInscriptionIntegrationTest {
 
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId, email)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void profilApresInscriptionRenvoieIdentiteSansAdresse() throws Exception {
+        String keycloakId = "kc-" + UUID.randomUUID();
+        String email = "bailleur-" + UUID.randomUUID() + "@test.local";
+        mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/bailleurs/profil").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(email))
+                .andExpect(jsonPath("$.nom").value("Durand"))
+                .andExpect(jsonPath("$.adresse").doesNotExist());
+    }
+
+    @Test
+    void miseAJourAdresseProfilEstPersistee() throws Exception {
+        String keycloakId = "kc-" + UUID.randomUUID();
+        String email = "bailleur-" + UUID.randomUUID() + "@test.local";
+        mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/bailleurs/profil").with(bailleurJwt(keycloakId, email))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"adresse\":\"12 rue des Lilas, 75011 Paris\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.adresse").value("12 rue des Lilas, 75011 Paris"));
+
+        // Relecture : l'adresse est bien persistée pour ce tenant.
+        mockMvc.perform(get("/api/bailleurs/profil").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.adresse").value("12 rue des Lilas, 75011 Paris"));
+    }
+
+    @Test
+    void miseAJourAdresseVideEstRefusee() throws Exception {
+        String keycloakId = "kc-" + UUID.randomUUID();
+        String email = "bailleur-" + UUID.randomUUID() + "@test.local";
+        mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/bailleurs/profil").with(bailleurJwt(keycloakId, email))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"adresse\":\"\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void profilSansRoleBailleurEstRefuse() throws Exception {
+        mockMvc.perform(get("/api/bailleurs/profil").with(jwt()))
+                .andExpect(status().isForbidden());
     }
 
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor bailleurJwt(
