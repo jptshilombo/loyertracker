@@ -1,5 +1,6 @@
 package com.loyertracker.documents;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -96,7 +97,7 @@ public class QuittanceService {
                     "Renseignez votre adresse dans « Mon profil » avant d'émettre un document.");
         }
 
-        java.math.BigDecimal montant =
+        BigDecimal montant =
                 type == TypeDocument.QUITTANCE ? paiement.getMontantRecu() : paiement.getResteDu();
 
         return new DonneesDocument(type,
@@ -107,11 +108,7 @@ public class QuittanceService {
     }
 
     private static String libellePeriode(String periode) {
-        try {
-            return YearMonth.parse(periode).format(MOIS_ANNEE);
-        } catch (java.time.format.DateTimeParseException e) {
-            // Période déjà validée en amont (format CHAR(7) 'YYYY-MM') ; repli défensif.
-            return periode;
-        }
+        // La période provient d'un paiement existant : format CHAR(7) 'YYYY-MM' garanti en base.
+        return YearMonth.parse(periode).format(MOIS_ANNEE);
     }
 }

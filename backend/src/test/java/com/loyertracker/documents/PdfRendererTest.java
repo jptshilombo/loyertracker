@@ -1,6 +1,7 @@
 package com.loyertracker.documents;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
@@ -21,5 +22,12 @@ class PdfRendererTest {
 
         assertThat(pdf).isNotEmpty();
         assertThat(new String(pdf, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+    }
+
+    @Test
+    void echoueProprementSurXhtmlMalForme() {
+        // XHTML non clos : le parseur échoue, l'erreur est encapsulée en IllegalStateException.
+        assertThatThrownBy(() -> renderer.rendre("<html><body><p>non fermé"))
+                .isInstanceOf(IllegalStateException.class);
     }
 }
