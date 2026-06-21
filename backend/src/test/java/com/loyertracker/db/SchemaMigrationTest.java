@@ -51,7 +51,8 @@ class SchemaMigrationTest {
         // + V10 (alerte PREAVIS S04).
         // + V11 (ventilation loyer HC/charges + adresse bailleur — socle quittances).
         // + V12 (Patrimoine + TypeBien administrable — US-80/81/82).
-        assertThat(result.migrationsExecuted).isEqualTo(12);
+        // + V13 (affectations au périmètre patrimoine — Sprint 2 Patrimoine).
+        assertThat(result.migrationsExecuted).isEqualTo(13);
         assertThat(result.success).isTrue();
     }
 
@@ -75,10 +76,10 @@ class SchemaMigrationTest {
     }
 
     @Test
-    void lesCinqIndexUniquesPartielsSontCrees() throws SQLException {
+    void lesSixIndexUniquesPartielsSontCrees() throws SQLException {
         String[] index = {
-            "uq_bail_actif", "uq_affectation_active", "uq_paiement_periode",
-            "uq_honoraire_periode", "uq_alerte_nonlue"
+            "uq_bail_actif", "uq_affectation_active", "uq_affectation_patrimoine_active",
+            "uq_paiement_periode", "uq_honoraire_periode", "uq_alerte_nonlue"
         };
         try (Connection c = connect()) {
             for (String idx : index) {
