@@ -7,6 +7,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Patrimoine (Sprint 1, modèle de données, PR #72)
+
+- **Patrimoines bailleur** : nouveau niveau `Patrimoine` entre bailleur et bien, avec endpoints
+  `/api/patrimoines` et statut d’archivage.
+- **Typologie administrable des biens** : référentiel `TypeBien` administrable par le bailleur, en
+  remplacement progressif de la saisie libre historique.
+- **Rattachement obligatoire des biens** : `Bien.patrimoineId` devient obligatoire ; migration V12
+  avec patrimoine par défaut par bailleur et rattachement des biens existants.
+- **Sécurité / non-régression** : RLS activée/forcée sur les nouvelles tables et tests
+  d’intégration Patrimoine + adaptations S02/S03/S04/documents.
+
 ### Ajouts — Quittances de loyer (documents, lot post-go-live, PR2)
 
 - **Quittance de loyer** et **avis d'échéance** générés **à la volée en PDF** (jamais stockés) à
@@ -31,7 +42,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - Validation staging par simulation d'incident de l'alerting (OBS-02/03) et re-validation du
   Gate Staging enrichi.
 - Ratification du Gate 07A — Release Readiness.
-- Go-live production réel (provisioning hôte, Gate 09/10) — lot ultérieur.
+- Go-live production réel (provisioning hôte, Gate 09/10) — réalisé le 2026-06-20, Gate 10 GO.
 
 ## [1.0.0] — 2026-06-16
 
@@ -81,8 +92,8 @@ go-live production différé à un lot ultérieur.
 
 ### Limitations connues
 
-- Go-live production non encore réalisé (Gate 07A à statuer, Gate 09/10 ultérieurs).
-- Alerting livré ; validation staging par simulation d'incident à rejouer.
+- Go-live production réalisé le 2026-06-20 (Gate 10 GO) ; `1.0.0` LIVE.
+- Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
 [Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.0.0...HEAD
