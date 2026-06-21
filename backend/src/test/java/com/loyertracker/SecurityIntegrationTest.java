@@ -23,6 +23,7 @@ import com.loyertracker.baux.BailService;
 import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
 import com.loyertracker.comptes.InvitationService;
+import com.loyertracker.documents.QuittanceService;
 import com.loyertracker.garanties.GarantieService;
 import com.loyertracker.honoraires.HonoraireService;
 import com.loyertracker.paiements.PaiementService;
@@ -76,6 +77,9 @@ class SecurityIntegrationTest {
     AlerteService alerteService;
     @MockitoBean
     AuditService auditService;
+    // Documents locatifs (V11, PR2) : dépend des repositories JPA, neutralisé pour ce test sans BDD.
+    @MockitoBean
+    QuittanceService quittanceService;
 
     @Test
     void health_estPublic() throws Exception {
