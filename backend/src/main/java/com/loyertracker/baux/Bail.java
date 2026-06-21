@@ -31,6 +31,13 @@ public class Bail {
     @Column(name = "locataire_email")
     private String locataireEmail;
 
+    @Column(name = "loyer_hc", nullable = false)
+    private BigDecimal loyerHc;
+
+    @Column(name = "provision_charges", nullable = false)
+    private BigDecimal provisionCharges;
+
+    /** Loyer charges comprises = loyer_hc + provision_charges (cohérence imposée en base, V11). */
     @Column(name = "loyer_cc", nullable = false)
     private BigDecimal loyerCc;
 
@@ -52,13 +59,17 @@ public class Bail {
     }
 
     public Bail(UUID id, UUID bailleurId, UUID bienId, String locataireNom, String locataireEmail,
-            BigDecimal loyerCc, BigDecimal depotGarantie, LocalDate dateDebut, LocalDate dateFin) {
+            BigDecimal loyerHc, BigDecimal provisionCharges, BigDecimal depotGarantie,
+            LocalDate dateDebut, LocalDate dateFin) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.bienId = bienId;
         this.locataireNom = locataireNom;
         this.locataireEmail = locataireEmail;
-        this.loyerCc = loyerCc;
+        this.loyerHc = loyerHc;
+        this.provisionCharges = provisionCharges;
+        // Source de vérité unique : le « charges comprises » est dérivé, jamais saisi (cohérence V11).
+        this.loyerCc = loyerHc.add(provisionCharges);
         this.depotGarantie = depotGarantie;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
@@ -70,6 +81,8 @@ public class Bail {
     public UUID getBienId() { return bienId; }
     public String getLocataireNom() { return locataireNom; }
     public String getLocataireEmail() { return locataireEmail; }
+    public BigDecimal getLoyerHc() { return loyerHc; }
+    public BigDecimal getProvisionCharges() { return provisionCharges; }
     public BigDecimal getLoyerCc() { return loyerCc; }
     public BigDecimal getDepotGarantie() { return depotGarantie; }
     public LocalDate getDateDebut() { return dateDebut; }

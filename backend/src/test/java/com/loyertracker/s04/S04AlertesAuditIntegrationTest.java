@@ -215,7 +215,7 @@ class S04AlertesAuditIntegrationTest {
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
-                                + "\"loyerCc\":850.00,\"depotGarantie\":850.00,\"dateDebut\":\""
+                                + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"depotGarantie\":850.00,\"dateDebut\":\""
                                 + debut + "\",\"dateFin\":\"" + fin + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");

@@ -57,7 +57,8 @@ describe('S02ApiService', () => {
     const payload = {
       locataireNom: 'Locataire',
       locataireEmail: 'locataire@test.local',
-      loyerCc: 850,
+      loyerHc: 850,
+      provisionCharges: 0,
       depotGarantie: 850,
       dateDebut: '2026-06-01',
       dateFin: null,
