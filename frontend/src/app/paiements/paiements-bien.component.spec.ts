@@ -101,7 +101,7 @@ describe('PaiementsBienComponent', () => {
   it('traduit les erreurs HTTP et les erreurs inconnues', () => {
     const cmp = creer();
     const p = paiement('RECU');
-    const cas: Array<[number, string]> = [
+    const cas: [number, string][] = [
       [400, 'incohérence (400)'],
       [404, 'introuvable (404)'],
       [403, 'accès refusé (403)'],
