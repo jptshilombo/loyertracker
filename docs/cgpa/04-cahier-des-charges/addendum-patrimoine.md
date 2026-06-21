@@ -57,7 +57,7 @@
 | RM-98 | Le périmètre effectif d'un gestionnaire sur un patrimoine = (biens du patrimoine si affectation patrimoine ACTIVE) ∪ (biens en `INCLUSION` ACTIVE) − (biens en `EXCLUSION` ACTIVE), évalué par gestionnaire. | EF-95, ENF-90 |
 | RM-99 | Toute table métier de ce périmètre porte `bailleur_id` (cohérence ADR-01) ; `Patrimoine` n'est pas une exception. | ADR-01, ADR-11 |
 
-> ⚠️ **RM-98 est une proposition d'algorithme**, la décision métier source ne précisant pas la formule exacte de résolution. Réserve ouverte — à faire trancher explicitement par le PO avant le Sprint 2 du Plan d'Exécution (cf. `plan-execution-patrimoine.md`).
+> ✅ **RM-98 validé par le PO le 2026-06-21** : la formule de résolution est confirmée telle que proposée. Deux règles complémentaires actées dans la même décision : une `EXCLUSION` créée sans affectation patrimoine active correspondante pour ce gestionnaire est **rejetée en 400** (RS-04, `securite-patrimoine.md` §9) ; une `INCLUSION` redondante avec une affectation patrimoine déjà active sur le même bien est **tolérée** (idempotente). Réserve Sprint 2 (`plan-execution-patrimoine.md`) levée.
 
 ---
 
@@ -152,9 +152,9 @@ TypeBien (référentiel administrable) ◄──── Bien.type
 
 | Axe | Note (0–4) | Commentaire |
 |-----|-----------|-------------|
-| Complétude | 3 | RM-98 (algorithme de résolution) reste une proposition non validée par le PO |
+| Complétude | 4 | RM-98 (algorithme de résolution) validé par le PO le 2026-06-21 |
 | Qualité | 4 | Critères ED/Q/A testables sur chaque EF |
-| Sécurité | 3 | Extension ReBAC proposée mais non testée (zone de risque prioritaire, cf. `securite-patrimoine.md`) |
+| Sécurité | 3 | Extension ReBAC validée sur le papier (RM-98/RS-04) mais non encore testée en code (zone de risque prioritaire, cf. `securite-patrimoine.md`) |
 | Traçabilité | 4 | Matrice BF→EF→RM→TC complète, numérotation sans collision (90+) |
 | Automatisation | 0 | Aucun code, aucune migration — conforme à la contrainte « ne rien coder » de cette analyse |
-| **Total** | **14/20** | « Solide » sous réserve de la validation PO de RM-98 et de l'algorithme d'héritage — **ne constitue pas un Gate**, ce score qualifie uniquement la maturité documentaire de l'addendum avant Plan d'Exécution |
+| **Total** | **15/20** | « Solide » — RM-98 validé par le PO (réserve Sprint 2 levée) ; **ne constitue pas un Gate**, ce score qualifie uniquement la maturité documentaire de l'addendum avant Plan d'Exécution |

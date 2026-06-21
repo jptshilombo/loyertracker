@@ -36,7 +36,7 @@ Principes retenus :
    - `INCLUSION` : accède à ce bien précis sans disposer d'affectation patrimoine (complément local) ;
    - `EXCLUSION` : retire l'accès à ce bien précis malgré une affectation patrimoine active (restriction locale).
    Le périmètre effectif d'un gestionnaire sur un patrimoine P = (biens de P si affectation patrimoine ACTIVE sur P) ∪ (biens avec affectation bien `INCLUSION` ACTIVE) − (biens avec affectation bien `EXCLUSION` ACTIVE pour ce même gestionnaire).
-   > ⚠️ Cette mécanique de résolution est une **proposition d'interprétation** de la règle métier #9/#10 (le PO n'a pas précisé l'algorithme). À valider explicitement avant tout codage (cf. Risques).
+   > ✅ **Algorithme validé par le PO le 2026-06-21** (formule confirmée telle que proposée). Deux règles de validation associées, également tranchées par le PO : une `EXCLUSION` créée sans affectation patrimoine active correspondante pour ce gestionnaire est **rejetée en 400** (RS-04) ; une `INCLUSION` redondante avec une affectation patrimoine déjà active sur le même bien est **tolérée** (idempotente). Détail : `securite-patrimoine.md` §3/§7/§9.
 6. **Cloisonnement inchangé** : la RLS PostgreSQL (ADR-01, couche 2) s'étend naturellement à `patrimoine` (même policy `bailleur_id`) ; `AuthorizationService` (ADR-02) gagne une résolution à deux niveaux mais conserve son rôle de source de vérité unique de l'autorisation fine.
 
 ## Conséquences
@@ -53,7 +53,7 @@ Principes retenus :
 
 | Risque | Niveau | Mitigation proposée |
 |--------|--------|----------------------|
-| Algorithme de résolution priorité/exception (héritage patrimoine, `INCLUSION`/`EXCLUSION`) non validé explicitement par le PO | Majeur | Faire trancher l'algorithme exact en ouverture de Sprint 2 (critère GO dédié) avant tout codage de `AuthorizationService` |
+| ~~Algorithme de résolution priorité/exception (héritage patrimoine, `INCLUSION`/`EXCLUSION`) non validé explicitement par le PO~~ | ~~Majeur~~ | **Résolu — validé par le PO le 2026-06-21** : formule confirmée telle que proposée, RS-04 (rejet 400 `EXCLUSION` orpheline) et tolérance `INCLUSION` redondante actées (cf. Décision point 5) ; critère GO Sprint 2 désormais satisfaisable dès l'approbation du Plan d'Exécution |
 | Régression de cloisonnement pendant la transition (biens existants sans patrimoine) | Critique | Patrimoine par défaut auto-créé par bailleur à la migration ; tests de non-régression sur la suite d'autorisation existante (`SecurityIntegrationTest`) avant fusion |
 | Confusion durable « Bail » (code/DB) vs « Contrat » (vocabulaire métier de la décision) | Mineur | Glossaire explicite dans l'addendum CDC ; aucun renommage de code |
 | Collision d'identifiants US-70/71/72 si le backlog source de la décision est utilisé tel quel | Moyen gouvernance | Renumérotation actée US-80→85 dans cette ADR et dans l'addendum backlog |

@@ -17,6 +17,8 @@ Défense en profondeur à 3 couches (ADR-01) : service layer (filtre `bailleurId
 
 ## 3. Impact ReBAC (autorisation fine applicative)
 
+> ✅ **Algorithme et règles de validation ci-dessous confirmés par le PO le 2026-06-21** (point de décision RM-98 dédié, cf. `plan-execution-patrimoine.md` Sprint 2). Réserve Sprint 2 levée — extension `AuthorizationService` autorisée à démarrer dès approbation du Plan d'Exécution.
+
 `AuthorizationService` doit évoluer d'une résolution à un seul niveau vers une résolution à **deux niveaux avec priorité** :
 
 1. **Nouveau prédicat** `estGestionnaireAffectePatrimoineActif(patrimoineId, gestionnaireId)` — symétrique de l'existant `estGestionnaireAffecteActif(bienId, gestionnaireId)`, implémenté en fonction `SECURITY DEFINER` (même patron que V3, ADR-09).
@@ -49,8 +51,8 @@ L'héritage est **dynamique et non dénormalisé** : aucune table de jonction ma
 ## 7. Exceptions (`INCLUSION`/`EXCLUSION`)
 
 - Une exception n'a de sens **qu'en présence d'un `bienId`** (contrainte `CHECK`, addendum CDC §4.3).
-- `EXCLUSION` sans affectation patrimoine préalable pour ce gestionnaire est un **état incohérent** (rien à exclure) : à rejeter en validation applicative (400), pas seulement documenter — sans quoi un bailleur pourrait croire avoir restreint un accès qui n'existait pas.
-- `INCLUSION` en présence d'une affectation patrimoine déjà active pour ce même bien est **redondante** mais non dangereuse — à tolérer (idempotence) plutôt que rejeter, pour ne pas complexifier l'UX bailleur.
+- `EXCLUSION` sans affectation patrimoine préalable pour ce gestionnaire est un **état incohérent** (rien à exclure) : **rejetée en validation applicative (400)**, pas seulement documentée — sans quoi un bailleur pourrait croire avoir restreint un accès qui n'existait pas. **Confirmé par le PO le 2026-06-21 (RS-04).**
+- `INCLUSION` en présence d'une affectation patrimoine déjà active pour ce même bien est **redondante** mais non dangereuse — **tolérée (idempotence)** plutôt que rejetée, pour ne pas complexifier l'UX bailleur. **Confirmé par le PO le 2026-06-21.**
 
 ## 8. Risques de fuite d'information
 
@@ -67,6 +69,6 @@ L'héritage est **dynamique et non dénormalisé** : aucune table de jonction ma
 1. **RS-01** — Toute résolution de périmètre (patrimoine ou bien) reste centralisée dans `AuthorizationService` ; aucune logique de filtrage par patrimoine/bien dans les contrôleurs ou le frontend.
 2. **RS-02** — `Patrimoine` est soumis à la RLS PostgreSQL au même titre que les autres tables métier (ADR-01), dès sa création, sans phase intermédiaire « sans RLS ».
 3. **RS-03** — La suite de tests d'autorisation existante (`SecurityIntegrationTest`, esprit US-71/ex-US-71 du backlog déjà validé) est étendue avec un test par combinaison du tableau §5, avant toute fusion en `main`.
-4. **RS-04** — Toute création d'affectation `EXCLUSION` sans affectation patrimoine active correspondante est rejetée en 400 (cohérence métier, pas seulement documentaire).
+4. **RS-04** — Toute création d'affectation `EXCLUSION` sans affectation patrimoine active correspondante est rejetée en 400 (cohérence métier, pas seulement documentaire). **Validé par le PO le 2026-06-21**, avec tolérance symétrique pour une `INCLUSION` redondante (idempotente, non rejetée) — cf. §3/§7.
 5. **RS-05** — Aucun nouveau rôle Keycloak n'est créé pour l'administration de la typologie de biens ; elle reste portée par le rôle `BAILLEUR` existant (sauf décision contraire explicite du PO).
 6. **RS-06** — Le comportement d'archivage d'un patrimoine sur les affectations patrimoine actives doit être explicitement tranché par le PO avant le Sprint 2 (cf. Plan d'Exécution) — à défaut, comportement par défaut proposé : archivage bloqué si au moins une affectation patrimoine `ACTIVE` existe (cohérent avec EF-22, qui exige une révocation explicite plutôt qu'un effet de bord).

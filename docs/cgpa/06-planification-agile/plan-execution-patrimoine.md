@@ -33,11 +33,11 @@
 | Élément | Détail |
 |---------|--------|
 | Stories couvertes | US-84 (affectation patrimoine), début US-85 (priorité — partie résolution) |
-| Pré-requis bloquant | **Validation explicite du PO sur l'algorithme RM-98** (résolution patrimoine ∪ inclusion − exclusion) — point de décision dédié en ouverture de sprint, avant toute ligne de code |
+| Pré-requis bloquant | ~~Validation explicite du PO sur l'algorithme RM-98~~ **✅ Levé — validé par le PO le 2026-06-21** (résolution patrimoine ∪ inclusion − exclusion confirmée telle que proposée ; RS-04 rejet 400 `EXCLUSION` orpheline ; `INCLUSION` redondante tolérée). Détail : ADR-11 §Décision point 5, `securite-patrimoine.md` §3/§7/§9. Pré-requis restant avant code : approbation du présent Plan d'Exécution par le PO (statut global, cf. bandeau) |
 | Livrables | `Affectation.patrimoineId` (nullable, exclusif de `bienId`) + `typeException` ; extension `AuthorizationService` (nouveau prédicat `estGestionnaireAffectePatrimoineActif`, fonction `SECURITY DEFINER` associée) ; endpoint `/api/affectations` étendu (validation 400 si patrimoineId+bienId simultanés ou absents) ; `/api/patrimoines/{id}/affectations` |
 | Dépendances | Sprint 1 (Patrimoine et rattachement biens doivent exister) |
-| Risques | Risque sécurité majeur si l'algorithme de résolution est implémenté avant validation PO (cf. RS-01→RS-04, `securite-patrimoine.md`) ; jointure supplémentaire sur les dashboards (ENF-06) |
-| Critères GO (fin de sprint) | ✅ Algorithme RM-98 validé par le PO et documenté avant tout commit applicatif · ✅ Affectation patrimoine fonctionnelle avec héritage dynamique vérifié (ajout d'un bien après affectation → accès immédiat) · ✅ 0 régression sur la suite d'autorisation existante · ✅ Performance dashboard < 2 s maintenue (ENF-06) sur un jeu de test ≥ 50 biens |
+| Risques | Algorithme validé (2026-06-21) — risque résiduel : implémentation non conforme à RM-98/RS-04 tel que validé (cf. RS-01→RS-04, `securite-patrimoine.md`), à couvrir par les tests d'autorisation dédiés avant fusion ; jointure supplémentaire sur les dashboards (ENF-06) |
+| Critères GO (fin de sprint) | ✅ Algorithme RM-98 validé par le PO et documenté avant tout commit applicatif **(acquis le 2026-06-21)** · ✅ Affectation patrimoine fonctionnelle avec héritage dynamique vérifié (ajout d'un bien après affectation → accès immédiat) · ✅ 0 régression sur la suite d'autorisation existante · ✅ Performance dashboard < 2 s maintenue (ENF-06) sur un jeu de test ≥ 50 biens |
 
 ---
 
@@ -60,7 +60,7 @@
 | Point de contrôle | Avant quoi | Bloquant |
 |---------------------|-----------|----------|
 | Arbitrage des valeurs `Bien.type` non mappables | Fin Sprint 1 | Oui |
-| Validation de l'algorithme RM-98 (résolution priorité/exception) | Début Sprint 2 | Oui — aucun code d'`AuthorizationService` avant cette validation |
+| Validation de l'algorithme RM-98 (résolution priorité/exception) | Début Sprint 2 | **✅ Validé par le PO le 2026-06-21** — formule confirmée, RS-04 (rejet 400 `EXCLUSION` orpheline) et tolérance `INCLUSION` redondante actées |
 | Confirmation du rôle autorisé à administrer la typologie (RS-05) | Début Sprint 1 | Non bloquant pour le code, mais à trancher avant la livraison de `/api/types-biens` en écriture |
 | Comportement d'archivage d'un patrimoine avec affectations actives (RS-06) | Avant Sprint 3 | Non bloquant pour US-80→85, mais à trancher avant mise en production du lot |
 
