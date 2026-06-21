@@ -79,14 +79,20 @@ export class S03ApiService {
 
   /** Quittance de loyer (PDF) d'une période soldée (statut RECU). */
   telechargerQuittance(bienId: string, periode: string): Observable<Blob> {
-    return this.http.get(`${API_BASE_URL}/biens/${bienId}/paiements/${periode}/quittance`, {
-      responseType: 'blob',
-    });
+    return this.telechargerDocument(bienId, periode, 'quittance');
   }
 
   /** Avis d'échéance (PDF) d'une période non soldée. */
   telechargerAvisEcheance(bienId: string, periode: string): Observable<Blob> {
-    return this.http.get(`${API_BASE_URL}/biens/${bienId}/paiements/${periode}/avis-echeance`, {
+    return this.telechargerDocument(bienId, periode, 'avis-echeance');
+  }
+
+  private telechargerDocument(
+    bienId: string,
+    periode: string,
+    document: 'quittance' | 'avis-echeance',
+  ): Observable<Blob> {
+    return this.http.get(`${API_BASE_URL}/biens/${bienId}/paiements/${periode}/${document}`, {
       responseType: 'blob',
     });
   }
