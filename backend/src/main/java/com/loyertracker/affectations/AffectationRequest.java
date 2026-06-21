@@ -8,10 +8,15 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
 public record AffectationRequest(
-        @NotNull UUID bienId,
+        UUID bienId,
+        UUID patrimoineId,
         @NotNull UUID gestionnaireId,
         @NotNull TypeHonoraires typeHonoraires,
         @NotNull @DecimalMin("0.00") BigDecimal montantHonoraires,
         @NotNull LocalDate dateDebut,
         LocalDate dateFin) {
+
+    public boolean aExactementUnPerimetre() {
+        return (bienId != null) ^ (patrimoineId != null);
+    }
 }

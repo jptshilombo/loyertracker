@@ -24,8 +24,11 @@ public class Affectation {
     @Column(name = "bailleur_id", nullable = false, updatable = false)
     private UUID bailleurId;
 
-    @Column(name = "bien_id", nullable = false, updatable = false)
+    @Column(name = "bien_id", updatable = false)
     private UUID bienId;
+
+    @Column(name = "patrimoine_id", updatable = false)
+    private UUID patrimoineId;
 
     @Column(name = "gestionnaire_id", nullable = false, updatable = false)
     private UUID gestionnaireId;
@@ -57,9 +60,24 @@ public class Affectation {
     public Affectation(UUID id, UUID bailleurId, UUID bienId, UUID gestionnaireId,
             TypeHonoraires typeHonoraires, BigDecimal montantHonoraires, LocalDate dateDebut,
             LocalDate dateFin) {
+        this(id, bailleurId, bienId, null, gestionnaireId, typeHonoraires, montantHonoraires,
+                dateDebut, dateFin);
+    }
+
+    public static Affectation surPatrimoine(UUID id, UUID bailleurId, UUID patrimoineId,
+            UUID gestionnaireId, TypeHonoraires typeHonoraires, BigDecimal montantHonoraires,
+            LocalDate dateDebut, LocalDate dateFin) {
+        return new Affectation(id, bailleurId, null, patrimoineId, gestionnaireId, typeHonoraires,
+                montantHonoraires, dateDebut, dateFin);
+    }
+
+    private Affectation(UUID id, UUID bailleurId, UUID bienId, UUID patrimoineId,
+            UUID gestionnaireId, TypeHonoraires typeHonoraires, BigDecimal montantHonoraires,
+            LocalDate dateDebut, LocalDate dateFin) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.bienId = bienId;
+        this.patrimoineId = patrimoineId;
         this.gestionnaireId = gestionnaireId;
         this.typeHonoraires = typeHonoraires;
         this.montantHonoraires = montantHonoraires;
@@ -76,6 +94,7 @@ public class Affectation {
     public UUID getId() { return id; }
     public UUID getBailleurId() { return bailleurId; }
     public UUID getBienId() { return bienId; }
+    public UUID getPatrimoineId() { return patrimoineId; }
     public UUID getGestionnaireId() { return gestionnaireId; }
     public TypeHonoraires getTypeHonoraires() { return typeHonoraires; }
     public BigDecimal getMontantHonoraires() { return montantHonoraires; }

@@ -209,6 +209,36 @@ class S02BiensBauxAffectationsIntegrationTest {
                 .andExpect(jsonPath("$[0].statut").value("ACTIVE"));
     }
 
+    @Test
+    void affectationPeutCiblerUnPatrimoineAvecUnSeulPerimetre() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille A");
+        String bienId = creerBien(bailleur, "50 rue Mixte");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gp@test.local");
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.bienId").doesNotExist())
+                .andExpect(jsonPath("$.patrimoineId").value(patrimoineId))
+                .andExpect(jsonPath("$.statut").value("ACTIVE"));
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationJson(bienId, patrimoineId, gestionnaire)))
+                .andExpect(status().isBadRequest());
+    }
+
     private void inscrireBailleur(String keycloakId) throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId)))
                 .andExpect(status().isCreated());
@@ -257,6 +287,19 @@ class S02BiensBauxAffectationsIntegrationTest {
 
     private static String affectationJson(String bienId, UUID gestionnaireId) {
         return "{\"bienId\":\"" + bienId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
+                + "\"dateDebut\":\"2026-06-01\"}";
+    }
+
+    private static String affectationPatrimoineJson(String patrimoineId, UUID gestionnaireId) {
+        return "{\"patrimoineId\":\"" + patrimoineId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
+                + "\"dateDebut\":\"2026-06-01\"}";
+    }
+
+    private static String affectationJson(String bienId, String patrimoineId, UUID gestionnaireId) {
+        return "{\"bienId\":\"" + bienId + "\",\"patrimoineId\":\"" + patrimoineId
+                + "\",\"gestionnaireId\":\"" + gestionnaireId
                 + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
                 + "\"dateDebut\":\"2026-06-01\"}";
     }
