@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **✅ Approuvé — GO, le 2026-06-21**. Sprint 1 (Patrimoines & modèle de données) autorisé à démarrer. Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
+| Statut | **✅ Approuvé — GO, le 2026-06-21**. **Sprint 1 (Patrimoines & modèle de données) démarré — kickoff confirmé par le PO le 2026-06-21 (GO sans réserve).** Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
 | Date | 2026-06-21 (proposé) — **approuvé le 2026-06-21** |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Backlog couvert | EP-09, US-80→85 (`addendum-patrimoine-backlog.md`) |
@@ -18,6 +18,7 @@
 
 | Élément | Détail |
 |---------|--------|
+| Statut | **✅ Kickoff confirmé par le PO le 2026-06-21 — GO sans réserve.** Sprint démarré sur son périmètre complet (US-80/81/82) |
 | Stories couvertes | US-80 (patrimoines), US-81 (typologie), US-82 (rattachement bien→patrimoine) |
 | Livrables | Entité/table `Patrimoine` + RLS ; référentiel `TypeBien` administrable ; `Bien.patrimoineId` NOT NULL ; migration de données (patrimoine par défaut par bailleur + rattachement + mapping des `Bien.type` libres existants) ; endpoints `/api/patrimoines`, `/api/types-biens` ; tests unitaires + intégration ; non-régression complète des endpoints `biens` existants |
 | Dépendances | Aucune dépendance externe ; nécessite la liste des valeurs distinctes actuellement présentes dans `Bien.type` (à extraire en base avant de cadrer le mapping, hors périmètre de cette analyse documentaire) |
@@ -59,6 +60,7 @@
 
 | Point de contrôle | Avant quoi | Bloquant |
 |---------------------|-----------|----------|
+| Kickoff Sprint 1 (GO/NO GO de démarrage, distinct du GO global du plan) | Début Sprint 1 | **✅ Confirmé par le PO le 2026-06-21** — GO sans réserve |
 | Arbitrage des valeurs `Bien.type` non mappables | Fin Sprint 1 | Oui |
 | Validation de l'algorithme RM-98 (résolution priorité/exception) | Début Sprint 2 | **✅ Validé par le PO le 2026-06-21** — formule confirmée, RS-04 (rejet 400 `EXCLUSION` orpheline) et tolérance `INCLUSION` redondante actées |
 | Confirmation du rôle autorisé à administrer la typologie (RS-05) | Début Sprint 1 | **✅ Validé par le PO le 2026-06-21** — rôle `BAILLEUR` existant, aucun nouveau rôle Keycloak créé |
