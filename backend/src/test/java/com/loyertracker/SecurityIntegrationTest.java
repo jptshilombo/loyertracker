@@ -27,6 +27,8 @@ import com.loyertracker.documents.QuittanceService;
 import com.loyertracker.garanties.GarantieService;
 import com.loyertracker.honoraires.HonoraireService;
 import com.loyertracker.paiements.PaiementService;
+import com.loyertracker.patrimoine.PatrimoineService;
+import com.loyertracker.patrimoine.TypeBienService;
 import com.loyertracker.securite.AuthorizationService;
 import com.loyertracker.securite.TenantContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -80,6 +82,11 @@ class SecurityIntegrationTest {
     // Documents locatifs (V11, PR2) : dépend des repositories JPA, neutralisé pour ce test sans BDD.
     @MockitoBean
     QuittanceService quittanceService;
+    // Patrimoine & TypeBien (V12, US-80/81) : dépendent de repositories JPA, neutralisés comme les autres.
+    @MockitoBean
+    PatrimoineService patrimoineService;
+    @MockitoBean
+    TypeBienService typeBienService;
 
     @Test
     void health_estPublic() throws Exception {

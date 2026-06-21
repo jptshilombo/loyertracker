@@ -50,6 +50,27 @@ public class AuthorizationService {
         return false;
     }
 
+    /** Propriété bailleur sur un patrimoine ; fail-closed (seul BAILLEUR accède à Patrimoine). */
+    @Transactional(readOnly = true)
+    public boolean peutAccederPatrimoine(UUID patrimoineId, Authentication authentication) {
+        if (patrimoineId == null || authentication == null
+                || !(authentication.getPrincipal() instanceof Jwt jwt)
+                || !aRole(authentication, "ROLE_BAILLEUR")) {
+            return false;
+        }
+        UUID bailleurId = resoudreBailleur(jwt.getSubject());
+        return bailleurId != null && estBailleurProprietairePatrimoine(patrimoineId, bailleurId);
+    }
+
+    /** Vrai si le bailleur est propriétaire du patrimoine (prédicat V12, contourne la RLS). */
+    public boolean estBailleurProprietairePatrimoine(UUID patrimoineId, UUID bailleurId) {
+        return (Boolean) em.createNativeQuery(
+                        "SELECT patrimoine_appartient_au_bailleur(CAST(:p AS uuid), CAST(:o AS uuid))")
+                .setParameter("p", patrimoineId.toString())
+                .setParameter("o", bailleurId.toString())
+                .getSingleResult();
+    }
+
     /** Vrai si le bailleur est propriétaire du bien (prédicat V3, contourne la RLS). */
     public boolean estBailleurProprietaire(UUID bienId, UUID bailleurId) {
         return (Boolean) em.createNativeQuery(

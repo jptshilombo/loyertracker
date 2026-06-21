@@ -121,9 +121,13 @@ class AuthorizationServiceIntegrationTest {
     }
 
     private UUID insertBien(UUID bailleurId) {
+        UUID patrimoineId = UUID.randomUUID();
+        jdbc.update("INSERT INTO patrimoine (id, bailleur_id, nom) VALUES (?,?, 'Patrimoine test')",
+                patrimoineId, bailleurId);
         UUID bienId = UUID.randomUUID();
-        jdbc.update("INSERT INTO bien (id, bailleur_id, adresse, type) VALUES (?,?,?, 'APPARTEMENT')",
-                bienId, bailleurId, "adresse-" + bienId);
+        jdbc.update("INSERT INTO bien (id, bailleur_id, adresse, type, patrimoine_id) "
+                        + "VALUES (?,?,?, 'APPARTEMENT', ?)",
+                bienId, bailleurId, "adresse-" + bienId, patrimoineId);
         return bienId;
     }
 

@@ -31,22 +31,28 @@ public class Bien {
     @Column(nullable = false)
     private StatutBien statut;
 
+    @Column(name = "patrimoine_id", nullable = false)
+    private UUID patrimoineId;
+
     protected Bien() {
         // requis par JPA
     }
 
-    public Bien(UUID id, UUID bailleurId, String adresse, String type, StatutBien statut) {
+    public Bien(UUID id, UUID bailleurId, String adresse, String type, StatutBien statut,
+            UUID patrimoineId) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.adresse = adresse;
         this.type = type;
         this.statut = statut;
+        this.patrimoineId = patrimoineId;
     }
 
-    public void modifier(String adresse, String type, StatutBien statut) {
+    public void modifier(String adresse, String type, StatutBien statut, UUID patrimoineId) {
         this.adresse = adresse;
         this.type = type;
         this.statut = statut;
+        this.patrimoineId = patrimoineId;
     }
 
     public void archiver() {
@@ -75,5 +81,9 @@ public class Bien {
 
     public StatutBien getStatut() {
         return statut;
+    }
+
+    public UUID getPatrimoineId() {
+        return patrimoineId;
     }
 }
