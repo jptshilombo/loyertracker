@@ -55,7 +55,7 @@ class S04HonorairesIntegrationTest {
     void nettoyerBase() {
         jdbc.execute("""
                 TRUNCATE audit_log, honoraire, garantie, paiement, affectation, bail, bien,
-                         invitation, bailleur, gestionnaire
+                         patrimoine, invitation, bailleur, gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -179,10 +179,21 @@ class S04HonorairesIntegrationTest {
     }
 
     private String creerBien(String keycloakId, String adresse) throws Exception {
+        String patrimoineId = creerPatrimoine(keycloakId, "Patrimoine " + adresse);
         return JsonPath.read(mockMvc.perform(post("/api/biens")
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"adresse\":\"" + adresse + "\",\"type\":\"APPARTEMENT\",\"statut\":\"LIBRE\"}"))
+                        .content("{\"adresse\":\"" + adresse + "\",\"type\":\"APPARTEMENT\",\"statut\":\"LIBRE\","
+                                + "\"patrimoineId\":\"" + patrimoineId + "\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
+    private String creerPatrimoine(String keycloakId, String nom) throws Exception {
+        return JsonPath.read(mockMvc.perform(post("/api/patrimoines")
+                        .with(bailleurJwt(keycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"" + nom + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }

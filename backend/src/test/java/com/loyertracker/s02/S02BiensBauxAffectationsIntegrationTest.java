@@ -50,7 +50,7 @@ class S02BiensBauxAffectationsIntegrationTest {
     @BeforeEach
     void nettoyerBase() {
         jdbc.execute("""
-                TRUNCATE affectation, bail, bien, invitation, bailleur, gestionnaire
+                TRUNCATE affectation, bail, bien, patrimoine, invitation, bailleur, gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -85,7 +85,7 @@ class S02BiensBauxAffectationsIntegrationTest {
         mockMvc.perform(put("/api/biens/{id}", bienId)
                         .with(bailleurJwt(bailleurB))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bienJson("hack", "MAISON", "LIBRE")))
+                        .content(bienJson("hack", "APPARTEMENT", "LIBRE", UUID.randomUUID().toString())))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(patch("/api/biens/{id}/archivage", bienId).with(bailleurJwt(bailleurA)))
@@ -215,10 +215,20 @@ class S02BiensBauxAffectationsIntegrationTest {
     }
 
     private String creerBien(String keycloakId, String adresse) throws Exception {
+        String patrimoineId = creerPatrimoine(keycloakId, "Patrimoine " + adresse);
         return JsonPath.read(mockMvc.perform(post("/api/biens")
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bienJson(adresse, "APPARTEMENT", "LIBRE")))
+                        .content(bienJson(adresse, "APPARTEMENT", "LIBRE", patrimoineId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
+    private String creerPatrimoine(String keycloakId, String nom) throws Exception {
+        return JsonPath.read(mockMvc.perform(post("/api/patrimoines")
+                        .with(bailleurJwt(keycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"" + nom + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }
@@ -235,9 +245,9 @@ class S02BiensBauxAffectationsIntegrationTest {
                 gestionnaireId);
     }
 
-    private static String bienJson(String adresse, String type, String statut) {
+    private static String bienJson(String adresse, String type, String statut, String patrimoineId) {
         return "{\"adresse\":\"" + adresse + "\",\"type\":\"" + type
-                + "\",\"statut\":\"" + statut + "\"}";
+                + "\",\"statut\":\"" + statut + "\",\"patrimoineId\":\"" + patrimoineId + "\"}";
     }
 
     private static String bailJson(String locataire) {

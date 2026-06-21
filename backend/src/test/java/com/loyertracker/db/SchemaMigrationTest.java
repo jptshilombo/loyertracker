@@ -50,7 +50,8 @@ class SchemaMigrationTest {
         // + V8 (calcul honoraires S04) + V9 (génération alertes S04).
         // + V10 (alerte PREAVIS S04).
         // + V11 (ventilation loyer HC/charges + adresse bailleur — socle quittances).
-        assertThat(result.migrationsExecuted).isEqualTo(11);
+        // + V12 (Patrimoine + TypeBien administrable — US-80/81/82).
+        assertThat(result.migrationsExecuted).isEqualTo(12);
         assertThat(result.success).isTrue();
     }
 
@@ -63,7 +64,8 @@ class SchemaMigrationTest {
     void toutesLesTablesMetierExistent() throws SQLException {
         String[] tables = {
             "bailleur", "gestionnaire", "invitation", "bien", "bail", "affectation",
-            "paiement", "garantie", "honoraire", "alerte", "audit_log", "flyway_schema_history"
+            "paiement", "garantie", "honoraire", "alerte", "audit_log", "patrimoine", "type_bien",
+            "flyway_schema_history"
         };
         try (Connection c = connect()) {
             for (String table : tables) {
@@ -92,6 +94,19 @@ class SchemaMigrationTest {
              ResultSet rs = s.executeQuery(
                      "SELECT relrowsecurity, relforcerowsecurity "
                              + "FROM pg_class WHERE relname = 'bien'")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getBoolean("relrowsecurity")).as("ENABLE RLS").isTrue();
+            assertThat(rs.getBoolean("relforcerowsecurity")).as("FORCE RLS").isTrue();
+        }
+    }
+
+    @Test
+    void rlsActiveEtForceeSurPatrimoine() throws SQLException {
+        try (Connection c = connect();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery(
+                     "SELECT relrowsecurity, relforcerowsecurity "
+                             + "FROM pg_class WHERE relname = 'patrimoine'")) {
             assertThat(rs.next()).isTrue();
             assertThat(rs.getBoolean("relrowsecurity")).as("ENABLE RLS").isTrue();
             assertThat(rs.getBoolean("relforcerowsecurity")).as("FORCE RLS").isTrue();
@@ -282,10 +297,21 @@ class SchemaMigrationTest {
             ps.setString(3, email);
             ps.executeUpdate();
         }
+        UUID patrimoineId;
         try (PreparedStatement ps = c.prepareStatement(
-                "INSERT INTO bien (bailleur_id, adresse, type) VALUES (?, ?, 'APPARTEMENT')")) {
+                "INSERT INTO patrimoine (bailleur_id, nom) VALUES (?, 'Patrimoine test') RETURNING id")) {
+            ps.setObject(1, bailleurId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                patrimoineId = rs.getObject(1, UUID.class);
+            }
+        }
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO bien (bailleur_id, adresse, type, patrimoine_id) "
+                        + "VALUES (?, ?, 'APPARTEMENT', ?)")) {
             ps.setObject(1, bailleurId);
             ps.setString(2, adresse);
+            ps.setObject(3, patrimoineId);
             ps.executeUpdate();
         }
     }
