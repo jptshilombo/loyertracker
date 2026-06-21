@@ -68,6 +68,22 @@ import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.ser
           </div>
           <button type="submit" [disabled]="pointageForm.invalid || chargement()">Enregistrer</button>
         </form>
+
+        <div class="documents">
+          @if (p.statut === 'RECU') {
+            <button type="button" (click)="telecharger(p, 'quittance')" [disabled]="chargement()">
+              Télécharger la quittance
+            </button>
+          } @else {
+            <button
+              type="button"
+              (click)="telecharger(p, 'avis-echeance')"
+              [disabled]="chargement()"
+            >
+              Télécharger l'avis d'échéance
+            </button>
+          }
+        </div>
       }
     </div>
   `,
@@ -239,6 +255,32 @@ export class PaiementsBienComponent {
       error: (err: unknown) => this.signalerErreur(err),
       complete: () => this.chargement.set(false),
     });
+  }
+
+  telecharger(p: Paiement, type: 'quittance' | 'avis-echeance'): void {
+    this.chargement.set(true);
+    this.message.set('Génération du document…');
+    const flux =
+      type === 'quittance'
+        ? this.api.telechargerQuittance(this.bienId(), p.periode)
+        : this.api.telechargerAvisEcheance(this.bienId(), p.periode);
+    flux.subscribe({
+      next: (blob) => {
+        this.enregistrerFichier(blob, `${type}-${p.periode}.pdf`);
+        this.message.set('Document téléchargé');
+      },
+      error: (err: unknown) => this.signalerErreur(err),
+      complete: () => this.chargement.set(false),
+    });
+  }
+
+  private enregistrerFichier(blob: Blob, nom: string): void {
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = nom;
+    lien.click();
+    URL.revokeObjectURL(url);
   }
 
   private signalerErreur(err: unknown): void {

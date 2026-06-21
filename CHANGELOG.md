@@ -7,6 +7,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Quittances de loyer (documents, lot post-go-live, PR2)
+
+- **Quittance de loyer** et **avis d'échéance** générés **à la volée en PDF** (jamais stockés) à
+  partir d'un loyer : `GET /api/biens/{bienId}/paiements/{periode}/quittance` (loyer `RECU`) et
+  `…/avis-echeance` (loyer non soldé). Mise en page XHTML→PDF côté serveur (OpenHTMLtoPDF), avec
+  ventilation loyer/charges et mentions bailleur/locataire/bien. Accès ReBAC (bailleur propriétaire
+  ou gestionnaire affecté), cloisonné RLS. Adresse bailleur requise (409 explicite sinon).
+- **Frontend** : boutons « Télécharger la quittance » / « Télécharger l'avis d'échéance » sur chaque
+  loyer, selon son statut.
+
 ### Ajouts — Quittances de loyer (socle données, lot post-go-live, PR1)
 
 - **Ventilation du loyer** : le bail distingue désormais le loyer hors charges (`loyer_hc`) et la

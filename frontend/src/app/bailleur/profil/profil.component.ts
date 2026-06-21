@@ -83,7 +83,10 @@ export class ProfilComponent implements OnInit {
         this.profil.set(p);
         this.message.set('Adresse enregistrée.');
       },
-      error: () => this.message.set("Échec de l'enregistrement."),
+      error: () => {
+        this.message.set("Échec de l'enregistrement.");
+        this.enregistrement.set(false);
+      },
       complete: () => this.enregistrement.set(false),
     });
   }

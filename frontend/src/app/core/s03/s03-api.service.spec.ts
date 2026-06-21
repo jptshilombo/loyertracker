@@ -66,6 +66,22 @@ describe('S03ApiService', () => {
     req.flush({ echeancesCreees: 3, loyersEnRetard: 2 });
   });
 
+  it('telecharge la quittance en PDF (blob)', () => {
+    service.telechargerQuittance('bien-1', '2026-01').subscribe();
+    const req = http.expectOne('/api/biens/bien-1/paiements/2026-01/quittance');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
+  });
+
+  it('telecharge l avis d echeance en PDF (blob)', () => {
+    service.telechargerAvisEcheance('bien-1', '2026-02').subscribe();
+    const req = http.expectOne('/api/biens/bien-1/paiements/2026-02/avis-echeance');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
+  });
+
   it('liste depose et restitue une garantie', () => {
     service.listerGaranties('bien-1', 'bail-1').subscribe();
     let req = http.expectOne('/api/biens/bien-1/baux/bail-1/garanties');

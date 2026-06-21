@@ -90,6 +90,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Génération PDF des documents locatifs (quittance de loyer / avis d'échéance) :
+             rendu XHTML→PDF côté serveur (arbitrage B). Documents produits à la volée, jamais
+             stockés (arbitrage C) ; aucune donnée n'est persistée par cette dépendance. -->
+        <dependency>
+            <groupId>com.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+            <version>1.0.10</version>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
