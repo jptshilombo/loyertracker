@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.loyertracker.biens.Bien;
 import com.loyertracker.biens.BienRepository;
 import com.loyertracker.comptes.GestionnaireRepository;
+import com.loyertracker.affectations.Affectation.HonorairesAffectation;
 import com.loyertracker.patrimoine.PatrimoineRepository;
 import com.loyertracker.securite.TenantContext;
 
@@ -58,13 +59,13 @@ public class AffectationService {
         if (!gestionnaires.existsById(requete.gestionnaireId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Gestionnaire introuvable.");
         }
+        HonorairesAffectation honoraires = new HonorairesAffectation(requete.typeHonoraires(),
+                requete.montantHonoraires(), requete.dateDebut(), requete.dateFin());
         Affectation affectation = requete.bienId() != null
-                ? new Affectation(UUID.randomUUID(), bailleurId, requete.bienId(),
-                        requete.gestionnaireId(), requete.typeHonoraires(), requete.montantHonoraires(),
-                        requete.dateDebut(), requete.dateFin())
+                ? Affectation.surBien(UUID.randomUUID(), bailleurId, requete.bienId(),
+                        requete.gestionnaireId(), honoraires)
                 : Affectation.surPatrimoine(UUID.randomUUID(), bailleurId, requete.patrimoineId(),
-                        requete.gestionnaireId(), requete.typeHonoraires(), requete.montantHonoraires(),
-                        requete.dateDebut(), requete.dateFin());
+                        requete.gestionnaireId(), honoraires);
         try {
             return AffectationDto.from(affectations.saveAndFlush(affectation));
         } catch (DataIntegrityViolationException e) {

@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.loyertracker.affectations.Affectation.HonorairesAffectation;
+
 import org.junit.jupiter.api.Test;
 
 class AffectationModelTest {
@@ -16,8 +18,10 @@ class AffectationModelTest {
         UUID patrimoineId = UUID.randomUUID();
         UUID gestionnaireId = UUID.randomUUID();
 
+        HonorairesAffectation honoraires = new HonorairesAffectation(TypeHonoraires.POURCENTAGE,
+                BigDecimal.TEN, LocalDate.parse("2026-06-01"), null);
         Affectation affectation = Affectation.surPatrimoine(UUID.randomUUID(), bailleurId, patrimoineId,
-                gestionnaireId, TypeHonoraires.POURCENTAGE, BigDecimal.TEN, LocalDate.parse("2026-06-01"), null);
+                gestionnaireId, honoraires);
 
         assertThat(affectation.getBienId()).isNull();
         assertThat(affectation.getPatrimoineId()).isEqualTo(patrimoineId);
