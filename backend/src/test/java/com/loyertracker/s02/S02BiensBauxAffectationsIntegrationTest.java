@@ -2,6 +2,7 @@ package com.loyertracker.s02;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -237,6 +238,29 @@ class S02BiensBauxAffectationsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(affectationJson(bienId, patrimoineId, gestionnaire)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void archivagePatrimoineRefuseSiAffectationActive() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille Bloque");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gblock@test.local");
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statut").value("ACTIVE"));
+
+        mockMvc.perform(delete("/api/patrimoines/{id}", patrimoineId)
+                        .with(bailleurJwt(bailleur)))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/api/patrimoines").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '" + patrimoineId + "' && @.statut == 'ACTIF')]").exists());
     }
 
     @Test

@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AffectationRepository extends JpaRepository<Affectation, UUID> {
 
     List<Affectation> findByBienIdOrderByDateDebutDesc(UUID bienId);
+
+    boolean existsByPatrimoineIdAndStatut(UUID patrimoineId, StatutAffectation statut);
 }

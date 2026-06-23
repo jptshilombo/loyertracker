@@ -9,16 +9,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.loyertracker.affectations.AffectationRepository;
+import com.loyertracker.affectations.StatutAffectation;
 import com.loyertracker.securite.TenantContext;
 
 @Service
 public class PatrimoineService {
 
     private final PatrimoineRepository patrimoines;
+    private final AffectationRepository affectations;
     private final TenantContext tenant;
 
-    public PatrimoineService(PatrimoineRepository patrimoines, TenantContext tenant) {
+    public PatrimoineService(PatrimoineRepository patrimoines, AffectationRepository affectations, TenantContext tenant) {
         this.patrimoines = patrimoines;
+        this.affectations = affectations;
         this.tenant = tenant;
     }
 
@@ -53,6 +57,10 @@ public class PatrimoineService {
         Patrimoine patrimoine = patrimoines.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Patrimoine introuvable."));
+        if (affectations.existsByPatrimoineIdAndStatut(id, StatutAffectation.ACTIVE)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Archivage refusé: une affectation active cible ce patrimoine.");
+        }
         patrimoine.archiver();
         return PatrimoineDto.from(patrimoine);
     }
