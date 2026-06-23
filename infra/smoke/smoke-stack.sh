@@ -85,11 +85,11 @@ token() {
 }
 
 # =============================================================================
-note "0. Sanity : stack healthy, Flyway V1-V10, pool API sous loyertracker_api"
+note "0. Sanity : stack healthy, Flyway V1-V13, pool API sous loyertracker_api"
 docker compose ps --format '{{.Name}} {{.Health}}' | sed 's/^/  /'
 MIG=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
   "SELECT count(*) FROM flyway_schema_history WHERE success")
-[[ "$MIG" == "10" ]] && ok "Flyway : 10 migrations appliquées" || ko "Flyway : $MIG migrations (attendu 10)"
+[[ "$MIG" == "13" ]] && ok "Flyway : 13 migrations appliquées" || ko "Flyway : $MIG migrations (attendu 13)"
 ROLES=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
   "SELECT DISTINCT usename FROM pg_stat_activity WHERE datname='$POSTGRES_DB' AND application_name LIKE 'PostgreSQL JDBC%'")
 echo "$ROLES" | grep -q '^loyertracker_api$' && ok "Pool API connecté sous loyertracker_api" \
@@ -113,19 +113,22 @@ ISS=$(python3 -c "import base64,json,sys; p=sys.argv[1].split('.')[1]; p+='='*(-
 [[ "$ISS" == "$KEYCLOAK_ISSUER_URI" ]] && ok "issuer = $ISS" || ko "issuer inattendu : $ISS (attendu $KEYCLOAK_ISSUER_URI)"
 H_B1=(-H "Authorization: Bearer $T_B1")
 
-note "2. Parcours bailleur : inscription, bien, bail"
+note "2. Parcours bailleur : inscription, patrimoine, bien, bail"
 # 201 au 1er passage, 409 si le bailleur de test est déjà inscrit (re-run sur stack vivante)
 out=$("${CURL[@]}" -o /dev/null -w '%{http_code}' -X POST "${H_B1[@]}" "$BASE/api/bailleurs/inscription") || out="000"
 [[ "$out" == "201" || "$out" == "409" ]] && ok "POST /api/bailleurs/inscription ($out)" \
   || ko "POST /api/bailleurs/inscription (attendu 201|409, obtenu $out)"
+expect_status 201 "POST /api/patrimoines" -X POST "${H_B1[@]}" -H 'Content-Type: application/json' \
+  -d "{\"nom\":\"Patrimoine Smoke $RUN_ID\"}" "$BASE/api/patrimoines"
+PATRIMOINE1=$(echo "$BODY" | jq -r .id)
 expect_status 201 "POST /api/biens" -X POST "${H_B1[@]}" -H 'Content-Type: application/json' \
-  -d '{"adresse":"1 rue du Smoke Test","type":"APPARTEMENT","statut":"LIBRE"}' "$BASE/api/biens"
+  -d "{\"adresse\":\"1 rue du Smoke Test\",\"type\":\"APPARTEMENT\",\"statut\":\"LIBRE\",\"patrimoineId\":\"$PATRIMOINE1\"}" "$BASE/api/biens"
 BIEN1=$(echo "$BODY" | jq -r .id)
 DEBUT=$(date -d "-6 months" +%Y-%m-01)
 FIN=$(date -d "+75 days" +%Y-%m-%d)   # bande PREAVIS ]J+60;J+90]
 expect_status 201 "POST /api/biens/{id}/baux (debut $DEBUT, fin $FIN)" -X POST "${H_B1[@]}" \
   -H 'Content-Type: application/json' \
-  -d "{\"locataireNom\":\"Locataire Smoke\",\"locataireEmail\":\"locataire-smoke@test.local\",\"loyerCc\":900.00,\"depotGarantie\":900.00,\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}" \
+  -d "{\"locataireNom\":\"Locataire Smoke\",\"locataireEmail\":\"locataire-smoke@test.local\",\"loyerHc\":800.00,\"provisionCharges\":100.00,\"depotGarantie\":900.00,\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}" \
   "$BASE/api/biens/$BIEN1/baux"
 
 note "3. Invitation -> acceptation (Admin API réelle) -> JWT gestionnaire"
@@ -146,9 +149,9 @@ T_G=$(token "$GEST_EMAIL" "$GEST_PWD")
 H_G=(-H "Authorization: Bearer $T_G")
 
 note "4. Affectation, échéances (SECURITY DEFINER), pointage, honoraires"
-expect_status 201 "POST /api/affectations (POURCENTAGE 8%)" -X POST "${H_B1[@]}" \
+expect_status 201 "POST /api/affectations patrimoine (POURCENTAGE 8%)" -X POST "${H_B1[@]}" \
   -H 'Content-Type: application/json' \
-  -d "{\"bienId\":\"$BIEN1\",\"gestionnaireId\":\"$GEST_ID\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":8.00,\"dateDebut\":\"$DEBUT\"}" \
+  -d "{\"patrimoineId\":\"$PATRIMOINE1\",\"gestionnaireId\":\"$GEST_ID\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":8.00,\"dateDebut\":\"$DEBUT\"}" \
   "$BASE/api/affectations"
 expect_status 200 "POST /api/batch/echeances (bailleur)" -X POST "${H_B1[@]}" "$BASE/api/batch/echeances"
 echo "  -> $BODY"
