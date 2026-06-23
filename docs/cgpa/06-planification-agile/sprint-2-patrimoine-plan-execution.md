@@ -266,7 +266,25 @@ Le Sprint 2 ne sera clôturable que si :
 - affectations bien existantes non régressées ;
 - `mvn verify`, frontend lint/build/test et scans sécurité passent.
 
-## 7. Risques et garde-fous
+## 7. Validation locale backend/frontend/sécurité — 2026-06-23
+
+Le Sprint 2 backend-first a été validé localement sur la branche `sprint-2-patrimoine-reprise`.
+
+Rapport détaillé : `docs/cgpa/06-planification-agile/sprint-2-patrimoine-rapport-validation.md`.
+
+Résultats exécutés :
+
+- Backend : `mvn -f backend/pom.xml verify` — `BUILD SUCCESS`, `Tests run: 84, Failures: 0, Errors: 0, Skipped: 0`, Flyway V1→V13, Spotless OK, JaCoCo OK.
+- Frontend lint : `npm run lint` — `All files pass linting.`
+- Frontend build production : `npm run build -- --configuration production` — build OK, bundle initial `321.06 kB` brut / `92.04 kB` estimé transféré.
+- Frontend tests : `npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage` — `TOTAL: 41 SUCCESS`.
+- Secrets : Gitleaks Docker — `147 commits scanned`, `no leaks found`.
+- SCA frontend : Trivy FS sur `frontend/package-lock.json` — `Vulnerabilities: 0`.
+- SCA global : Trivy FS relancé avec cache Maven local monté — `backend/pom.xml` et `frontend/package-lock.json` scannés, `Vulnerabilities: 0` HIGH/CRITICAL.
+
+Décision locale : **GO technique local complet** ; le gate CI GitHub reste à confirmer après push/PR avant tout merge ou promotion staging.
+
+## 8. Risques et garde-fous
 
 - **Risque critique : fuite de périmètre gestionnaire.** Mitigation : tests d'autorisation avant implémentation, résolution centralisée dans `AuthorizationService`, fail-closed.
 - **Risque migration : contrainte trop permissive sur `affectation`.** Mitigation : contrainte SQL d'exclusivité + validation applicative.
@@ -274,7 +292,7 @@ Le Sprint 2 ne sera clôturable que si :
 - **Risque régression liste biens gestionnaire.** Mitigation : test `GET /api/biens` pour affectation bien seule, patrimoine seul et cas mixte.
 - **Risque dette Sprint 3 masquée.** Mitigation : ne pas livrer d'`EXCLUSION` partiel sans test explicite ; documenter ce qui est reporté.
 
-## 8. Décision demandée au PO
+## 9. Décision demandée au PO
 
 Choix PO confirmé : **Option A — GO Sprint 2 backend-first**.
 

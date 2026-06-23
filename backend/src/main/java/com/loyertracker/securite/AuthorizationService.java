@@ -80,7 +80,7 @@ public class AuthorizationService {
                 .getSingleResult();
     }
 
-    /** Vrai s'il existe une affectation ACTIVE (bien, gestionnaire) — prédicat V3. */
+    /** Vrai s'il existe une affectation ACTIVE (bien directe ou patrimoine hérité) — prédicat V13. */
     public boolean estGestionnaireAffecteActif(UUID bienId, UUID gestionnaireId) {
         return (Boolean) em.createNativeQuery(
                         "SELECT gestionnaire_affecte_actif(CAST(:b AS uuid), CAST(:g AS uuid))")

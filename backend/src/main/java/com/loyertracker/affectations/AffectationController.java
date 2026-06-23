@@ -29,7 +29,7 @@ public class AffectationController {
 
     @PostMapping("/affectations")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('BAILLEUR') and @authz.peutAccederBien(#requete.bienId(), authentication)")
+    @PreAuthorize("hasRole('BAILLEUR') and ((#requete.bienId() != null and @authz.peutAccederBien(#requete.bienId(), authentication)) or (#requete.patrimoineId() != null and @authz.peutAccederPatrimoine(#requete.patrimoineId(), authentication)))")
     public AffectationDto creer(@Valid @RequestBody AffectationRequest requete,
             @AuthenticationPrincipal Jwt jwt) {
         return affectationService.creer(jwt, requete);

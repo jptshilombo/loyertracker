@@ -2,6 +2,7 @@ package com.loyertracker.s02;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -209,6 +210,103 @@ class S02BiensBauxAffectationsIntegrationTest {
                 .andExpect(jsonPath("$[0].statut").value("ACTIVE"));
     }
 
+    @Test
+    void affectationPeutCiblerUnPatrimoineAvecUnSeulPerimetre() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille A");
+        String bienId = creerBien(bailleur, "50 rue Mixte");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gp@test.local");
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.bienId").doesNotExist())
+                .andExpect(jsonPath("$.patrimoineId").value(patrimoineId))
+                .andExpect(jsonPath("$.statut").value("ACTIVE"));
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationJson(bienId, patrimoineId, gestionnaire)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void archivagePatrimoineRefuseSiAffectationActive() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille Bloque");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gblock@test.local");
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statut").value("ACTIVE"));
+
+        mockMvc.perform(delete("/api/patrimoines/{id}", patrimoineId)
+                        .with(bailleurJwt(bailleur)))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/api/patrimoines").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '" + patrimoineId + "' && @.statut == 'ACTIF')]").exists());
+    }
+
+    @Test
+    void affectationPatrimoineDonneAccesAuxBiensDuPortefeuillePuisRevoque() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille Herite");
+        String bienA = creerBienDansPatrimoine(bailleur, patrimoineId, "60 rue Heritee A");
+        String bienB = creerBienDansPatrimoine(bailleur, patrimoineId, "61 rue Heritee B");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gpat@test.local");
+
+        String affectationId = JsonPath.read(mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.id == '" + bienA + "')]").exists())
+                .andExpect(jsonPath("$[?(@.id == '" + bienB + "')]").exists());
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienA)
+                        .with(gestionnaireJwt(keycloakId(gestionnaire)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bailJson("Locataire Patrimoine")))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/affectations/{id}/revocation", affectationId)
+                        .with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("REVOQUEE"));
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienB)
+                        .with(gestionnaireJwt(keycloakId(gestionnaire)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bailJson("Locataire Apres Revocation")))
+                .andExpect(status().isForbidden());
+    }
+
     private void inscrireBailleur(String keycloakId) throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId)))
                 .andExpect(status().isCreated());
@@ -216,6 +314,10 @@ class S02BiensBauxAffectationsIntegrationTest {
 
     private String creerBien(String keycloakId, String adresse) throws Exception {
         String patrimoineId = creerPatrimoine(keycloakId, "Patrimoine " + adresse);
+        return creerBienDansPatrimoine(keycloakId, patrimoineId, adresse);
+    }
+
+    private String creerBienDansPatrimoine(String keycloakId, String patrimoineId, String adresse) throws Exception {
         return JsonPath.read(mockMvc.perform(post("/api/biens")
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -257,6 +359,19 @@ class S02BiensBauxAffectationsIntegrationTest {
 
     private static String affectationJson(String bienId, UUID gestionnaireId) {
         return "{\"bienId\":\"" + bienId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
+                + "\"dateDebut\":\"2026-06-01\"}";
+    }
+
+    private static String affectationPatrimoineJson(String patrimoineId, UUID gestionnaireId) {
+        return "{\"patrimoineId\":\"" + patrimoineId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
+                + "\"dateDebut\":\"2026-06-01\"}";
+    }
+
+    private static String affectationJson(String bienId, String patrimoineId, UUID gestionnaireId) {
+        return "{\"bienId\":\"" + bienId + "\",\"patrimoineId\":\"" + patrimoineId
+                + "\",\"gestionnaireId\":\"" + gestionnaireId
                 + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
                 + "\"dateDebut\":\"2026-06-01\"}";
     }

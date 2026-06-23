@@ -17,6 +17,10 @@ import jakarta.persistence.Table;
 @Table(name = "affectation")
 public class Affectation {
 
+    public record HonorairesAffectation(TypeHonoraires typeHonoraires, BigDecimal montantHonoraires,
+            LocalDate dateDebut, LocalDate dateFin) {
+    }
+
     @Id
     @Column(nullable = false, updatable = false)
     private UUID id;
@@ -24,8 +28,11 @@ public class Affectation {
     @Column(name = "bailleur_id", nullable = false, updatable = false)
     private UUID bailleurId;
 
-    @Column(name = "bien_id", nullable = false, updatable = false)
+    @Column(name = "bien_id", updatable = false)
     private UUID bienId;
+
+    @Column(name = "patrimoine_id", updatable = false)
+    private UUID patrimoineId;
 
     @Column(name = "gestionnaire_id", nullable = false, updatable = false)
     private UUID gestionnaireId;
@@ -54,17 +61,27 @@ public class Affectation {
         // requis par JPA
     }
 
-    public Affectation(UUID id, UUID bailleurId, UUID bienId, UUID gestionnaireId,
-            TypeHonoraires typeHonoraires, BigDecimal montantHonoraires, LocalDate dateDebut,
-            LocalDate dateFin) {
+    public static Affectation surBien(UUID id, UUID bailleurId, UUID bienId, UUID gestionnaireId,
+            HonorairesAffectation honoraires) {
+        return new Affectation(id, bailleurId, bienId, null, gestionnaireId, honoraires);
+    }
+
+    public static Affectation surPatrimoine(UUID id, UUID bailleurId, UUID patrimoineId,
+            UUID gestionnaireId, HonorairesAffectation honoraires) {
+        return new Affectation(id, bailleurId, null, patrimoineId, gestionnaireId, honoraires);
+    }
+
+    private Affectation(UUID id, UUID bailleurId, UUID bienId, UUID patrimoineId,
+            UUID gestionnaireId, HonorairesAffectation honoraires) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.bienId = bienId;
+        this.patrimoineId = patrimoineId;
         this.gestionnaireId = gestionnaireId;
-        this.typeHonoraires = typeHonoraires;
-        this.montantHonoraires = montantHonoraires;
-        this.dateDebut = dateDebut;
-        this.dateFin = dateFin;
+        this.typeHonoraires = honoraires.typeHonoraires();
+        this.montantHonoraires = honoraires.montantHonoraires();
+        this.dateDebut = honoraires.dateDebut();
+        this.dateFin = honoraires.dateFin();
         this.statut = StatutAffectation.ACTIVE;
     }
 
@@ -76,6 +93,7 @@ public class Affectation {
     public UUID getId() { return id; }
     public UUID getBailleurId() { return bailleurId; }
     public UUID getBienId() { return bienId; }
+    public UUID getPatrimoineId() { return patrimoineId; }
     public UUID getGestionnaireId() { return gestionnaireId; }
     public TypeHonoraires getTypeHonoraires() { return typeHonoraires; }
     public BigDecimal getMontantHonoraires() { return montantHonoraires; }
