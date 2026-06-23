@@ -16,7 +16,11 @@ public interface HonoraireRepository extends JpaRepository<Honoraire, UUID> {
     @Query("""
             SELECT h FROM Honoraire h
             WHERE h.affectationId IN (
-                SELECT a.id FROM Affectation a WHERE a.bienId = :bienId)
+                SELECT a.id FROM Affectation a
+                WHERE a.bienId = :bienId
+                OR (a.patrimoineId IS NOT NULL AND a.patrimoineId = (
+                    SELECT b.patrimoineId FROM Bien b WHERE b.id = :bienId))
+            )
             ORDER BY h.periode DESC
             """)
     List<Honoraire> findByBien(@Param("bienId") UUID bienId);
