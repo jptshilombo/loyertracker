@@ -52,7 +52,8 @@ class SchemaMigrationTest {
         // + V11 (ventilation loyer HC/charges + adresse bailleur — socle quittances).
         // + V12 (Patrimoine + TypeBien administrable — US-80/81/82).
         // + V13 (affectations au périmètre patrimoine — Sprint 2 Patrimoine).
-        assertThat(result.migrationsExecuted).isEqualTo(13);
+        // + V14 (honoraires sur affectations patrimoine — Sprint 2 Patrimoine).
+        assertThat(result.migrationsExecuted).isEqualTo(14);
         assertThat(result.success).isTrue();
     }
 
