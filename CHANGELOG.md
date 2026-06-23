@@ -3,9 +3,30 @@
 Toutes les évolutions notables de ce projet sont consignées dans ce fichier.
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet adhère au
-[Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.2).
+[Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.3).
 
 ## [Non publié]
+
+_Aucune évolution non publiée à ce stade._
+
+## [1.1.0] — 2026-06-23
+
+### Release — Production `1.1.0`
+
+- Déploiement Production le 2026-06-23 avec le tag immuable GHCR `sha-05424aa3`.
+- Backup pré-déploiement vérifié : `loyertracker-20260623-150659.dump`.
+- Smoke Production post-déploiement : 47 PASS / 0 FAIL.
+- Statut CGPA v5.3 : `PRODUCTION_DEPLOYED`.
+
+### Gouvernance — Migration CGPA v5.3
+
+- Migration additive du projet vers **CGPA v5.3** : `docs/project-state.md` passe à `framework.current_version: "5.3"` sans suppression d'historique, de décision, de risque ou de Gate validé.
+- Ajout des statuts Release Management `STAGING_READY`, `STAGING_DEPLOYED`, `PRODUCTION_READY` et `PRODUCTION_DEPLOYED`.
+- Ajout des workflows v5.3 Sprint -> Staging, Epic -> Production, Release -> Production et Hotfix -> Production.
+- Ajout des checklists Gate Staging et Gate Production.
+- Ajout des décisions D-RM-01 à D-RM-04 et des risques RSV-RM-01 à RSV-RM-04.
+- Création des rapports de migration dans `docs/cgpa/migration/`.
+
 
 ### Ajouts — Patrimoine (Sprint 2, affectations patrimoine, PR #74)
 

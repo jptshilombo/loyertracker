@@ -4,13 +4,31 @@
 > Document vivant : à mettre à jour à chaque déploiement production. Miroir de `docs/staging-state.md`.
 > Cadre : CGPA v5.2 — lève les réserves **RR-2** / **RG-09-1** / **RG-09-2** (Gate 09).
 
+
+## 0. Déploiement Production `1.1.0` — 2026-06-23
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.1.0` |
+| Tag déployé | **`sha-05424aa3`** (GHCR, push `main` post-PR #77) |
+| Tag précédent | `sha-73359c5c` (`1.0.0`) |
+| Backup pré-déploiement | `loyertracker-20260623-150659.dump`, `pg_restore --list` OK |
+| Déploiement | `.env` mis à jour (`LOYERTRACKER_TAG=sha-05424aa3`), `docker compose pull api nginx`, `up -d api nginx` |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **healthy** |
+| Flyway | V1→V14, **14 migrations success** |
+| Smoke Production | **47 PASS / 0 FAIL** via `infra/smoke/smoke-stack.sh` |
+| État Keycloak post-smoke | `bailleur-test@test.local` désactivé ; `loyertracker-spa.directAccessGrantsEnabled=false` |
+| Décision CGPA | `PRODUCTION_DEPLOYED` atteint |
+
+Le tag initialement préparé dans le Gate Production (`sha-1d6db31`) n'était pas publié sur GHCR. Le tag immuable réellement publié par le workflow `Packaging Docker` du dernier push `main` est `sha-05424aa3`; il a donc été retenu comme artefact de déploiement réel.
+
 ## 1. Contexte
 
 | Champ | Valeur |
 |---|---|
 | Date go-live | 2026-06-20 |
-| Release | `1.0.0` (SemVer) |
-| Tag déployé | **`sha-73359c5c`** (immuable GHCR, correctif CVE Angular PR #36 — identique staging) |
+| Release | `1.1.0` (SemVer) — release courante ; `1.0.0` conservée en historique go-live |
+| Tag déployé | **`sha-05424aa3`** (immuable GHCR, release `1.1.0`) ; précédent `sha-73359c5c` (`1.0.0`) |
 | Opérateur | Claude Code (CGPA Chief Delivery Officer), sous PO `jptshilombo@gmail.com` |
 | Hôte | **Production dédié** `loyertracker-prod-server` — EC2 `t3.medium` (2 vCPU / 4 GiB / 40 GiB gp3 chiffré), Ubuntu 24.04, `eu-central-1a`, instance `i-032524e6a47b72e05` |
 | Réseau | EIP `18.158.70.88` ; domaine `loyertracker.loyerpro.org` (Route53) ; SG `loyertracker-prod-sg` : `80/443` publics, **`22` restreint** (`52.29.80.119/32` admin + `172.31.30.45/32` dev privé, depuis le 2026-06-20) ; UFW + fail2ban actifs |
@@ -24,7 +42,7 @@ ou d'autres charges), conformément au modèle de promotion ENV-01 (Production d
 | Paramètre | Valeur |
 |---|---|
 | Fichiers Compose | `docker-compose.yml` + `docker-compose.prod.yml` (+ `docker-compose.monitoring.yml` pour l'overlay) |
-| Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable `sha-73359c5c` — **jamais `latest`**, **aucun build local** |
+| Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable `sha-05424aa3` — **jamais `latest`**, **aucun build local** |
 | Keycloak | mode **production** `start` (sans `--optimized`) + `--import-realm --http-relative-path=/auth` ; `KC_HOSTNAME=loyertracker.loyerpro.org` |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (via `ports: !override`) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** ; monitoring `9090/9093/9115` internes, Pushgateway `127.0.0.1:9091` (loopback) |
@@ -39,7 +57,7 @@ ou d'autres charges), conformément au modèle de promotion ENV-01 (Production d
 |---|---|---|
 | Tous les services `healthy` | 4/4 | ✅ api, keycloak, postgres, nginx |
 | `keycloak-init` (one-shot) | exit 0 | ✅ exit 0 (secret Admin API `loyertracker-admin` injecté) |
-| Flyway | V1→V10 | ✅ **10 migrations `success`** |
+| Flyway | V1→V14 | ✅ **14 migrations `success`** |
 | Pool applicatif | sous `loyertracker_api` (NOSUPERUSER NOBYPASSRLS) | ✅ RLS `FORCE` réellement exercée |
 | Issuer (découverte OIDC public) | `https://loyertracker.loyerpro.org/auth/realms/loyertracker` | ✅ portless |
 | `/healthz` (HTTPS public) | 200 (cert Let's Encrypt valide) | ✅ |
@@ -165,7 +183,7 @@ Plus un ajustement hôte non versionné (spécifique machine) : permissions du c
 (`localhost-key.pem` → 644) pour lecture par le conteneur web non-root, derrière le proxy TLS hôte
 (`proxy_ssl_verify off`) + `docker compose up -d --force-recreate nginx`.
 
-## 12. Gate 10 — Mise en production : **GO le 2026-06-20** ✅
+## 12. Gate 10 — Mise en production initiale : **GO le 2026-06-20** ✅
 
 Décision : `docs/cgpa/10-mise-en-production/gate-10-decision.md` — 12/12 critères ✅, réserves **RR-2 /
 RG-09-1 / RG-09-2 levées**. Production **LIVE** sur `https://loyertracker.loyerpro.org`.
@@ -177,3 +195,10 @@ publique : le hairpin sourcerait depuis l'IP publique `3.77.128.72`, non autoris
 
 **Suite (exploitation, hors gate)** : revue de capacité en exploitation ; drill de rollback à la prochaine
 release ; realm de production sans compte de test (état « excellent », non bloquant).
+
+
+## 13. Gate Production v5.3 — Release `1.1.0` : **PRODUCTION_DEPLOYED le 2026-06-23** ✅
+
+Décision : `docs/cgpa/09-production/gate-production-v1.1.0-decision.md` — Gate Production GO sous réserve acceptée, puis déploiement réel validé. Production **LIVE** sur `https://loyertracker.loyerpro.org` avec le tag `sha-05424aa3`.
+
+Résumé d’exécution : backup pré-déploiement vérifié (`loyertracker-20260623-150659.dump`), rollback applicatif préparé vers `sha-73359c5c`, services applicatifs healthy, Flyway V1→V14, smoke Production 47 PASS / 0 FAIL, compte de smoke redésactivé et `directAccessGrants=false`.
