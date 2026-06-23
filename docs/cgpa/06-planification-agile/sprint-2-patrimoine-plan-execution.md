@@ -1,6 +1,6 @@
 # Plan d'Exécution — Sprint 2 Patrimoine
 
-> **Statut :** approuvé — GO PO Option A confirmé le 2026-06-21.
+> **Statut :** clôturé — GO technique côté `main` après merge PR #74 le 2026-06-23 (GO PO Option A confirmé le 2026-06-21).
 >
 > **Règle de gouvernance :** le Sprint 2 peut démarrer en implémentation backend-first selon ce plan. Toute extension de périmètre, notamment `EXCLUSION` complète ou UX avancée, nécessite un nouvel arbitrage PO.
 
@@ -12,7 +12,7 @@
 | Pré-requis | Sprint 1 Patrimoine clôturé ; RM-98 / RS-04 / RS-05 / RS-06 déjà arbitrés par le PO le 2026-06-21 |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Références | `plan-execution-patrimoine.md`, `addendum-patrimoine-backlog.md`, `securite-patrimoine.md`, `ADR-11-introduction-patrimoine.md` |
-| Verdict proposé | **GO PO confirmé — Option A : démarrage Sprint 2 backend-first autorisé** |
+| Verdict | **GO technique — Sprint 2 backend-first clôturé côté `main` via PR #74** |
 
 ## 1. Objectif Sprint 2
 
@@ -282,7 +282,25 @@ Résultats exécutés :
 - SCA frontend : Trivy FS sur `frontend/package-lock.json` — `Vulnerabilities: 0`.
 - SCA global : Trivy FS relancé avec cache Maven local monté — `backend/pom.xml` et `frontend/package-lock.json` scannés, `Vulnerabilities: 0` HIGH/CRITICAL.
 
-Décision locale : **GO technique local complet** ; le gate CI GitHub reste à confirmer après push/PR avant tout merge ou promotion staging.
+Décision locale : **GO technique local complet**. Le gate CI GitHub a ensuite été confirmé sur la PR #74 avant merge.
+
+## 7A. Clôture post-merge — PR #74
+
+Le Sprint 2 a été intégré dans `main` via la PR #74 (`ed448b8`) le 2026-06-23.
+
+Décision de clôture : `docs/cgpa/06-planification-agile/sprint-2-patrimoine-cloture.md`.
+
+Checks GitHub observés après merge :
+
+- Backend (build + tests + couverture) : **SUCCESS**
+- Frontend (build + tests) : **SUCCESS**
+- Sécurité (Gitleaks + SCA + Trivy) : **SUCCESS**
+- Packaging Docker : **SUCCESS**
+- Analyse CodeQL Java/Kotlin : **SUCCESS**
+- Analyse CodeQL JavaScript/TypeScript : **SUCCESS**
+- CodeQL agrégé : **SUCCESS**
+
+La clôture ne vaut pas décision de promotion staging ni démarrage Sprint 3.
 
 ## 8. Risques et garde-fous
 

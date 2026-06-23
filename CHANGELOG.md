@@ -7,6 +7,22 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Patrimoine (Sprint 2, affectations patrimoine, PR #74)
+
+- **Affectations patrimoine backend-first** : un bailleur peut affecter un gestionnaire à un
+  patrimoine entier (`patrimoineId`) en complément des affectations bien existantes ; le modèle
+  impose l'exclusivité bien/patrimoine et la migration V13 porte les contraintes/index nécessaires.
+- **Héritage dynamique ReBAC** : `AuthorizationService` accorde l'accès aux biens d'un patrimoine
+  affecté, y compris les biens ajoutés après l'affectation, tout en conservant la priorité des
+  affectations bien existantes.
+- **Liste effective gestionnaire** : `GET /api/biens` inclut le périmètre hérité par patrimoine sans
+  doublons.
+- **Garde RS-06** : l'archivage d'un patrimoine avec affectation patrimoine `ACTIVE` est refusé en
+  400 jusqu'à révocation explicite.
+- **Clôture Sprint 2** : validations locales backend/frontend/sécurité du 2026-06-23 puis CI GitHub
+  PR #74 entièrement verte ; décision documentaire
+  `docs/cgpa/06-planification-agile/sprint-2-patrimoine-cloture.md`.
+
 ### Documentation — Patrimoine (Sprint 2, plan approuvé)
 
 - **Plan d'exécution Sprint 2 Patrimoine** : GO PO Option A confirmé pour un démarrage
