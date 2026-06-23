@@ -100,11 +100,11 @@ public class BienService {
     @SuppressWarnings("unchecked")
     private List<BienDto> listerBiensGestionnaire(String keycloakId) {
         List<Object[]> lignes = em.createNativeQuery(
-                        "SELECT id, adresse, type, statut FROM biens_affectes_gestionnaire(:keycloakId)")
+                        "SELECT id, adresse, type, statut, patrimoine_id FROM biens_affectes_gestionnaire(:keycloakId)")
                 .setParameter("keycloakId", keycloakId)
                 .getResultList();
         return lignes.stream()
-                .map(l -> new BienDto((UUID) l[0], (String) l[1], (String) l[2], (String) l[3], null))
+                .map(l -> new BienDto((UUID) l[0], (String) l[1], (String) l[2], (String) l[3], (UUID) l[4]))
                 .toList();
     }
 

@@ -239,6 +239,50 @@ class S02BiensBauxAffectationsIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void affectationPatrimoineDonneAccesAuxBiensDuPortefeuillePuisRevoque() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille Herite");
+        String bienA = creerBienDansPatrimoine(bailleur, patrimoineId, "60 rue Heritee A");
+        String bienB = creerBienDansPatrimoine(bailleur, patrimoineId, "61 rue Heritee B");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gpat@test.local");
+
+        String affectationId = JsonPath.read(mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.id == '" + bienA + "')]").exists())
+                .andExpect(jsonPath("$[?(@.id == '" + bienB + "')]").exists());
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienA)
+                        .with(gestionnaireJwt(keycloakId(gestionnaire)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bailJson("Locataire Patrimoine")))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/affectations/{id}/revocation", affectationId)
+                        .with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("REVOQUEE"));
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienB)
+                        .with(gestionnaireJwt(keycloakId(gestionnaire)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bailJson("Locataire Apres Revocation")))
+                .andExpect(status().isForbidden());
+    }
+
     private void inscrireBailleur(String keycloakId) throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId)))
                 .andExpect(status().isCreated());
@@ -246,6 +290,10 @@ class S02BiensBauxAffectationsIntegrationTest {
 
     private String creerBien(String keycloakId, String adresse) throws Exception {
         String patrimoineId = creerPatrimoine(keycloakId, "Patrimoine " + adresse);
+        return creerBienDansPatrimoine(keycloakId, patrimoineId, adresse);
+    }
+
+    private String creerBienDansPatrimoine(String keycloakId, String patrimoineId, String adresse) throws Exception {
         return JsonPath.read(mockMvc.perform(post("/api/biens")
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
