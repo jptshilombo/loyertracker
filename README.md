@@ -4,7 +4,7 @@ Application web de **gestion locative bailleur-centrée avec délégation fine p
 
 ## État du projet
 
-Projet gouverné par le **CGPA**. Le projet a été démarré avec le référentiel local v1.0 (`setup-cgpa/`) et resynchronisé vers **CGPA v3.0.1**. Le point d'entrée de reprise est `docs/project-state.md`. Phases de gouvernance franchies :
+Projet gouverné par le **CGPA**. Le projet a été démarré avec le référentiel local v1.0 (`setup-cgpa/`) et migré de manière additive jusqu'à **CGPA v5.3**. Le point d'entrée de reprise est `docs/project-state.md`. Phases de gouvernance franchies :
 
 | Gate | Phase | Statut |
 |------|-------|--------|
@@ -15,10 +15,13 @@ Projet gouverné par le **CGPA**. Le projet a été démarré avec le référent
 | Gate 4 | Architecture & conception | ✅ Go — **verrou de codage levé** |
 | Gate 5 | Backlog & planification | ✅ Go |
 | Gate 6 | DevSecOps | ✅ Go (16/20) — **ratifié le 2026-06-06** ; R1 clôturée, R2→R5 ouvertes avant prod, R6 partielle |
+| Gate Staging | Staging Readiness | ✅ Go — staging réel et smoke validés |
+| Gate 09 | Production Readiness | ✅ Go sous réserve — réserves traitées au Gate 10 |
+| Gate 10 | Mise en production | ✅ Go — production `1.0.0` LIVE |
 
 ## Phase actuelle
 
-CGPA v3.0.1 : **Phase 7 — Développement**. Dernier gate statué : **Gate 06 — Go**. Gate courant : **Gate 07**, non encore statué.
+CGPA v5.3 : **Phase 7 — Développement** pour les lots post-go-live. Production `1.0.0` LIVE depuis le 2026-06-20 ; les lots `[Non publié]` suivent désormais les workflows v5.3 Sprint -> Staging puis Epic/Release/Hotfix -> Production.
 
 ## Stack
 
@@ -60,6 +63,9 @@ gh secret list                       # vérifier les secrets enregistrés
 |-------|-------------|
 | Architecture & ADR | `docs/cgpa/05-architecture-conception/` |
 | Backlog & sprints | `docs/cgpa/06-planification-agile/` |
-| Project State CGPA v3.0.1 | `docs/project-state.md` |
+| Project State CGPA v5.3 | `docs/project-state.md` |
 | Plan d'implémentation DevSecOps | `docs/cgpa/07-devsecops/plan-implementation.md` |
+| Migration CGPA v5.3 | `docs/cgpa/migration/migration-report-v5.3.md` |
+| Workflows Staging/Production v5.3 | `docs/cgpa/workflows/` |
+| Checklists Gate Staging/Production v5.3 | `docs/cgpa/checklists/` |
 | Contribuer | `CONTRIBUTING.md` |
