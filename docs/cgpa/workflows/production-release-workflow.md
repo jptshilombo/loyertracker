@@ -51,3 +51,11 @@ Le circuit Hotfix ne supprime jamais le Gate Production ; il adapte seulement le
 |------|---------------|
 | `PRODUCTION_READY` | Gate Production validé, déploiement Production autorisé |
 | `PRODUCTION_DEPLOYED` | Artefact déployé en Production et tracé |
+
+## Isolation Staging amont (CGPA v5.4)
+
+Le Gate Production vérifie que le déploiement Staging amont a obtenu `STG-ISOL-01` = `PASS`
+(ou une exception explicite du Release Manager). Production (`loyertracker-prod-server`) est un
+hôte dédié, hors périmètre de mutualisation : `STG-ISOL-01` ne s'applique pas directement à la
+Production, mais conditionne la validité des preuves Staging qui fondent la décision Gate
+Production (cf. `docs/cgpa/checklists/gate-production-checklist.md`).

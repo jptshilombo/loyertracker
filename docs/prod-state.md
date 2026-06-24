@@ -5,6 +5,25 @@
 > Cadre : CGPA v5.2 — lève les réserves **RR-2** / **RG-09-1** / **RG-09-2** (Gate 09).
 
 
+
+## 0A. Déploiement Production Hotfix `1.1.1` — 2026-06-24
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.1.1` |
+| Tag déployé | **`sha-0adc4941`** (GHCR, commit canonique `0adc4941f854304a3f7412b04294615b05403707`) |
+| Tag précédent / rollback | `sha-05424aa3` (`1.1.0`), digests immuables vérifiés |
+| Backup pré-déploiement | `loyertracker-20260624-140441.dump`, checksum tracé, `pg_restore --list` OK |
+| Déploiement | pull puis recréation ciblée d’`api` et `nginx` uniquement ; tag persisté dans `.env` après validation |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **healthy**, zéro restart |
+| Flyway | V1→V14, **14 migrations success**, aucune nouvelle migration |
+| Smoke Production | **47 PASS / 0 FAIL** ; patrimoine/bien et isolation cross-tenant validés |
+| Nettoyage | données du run supprimées, compteurs revenus à la baseline, comptes Keycloak éphémères supprimés |
+| Observabilité | cinq cibles Prometheus up, aucune alerte |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint |
+
+Rapport final : `docs/cgpa/09-production/validation-finale-v1.1.1-report.md`.
+
 ## 0. Déploiement Production `1.1.0` — 2026-06-23
 
 | Contrôle | Résultat |
@@ -27,8 +46,8 @@ Le tag initialement préparé dans le Gate Production (`sha-1d6db31`) n'était p
 | Champ | Valeur |
 |---|---|
 | Date go-live | 2026-06-20 |
-| Release | `1.1.0` (SemVer) — release courante ; `1.0.0` conservée en historique go-live |
-| Tag déployé | **`sha-05424aa3`** (immuable GHCR, release `1.1.0`) ; précédent `sha-73359c5c` (`1.0.0`) |
+| Release | `1.1.1` (SemVer) — release courante ; `1.1.0` et `1.0.0` conservées en historique |
+| Tag déployé | **`sha-0adc4941`** (immuable GHCR, release `1.1.1`) ; précédent `sha-05424aa3` (`1.1.0`) |
 | Opérateur | Claude Code (CGPA Chief Delivery Officer), sous PO `jptshilombo@gmail.com` |
 | Hôte | **Production dédié** `loyertracker-prod-server` — EC2 `t3.medium` (2 vCPU / 4 GiB / 40 GiB gp3 chiffré), Ubuntu 24.04, `eu-central-1a`, instance `i-032524e6a47b72e05` |
 | Réseau | EIP `18.158.70.88` ; domaine `loyertracker.loyerpro.org` (Route53) ; SG `loyertracker-prod-sg` : `80/443` publics, **`22` restreint** (`52.29.80.119/32` admin + `172.31.30.45/32` dev privé, depuis le 2026-06-20) ; UFW + fail2ban actifs |
@@ -42,7 +61,7 @@ ou d'autres charges), conformément au modèle de promotion ENV-01 (Production d
 | Paramètre | Valeur |
 |---|---|
 | Fichiers Compose | `docker-compose.yml` + `docker-compose.prod.yml` (+ `docker-compose.monitoring.yml` pour l'overlay) |
-| Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable `sha-05424aa3` — **jamais `latest`**, **aucun build local** |
+| Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable `sha-0adc4941` — **jamais `latest`**, **aucun build local** |
 | Keycloak | mode **production** `start` (sans `--optimized`) + `--import-realm --http-relative-path=/auth` ; `KC_HOSTNAME=loyertracker.loyerpro.org` |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (via `ports: !override`) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** ; monitoring `9090/9093/9115` internes, Pushgateway `127.0.0.1:9091` (loopback) |
@@ -201,6 +220,20 @@ SonarQube — dans `docs/cgpa/environment-promotion-model.md` (Accès SSH inter-
 **Suite (exploitation, hors gate)** : revue de capacité en exploitation ; drill de rollback à la prochaine
 release ; realm de production sans compte de test (état « excellent », non bloquant).
 
+
+## 13A. Production Hotfix `1.1.1` — `PRODUCTION_DEPLOYED` le 2026-06-24 ✅
+
+| Contrôle | Résultat |
+|---|---|
+| API/Web | `sha-0adc4941`, digests conformes |
+| Services recréés | `api`, `nginx` uniquement |
+| PostgreSQL/Keycloak/monitoring | Inchangés |
+| Flyway | V1→V14, aucune migration |
+| Santé | API/Web healthy, cinq cibles Prometheus up, aucune alerte |
+| Smoke métier | **47 PASS / 0 FAIL** |
+| Statut | **`PRODUCTION_DEPLOYED`** |
+
+Rapports : `docs/cgpa/09-production/deploiement-technique-v1.1.1-report.md` et `docs/cgpa/09-production/validation-finale-v1.1.1-report.md`. Après validation finale, le tag candidat a été persisté dans `.env` avec sauvegarde en permissions 600 ; le rollback `sha-05424aa3` reste disponible.
 
 ## 13. Gate Production v5.3 — Release `1.1.0` : **PRODUCTION_DEPLOYED le 2026-06-23** ✅
 

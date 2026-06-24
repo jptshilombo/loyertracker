@@ -243,3 +243,33 @@ au **go-live réel** (Gate 09/10), hors périmètre staging.
 **Récepteur jetable :** `am-sink` supprimé après collecte des preuves (`docker rm -f am-sink`,
 ligne `ALERTMANAGER_WEBHOOK_URL` de test retirée de `.env`). Overlay `monitoring` laissé actif
 (supervision continue du staging).
+
+## 11. Conformité `STG-ISOL-01` (CGPA v5.4) — isolation de l'environnement Staging mutualisé
+
+> Gate ajouté par CGPA v5.4. Décision formelle : `docs/cgpa/07-devsecops/gate-stg-isol-01-decision.md`.
+> Checklist : `docs/cgpa/checklists/stg-isol-01-checklist.md`. Workflow :
+> `docs/cgpa/workflows/staging-isolation-workflow.md`. ADR : `docs/cgpa/05-architecture-conception/adr/ADR-STG-001-isolation-staging-partage.md`.
+
+### Inventaire des ressources mutualisées (D-STG-04)
+
+| Ressource | Nature | Propriétaire / portée | Conditions d'usage |
+|---|---|---|---|
+| Hôte `ai-test-server` (IP privée `172.31.11.102`) | Hôte EC2 partagé | Exploitant LoyerTracker/labo (cf. `SERVER_CONFIG.md`, hors dépôt) | Hébergement multi-projets ; chaque projet isole sa propre stack Compose (namespace, réseau, volume) |
+| Reverse proxy nginx-proxy-manager | Service mutualisé occupant les ports 80/443 de l'hôte | Exploitant (commun à tous les projets de l'hôte) | Publication par nom DNS et Proxy Host dédié par projet (Proxy Host #18 pour LoyerTracker) ; aucune modification de la configuration des autres projets lors d'un déploiement LoyerTracker |
+| Registre d'images GHCR (`ghcr.io/jptshilombo`) | Registre partagé au niveau du compte | Exploitant | Espace de noms par projet (`loyertracker-api`, `loyertracker-web`) ; pas de partage d'image avec un autre projet |
+| Autres projets connus sur l'hôte (« loyerpro », outils labo — SG `innovtech-ai-lab-sg`) | Stacks tierces, hors périmètre LoyerTracker | Hors périmètre de gouvernance LoyerTracker | Aucune ressource Docker (réseau/volume/conteneur) partagée avec LoyerTracker constatée à ce jour |
+
+Ressources **dédiées** au projet (non partagées) : réseau `loyertracker-staging_loyertracker-net`,
+volume `loyertracker-staging_postgres-data`, `.env` propre à l'hôte, conteneurs préfixés
+`loyertracker-staging-*` — cf. `docker-compose.staging.yml` (`name: loyertracker-staging`).
+
+### Résultat du contrôle
+
+**PASS** (2026-06-24) — fondé sur l'analyse de configuration (namespace Compose explicite,
+réseau/volume dédiés, ports internes non publiés, absence de commande Docker globale dans le
+runbook et la CI) et sur l'historique des redéploiements §8 (6 déploiements entre le 2026-06-14 et
+le 2026-06-24, sans incident rapporté sur un autre projet de l'hôte).
+
+**Réserve ouverte (RSV-STG-01)** : confirmation *live* (`docker ps` / `docker network ls` /
+`docker volume ls` sur l'hôte, en présence d'au moins un autre projet) non encore exécutée au
+moment du contrôle formel — à réaliser au prochain déploiement Staging réel.

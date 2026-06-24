@@ -7,6 +7,31 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Release candidate — Hotfix `1.1.1` (2026-06-24)
+
+- Candidat Production recevable : commit `0adc4941`, images API/Web `sha-0adc4941`.
+- CI, CodeQL, SonarQube et scans de sécurité verts ; Staging 4/4 healthy, smoke 47/0 et parcours navigateur réel validé.
+- Gate Production accéléré : GO sous réserve acceptée ; `PRODUCTION_READY` atteint.
+- Préflight Production PASS et backup `loyertracker-20260624-140441.dump` vérifié.
+- Production `1.1.1` déployée sur `sha-0adc4941` ; smoke 47/0, nettoyage complet et `PRODUCTION_DEPLOYED` atteint.
+
+### Gouvernance — Migration corrective CGPA v5.4.1 (2026-06-24)
+
+- Normalisation de l’ADR-STG-001 au chemin canonique `docs/cgpa/adr/ADR-STG-001-staging-isolation.md`, avec conservation de l’ancien chemin v5.4 comme alias.
+- Ajout des rapports de migration v5.4.1, maintien de `STG-ISOL-01` et ajout des risques RSV-STG-02 à RSV-STG-04.
+- Aucun Gate rejoué ; décision GO sous réserve de la preuve live RSV-STG-01.
+
+### Gouvernance — Migration CGPA v5.4 (2026-06-24)
+
+- Migration additive du projet vers **CGPA v5.4** : `docs/project-state.md` passe à `framework.current_version: "5.4"` sans suppression d'historique, de décision, de risque ou de Gate validé.
+- Ajout de la gouvernance des environnements Staging partagés : LoyerTracker partage l'hôte `ai-test-server` avec d'autres projets.
+- Ajout du Gate bloquant **`STG-ISOL-01`** (isolation du déploiement Staging), statué **PASS** sur la base de l'architecture existante (namespace Docker, réseau/volume dédiés, ports paramétrables, reverse proxy par nom DNS, absence de commande Docker globale).
+- Ajout du workflow `staging-isolation-workflow.md` et de la checklist `stg-isol-01-checklist.md`.
+- Ajout des décisions D-STG-01 à D-STG-05 et du risque RSV-STG-01.
+- Ajout de l'ADR obligatoire `ADR-STG-001-isolation-staging-partage.md` (rejette explicitement l'arrêt de tous les conteneurs de l'hôte avant chaque déploiement).
+- Mise à jour des responsabilités Release Manager, DevSecOps Lead, Governance Officer et Enterprise Architect.
+- Création des rapports de migration v5.4 dans `docs/cgpa/migration/`.
+
 ### Corrigé — Hotfix création/édition de bien cassée en Production (2026-06-24)
 
 - Le tableau de bord bailleur n'envoyait pas `patrimoineId` (devenu obligatoire depuis `1.1.0`/V12) lors
