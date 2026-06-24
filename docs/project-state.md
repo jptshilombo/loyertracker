@@ -2,13 +2,43 @@
 
 ```yaml
 framework:
-  current_version: "5.3"
-  migrated_from: "5.2"
-  migration_date: "2026-06-23"
+  current_version: "5.4.1"
+  migrated_from: "5.4"
+  migration_date: "2026-06-24"
   migration_status: "completed"
-  # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance)
+  # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Mise à jour 2026-06-24 (suite 5) — Migration corrective CGPA v5.4.1 : GO sous réserve.** Le chemin canonique de l’ADR Staging devient `docs/cgpa/adr/ADR-STG-001-staging-isolation.md`; l’ADR v5.4 historique reste conservée comme alias. La checklist canonique `STG-ISOL-01` est maintenue, les rapports v5.4.1 sont ajoutés sous `docs/cgpa/migration/`, et les risques RSV-STG-02 à RSV-STG-04 complètent RSV-STG-01. Aucun Gate n’est rejoué. Réserve : preuve live `STG-ISOL-01` au prochain déploiement Staging.
+>
+> **Décision finale du 2026-06-24 — GO sous réserve confirmé.** La migration CGPA v5.4.1 est acceptée. Réserve unique associée à cette décision : **RSV-STG-01**, à lever par une preuve live avant/après le prochain déploiement sur le Staging mutualisé. Cette décision n’autorise aucun déploiement Production et ne remplace pas les Gates Staging/Production applicables.
+>
+> **Décision PO du 2026-06-24 — parcours Production du Hotfix validé sous contrôle séquentiel.** Le prochain parcours est confirmé : candidat Production → Gate Production accéléré → préflight et sauvegarde → déploiement → validation/rollback. Avant chacune de ces étapes, un plan détaillé distinct doit être produit et validé ; aucune étape n’autorise automatiquement la suivante. Plan directeur : `docs/cgpa/09-production/plan-execution-hotfix-production.md`. Aucun Gate ni déploiement exécuté par cette décision.
+>
+> **Plan détaillé Étape 1 produit le 2026-06-24 — exécution suspendue.** Le plan de préparation du candidat Production est disponible dans `docs/cgpa/09-production/plan-etape-1-preparation-candidat-hotfix.md`. Il propose la version patch `1.1.1` et impose de résoudre la divergence entre le HEAD local observé `a33d103` et le candidat Staging documenté `0adc494` / `sha-0adc4941`, puis de vérifier GitHub Actions, CodeQL, SonarQube et les digests GHCR. Aucune vérification externe ni préparation du candidat n’est exécutée avant validation explicite de ce plan.
+>
+> **Validation PO du 2026-06-24 — Plan détaillé Étape 1 approuvé.** L’exécution de la préparation du candidat Production est autorisée selon `docs/cgpa/09-production/plan-etape-1-preparation-candidat-hotfix.md`. Cette approbation n’autorise pas le Gate Production, le préflight, la sauvegarde ou le déploiement ; un nouveau point de décision est requis après production du dossier candidat.
+>
+> **Étape 1 exécutée le 2026-06-24 — candidat Hotfix `1.1.1` recevable.** Commit canonique `0adc4941f854304a3f7412b04294615b05403707`, images GHCR API/Web `sha-0adc4941` vérifiées avec digests immuables, CI/CodeQL/Packaging/Sécurité SUCCESS, Quality Gates SonarQube backend et frontend OK. Le delta applicatif est limité au Hotfix patrimoine/bien et à jackson-databind 2.21.4 ; aucune migration SQL ni modification Compose/infra. Dossier : `docs/cgpa/09-production/release-candidate-v1.1.1-hotfix.md`. Décision : **candidat recevable**, Production toujours non autorisée. Prochaine action permise : produire le plan détaillé de l’Étape 2.
+>
+> **Plan détaillé Étape 2 produit le 2026-06-24 — Gate non exécuté.** Le plan `docs/cgpa/09-production/plan-etape-2-gate-production-hotfix.md` définit la checklist, les avis obligatoires, les critères GO/GO sous réserve/NO GO et les mutations documentaires autorisées. Un Gate valide pourra marquer `PRODUCTION_READY`, mais n’autorisera ni préflight, ni sauvegarde, ni déploiement sans plan Étape 3 validé. Le plan est en attente de validation PO.
+>
+> **Étape 2 exécutée le 2026-06-24 — Gate Production Hotfix `1.1.1` GO sous réserve acceptée.** L’identité du candidat `sha-0adc4941`, les preuves Staging, CI/CodeQL/SonarQube/Sécurité et le rollback `sha-05424aa3` sont validés. `RSV-STG-01` reste ouverte ; le backup et le préflight sont des conditions bloquantes de l’Étape 3. Statut **`PRODUCTION_READY` atteint**, `PRODUCTION_DEPLOYED` non atteint. Aucun accès Production, backup ou déploiement exécuté. Décision : `docs/cgpa/09-production/gate-production-v1.1.1-hotfix-decision.md`. Prochaine action permise : produire le plan détaillé de l’Étape 3.
+>
+> **Plan détaillé Étape 3 produit le 2026-06-24 — aucun accès Production exécuté.** Le plan `docs/cgpa/09-production/plan-etape-3-preflight-backup-production.md` sépare un préflight en lecture seule de la sauvegarde Production, unique mutation opérationnelle autorisée. Il impose les contrôles de santé, capacité, images courantes, Flyway, observabilité, cron, rollback, intégrité `pg_restore --list`, permissions et checksums. Tout déploiement, pull d’image ou changement de tag reste interdit. Plan en attente de validation PO.
+>
+> **Étape 3 exécutée le 2026-06-24 — préflight Production PASS et backup vérifié.** Hôte sain (33 Gio libres, charge faible), services applicatifs healthy, zéro restart, images courantes `sha-05424aa3`, Flyway 14/14, cinq cibles Prometheus up. Le backup `loyertracker-20260624-140441.dump` et son fichier globals ont été créés en permissions 600, checksums tracés et `pg_restore --list` validé. L’alerte initiale `BackupHeartbeatMissing`, causée par l’arrêt de l’hôte pendant le cron, est résolue après heartbeat. Aucun pull, changement de tag ou déploiement exécuté. Rapport : `docs/cgpa/09-production/preflight-backup-v1.1.1-report.md`. Prochaine action permise : produire le plan détaillé de l’Étape 4.
+>
+> **Plan détaillé Étape 4 produit le 2026-06-24 — déploiement non exécuté.** Le plan `docs/cgpa/09-production/plan-etape-4-deploiement-hotfix.md` prévoit une surcharge temporaire `LOYERTRACKER_TAG=sha-0adc4941` sans modifier `.env`, le pull et la recréation ciblés d’`api` et `nginx`, la vérification des digests, les contrôles techniques immédiats et un rollback autorisé vers `sha-05424aa3` en cas d’échec. PostgreSQL, Keycloak et le monitoring doivent rester inchangés. Le smoke métier et `PRODUCTION_DEPLOYED` restent réservés à l’Étape 5. Plan en attente de validation PO.
+>
+> **Étape 4 exécutée le 2026-06-24 — déploiement technique Hotfix `1.1.1` PASS.** API et Web `sha-0adc4941` ont été tirés, vérifiés par digest et recréés seuls. PostgreSQL et Keycloak ont conservé leurs IDs ; monitoring inchangé. API/Web healthy, Flyway 14/14, cinq cibles Prometheus up, aucune alerte ou erreur critique. Aucun smoke métier ni donnée de test exécuté ; `PRODUCTION_DEPLOYED` non atteint. `.env` est resté inchangé : l’Étape 5 devra persister le tag après validation ou rollback vers `sha-05424aa3`. Rapport : `docs/cgpa/09-production/deploiement-technique-v1.1.1-report.md`. Prochaine action permise : produire le plan détaillé de l’Étape 5.
+>
+> **Plan détaillé Étape 5 produit le 2026-06-24 — validation finale non exécutée.** Le plan `docs/cgpa/09-production/plan-etape-5-validation-finale-rollback.md` encadre le smoke Production 47/0, la preuve spécifique patrimoine/bien, le nettoyage ciblé des données et comptes de test, la révocation Keycloak, la persistance atomique de `LOYERTRACKER_TAG=sha-0adc4941` après succès et le rollback `sha-05424aa3` en cas d’échec. `PRODUCTION_DEPLOYED` ne pourra être marqué qu’après validation, nettoyage et contrôles post-persistance. Plan en attente de validation PO.
+>
+> **Étape 5 exécutée le 2026-06-24 — Hotfix `1.1.1` `PRODUCTION_DEPLOYED`.** Smoke Production **47 PASS/0 FAIL** ; création patrimoine/bien, honoraires et isolation cross-tenant validées. Nettoyage transactionnel ciblé : compteurs revenus exactement à l’état de référence, aucun marqueur du run `1782311743`, deux utilisateurs Keycloak éphémères supprimés, compte de smoke désactivé et `directAccessGrants=false`. Tag `sha-0adc4941` persisté dans `.env` avec sauvegarde permissions 600, sans restart. API/Web healthy, Flyway 14/14, assets 200, cinq cibles Prometheus up, aucune alerte. Décision CDO : **GO — `PRODUCTION_DEPLOYED`**. Rapport : `docs/cgpa/09-production/validation-finale-v1.1.1-report.md`.
+>
+> **Mise à jour 2026-06-24 (suite 4) — Migration CGPA v5.4 : GO sous réserve (gouvernance Staging partagée, `STG-ISOL-01`).** Migration additive réalisée sans rejouer ni supprimer les Gates, décisions ou risques historiques : `framework.current_version` passe de `5.3` à `5.4`. CGPA v5.4 introduit la gouvernance des environnements Staging mutualisés (`ai-test-server`, hébergeant LoyerTracker et d'autres projets) : nouveau Gate bloquant **`STG-ISOL-01`** (statué **PASS** le 2026-06-24, `docs/cgpa/07-devsecops/gate-stg-isol-01-decision.md`), workflow `docs/cgpa/workflows/staging-isolation-workflow.md`, checklist `docs/cgpa/checklists/stg-isol-01-checklist.md`, décisions **D-STG-01** à **D-STG-05**, risque **RSV-STG-01**, et ADR obligatoire `docs/cgpa/05-architecture-conception/adr/ADR-STG-001-isolation-staging-partage.md` (rejette explicitement l'option « arrêter tous les conteneurs avant chaque déploiement »). L'audit (`docs/cgpa/migration/audit-initial-v5.4.md`) établit que l'isolation requise (namespace Docker, réseaux/volumes dédiés, ports sans conflit, reverse proxy par nom DNS, absence de commande Docker globale) est **déjà en place de façon native** depuis le lot Production Readiness 4b (2026-06-14) : la migration est principalement une formalisation de gouvernance d'un état technique déjà conforme. Décision : **GO sous réserve** — réserve non bloquante **RSV-STG-01** (confirmation *live* de `STG-ISOL-01` sur l'hôte mutualisé, en présence d'au moins un autre projet, au prochain déploiement Staging réel). Détail complet : `docs/cgpa/migration/migration-report-v5.4.md` (§16 ci-dessous).
+>
 > **Mise à jour 2026-06-24 (suite 3) — Politique réseau formalisée : IP privée prioritaire pour les accès SSH inter-serveurs (dev/CI, staging/test, SonarQube).** Contexte communiqué par le PO : ces hôtes (dont `loyerpro-ci-server`, qui héberge aussi SonarQube) résident désormais dans le même VPC/périmètre réseau privé avec SSH ouvert par IP privée. Règle documentée : IP privée prioritaire sur l'IP publique pour tout accès intra-VPC ; IP publique réservée au dernier recours ou aux postes externes autorisés — cohérent avec le précédent déjà en place côté Production (`docs/prod-state.md`, restriction SG du 2026-06-20). Détail : `docs/cgpa/environment-promotion-model.md` (Accès SSH inter-serveurs), `docs/cgpa/07-devsecops/runbook-exploitation.md` §0.1. **Aucun code, secret ou règle de sécurité modifié — documentation uniquement.** **Réserve ouverte** : `SERVER_CONFIG.md` (2026-06-19, hors dépôt) documente encore 3 Security Groups distincts plutôt qu'un SG unique partagé, et aucun hôte SonarQube dédié distinct de `loyerpro-ci-server` — à vérifier/aligner par l'exploitant si la topologie a réellement changé.
 >
 > **Mise à jour 2026-06-24 (suite 2) — Vérification navigateur complète du Hotfix réalisée (preuve réelle) ; bug CORS distinct découvert et tracé ; nettoyage Staging confirmé.** À la demande du PO, accès direct temporaire ouvert (SG port `18443` `0.0.0.0/0`, `KC_HOSTNAME`/`KEYCLOAK_ISSUER_URI` basculés sur l'IP, `redirectUris`/`webOrigins` étendus) pour un test Playwright/Chrome de bout en bout : connexion Keycloak réelle, tableau de bord chargé, sélecteurs patrimoine/type peuplés, création d'un bien via le **vrai formulaire Angular** → `201 Created` (capture d'écran). **Bug distinct découvert en cours de route** : `APP_CORS_ALLOWED_ORIGIN`/`APP_INVITATION_BASE_URL` existent dans `.env` depuis l'exposition publique (2026-06-16) mais ne sont **jamais passées au conteneur `api` dans aucun fichier compose** — l'application tourne depuis toujours sur le défaut Spring CORS (`https://localhost`), sans rapport avec le Hotfix ; **reste ouvert, à corriger dans un lot dédié** (ajouter ces variables à `docker-compose.yml`/`docker-compose.staging.yml`/`docker-compose.prod.yml`). Compte de test fourni au PO : `jordan.test@loyerpro.org` (conservé). **Nettoyage effectué et vérifié** : `redirectUris`/`webOrigins` et `.env` (`KEYCLOAK_ISSUER_URI`, `APP_CORS_ALLOWED_ORIGIN`) revertés au domaine public, override temporaire supprimé, `keycloak`/`api` redémarrés (issuer revérifié), smoke **47/0** rejoué, règle SG port `18443` révoquée. Accès SSH `52.29.80.119/32` conservé (décision PO en attente sur son maintien). Détail : `docs/cgpa/06-planification-agile/plan-execution-hotfix-bien-patrimoine-frontend.md` §11.
@@ -49,11 +79,11 @@ framework:
 
 * Nom du projet : LoyerTracker
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
-* Version actuelle : 1.1.0 (SemVer) — **EN PRODUCTION** depuis le 2026-06-23 (`PRODUCTION_DEPLOYED`, `https://loyertracker.loyerpro.org`)
+* Version actuelle : 1.1.1 (SemVer) — **EN PRODUCTION** depuis le 2026-06-24 (`PRODUCTION_DEPLOYED`, `sha-0adc4941`, `https://loyertracker.loyerpro.org`)
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active de référence : `main` alignée sur `origin/main` (`aaa0681`, merge PR #78 — trace CGPA v5.3 production `1.1.0`) — S04 complet backend + frontend ; production `1.1.0` LIVE ; post-go-live **Quittances de loyer** mergé (`PR #70` fondation données, `PR #71` génération PDF) ; **Sprint 1 Patrimoine** implémenté via `PR #72` puis clôturé documentairement via `PR #73` ; **Sprint 2 Patrimoine backend-first intégré et clôturé côté `main` via PR #74** ; **smoke-staging réaligné sur V13+patrimoine (PR #75)** puis **honoraires patrimoine corrigés (PR #76, migration V14)**, réserve de gouvernance **R-S04-1 fermée** ; **re-vérification smoke staging post-V14 confirmée fonctionnelle (47 PASS/0 FAIL), écart cosmétique du compteur Flyway corrigé et mergé via PR #77** ; **migration CGPA v5.3 + Gate Production `1.1.0` + déploiement Production tracés via PR #78**.
-* Derniere mise a jour : 2026-06-24 (**Hotfix patrimoine/bien frontend implémenté et validé localement, non déployé**) : régression Production corrigée (patrimoine par défaut à l'inscription, sélecteurs patrimoine/type dans `bienForm`), `mvn verify` 86/0, `ng test` 45/0 ; Sprint 3 Patrimoine cadré en détail (backend-only, tranché par le PO). Précédemment 2026-06-24 (**Reprise CGPA v5.3 re-confirmée, `Resume Approved with Reservations`**) : 4/4 contrôles de continuité PASS, release `1.1.0` inchangée toujours `PRODUCTION_DEPLOYED` ; correction de l'écart documentaire de `docs/cgpa/migration/reprise-report-v5.3.md` (stale depuis la PR #78, ramené à l'état réel `1.1.0`). Précédemment 2026-06-23 (**Production `1.1.0` déployée**) : backup pré-déploiement `loyertracker-20260623-150659.dump` vérifié, tag `sha-05424aa3` déployé sur `api` et `nginx`, 4/4 services applicatifs healthy, Flyway V1→V14, smoke Production **47 PASS / 0 FAIL**, compte de smoke redésactivé et `directAccessGrants=false`.
-* Agent ayant mis a jour le fichier : Claude Code — CGPA Chief Delivery Officer, Hotfix patrimoine/bien frontend du 2026-06-24 (implémenté et validé localement, non déployé) et cadrage Sprint 3 Patrimoine (backend-only) ; précédemment Claude Code, reprise CGPA v5.3 re-confirmée du 2026-06-24 (`Resume Approved with Reservations`, correctif documentaire `reprise-report-v5.3.md`) ; précédemment Claude Code, déploiement Production `1.1.0` du 2026-06-23 (`sha-05424aa3`, smoke prod 47/0, `PRODUCTION_DEPLOYED`) ; précédemment Claude Code, re-vérification du smoke staging post-V14 du 2026-06-23 (redéploiement `sha-75473413`, smoke 46/1 puis 47/0 après correctif, PR #77 mergée et staging resynchronisé) ; précédemment Claude Code, synchronisation post-merge PR #75/#76 et clôture de la réserve de gouvernance R-S04-1 du 2026-06-23 (CI PR #76 vérifiée verte 13/13, régularisation a posteriori actée) ; précédemment Jo_skynet / Hermes — CGPA Chief Delivery Officer, synchronisation post-merge PR #74 et clôture Sprint 2 Patrimoine du 2026-06-23 (GO technique côté `main`, CI GitHub verte) ; validation locale Sprint 2 Patrimoine du 2026-06-23 ; GO Sprint 2 Patrimoine du 2026-06-21 (`Option A`, backend-first autorisé selon plan, sans extension UX/EXCLUSION hors arbitrage) ; synchronisation post-merge PR #73 du 2026-06-21 (`Resume Approved`, `main` aligné sur `origin/main`, R-V52-7/R-V52-9 closes, R-V52-8 maintenue mineure) ; précédemment Claude Code — CGPA Chief Delivery Officer pour les reprises et gates antérieurs.
+* Branche active de référence : `main` alignée sur `origin/main` (`a33d103`) ; candidat Production canonique `0adc4941f854304a3f7412b04294615b05403707`, déployé via les images immuables `sha-0adc4941`. L’historique `1.1.0` reste tracé par la PR #78 et le tag `sha-05424aa3`.
+* Derniere mise a jour : 2026-06-24 (**Hotfix `1.1.1` déployé et validé en Production**) : Gate Production GO sous réserve accepté, préflight et backup vérifiés, déploiement ciblé API/Web, smoke **47 PASS / 0 FAIL**, nettoyage complet des données/comptes de test, tag `sha-0adc4941` persisté et observabilité saine. Décision CDO : **GO — `PRODUCTION_DEPLOYED`**. Sprint 3 Patrimoine reste cadré backend-only et non démarré.
+* Agent ayant mis a jour le fichier : Codex — CGPA Chief Delivery Officer, exécution contrôlée des Étapes 1 à 5 du Hotfix Production `1.1.1` le 2026-06-24 ; précédemment Claude Code et les agents historiques, conservés dans les entrées chronologiques ci-dessus.
 
 ## 2. Resume executif
 
@@ -78,12 +108,12 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 ## 3A. Release et environnements (CGPA v5.2)
 
-* Release actuelle : **`1.1.0`** (SemVer, D-REL-002) — release **promue en production** le 2026-06-23, **LIVE** sur `https://loyertracker.loyerpro.org` (`sha-05424aa3`, Gate Production v5.3 GO sous réserve acceptée puis smoke prod 47/0).
+* Release actuelle : **`1.1.1`** (SemVer, D-REL-002) — Hotfix **promu en production** le 2026-06-24, **LIVE** sur `https://loyertracker.loyerpro.org` (`sha-0adc4941`, Gate Production GO sous réserve accepté puis smoke prod 47/0).
 * Environnement actuel : **Production** — go-live le 2026-06-20, **LIVE sur `https://loyertracker.loyerpro.org`** (hote dedie `loyertracker-prod-server`, `docs/prod-state.md`). Staging reste actif (`https://loyertracker.staging.loyerpro.org`). Dev/Test exerces en CI (Testcontainers, smoke stack complete).
 * Environnements definis (ENV-01) : Dev -> Test -> Staging -> Production, **formalises le 2026-06-16** (R-V52-3 levee) dans `docs/cgpa/environment-promotion-model.md`. Dev = `docker-compose.yml` local ; Test = CI (Testcontainers/Karma/smoke) ; Staging = `docker-compose.staging.yml` sur images GHCR à tag immuable ; Production = `docker-compose.prod.yml` sur hôte dédié, en service depuis le 2026-06-20. **Staging et Production distincts**.
 * Promotion des artefacts : par image GHCR a **tag immuable `sha-<8>`** (jamais `latest` en deploiement) ; chaine CD = merge `main` -> CI publie `sha-<8>` -> redeploiement staging.
-* Derniere promotion : production `sha-05424aa3` le 2026-06-23 pour `1.1.0` ; staging Patrimoine validé par Gate Staging v5.3 et smoke 47/0. Historique des redéploiements : `docs/staging-state.md` §8 et `docs/prod-state.md`.
-* Prochaine promotion : **à déterminer** pour le prochain lot `[Non publié]` après CI complète, revue sécurité et décision de release ; `1.1.0` est la release de production courante.
+* Derniere promotion : production `sha-0adc4941` le 2026-06-24 pour le Hotfix `1.1.1`, validé par smoke 47/0 et décision CDO GO. Historique des redéploiements : `docs/staging-state.md` §8 et `docs/prod-state.md`.
+* Prochaine promotion : **à déterminer** pour le prochain lot `[Non publié]` après CI complète, revue sécurité et décision de release ; `1.1.1` est la release de production courante.
 * Rollback : par redeploiement du `LOYERTRACKER_TAG` precedent (tags immuables) ; procedure documentee dans le runbook et `docs/staging-state.md` §7.
 
 ## 3B. Etat DevSecOps (CGPA v5.2)
@@ -136,7 +166,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
   * frontend Angular minimal pour biens, baux et affectations S02 ;
   * CI/CD de build, tests, scans et packaging Docker.
 
-## 5. Ou l'on est
+## 5. Ou l’on’est
 
 * Etat actuel du projet : socle technique, securite et lots metier EP-03/EP-04/EP-05 livres (backend + frontend), plan Production Readiness 4/4 lots livre et **staging readiness atteint** (Gate Staging Readiness GO le 2026-06-14). Pas encore de deploiement production.
 * Fonctionnalites terminees ou tres avancees :
@@ -336,6 +366,7 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | 2026-06-23 | Smoke-staging realigne sur V13 + patrimoine + S02 (PR #75) — revele un ecart honoraires patrimoine | Maintenir le script de smoke representatif du schema reellement deploye (V13, au lieu de V10) | jptshilombo@gmail.com | `infra/smoke/smoke-stack.sh` mis a jour : attente Flyway V1-V13, creation d'un patrimoine avant le bien (rattachement), bail via `loyerHc`/`provisionCharges`, affectation **patrimoine** 8 % au lieu d'une affectation bien. Execute manuellement contre staging : **43 PASS / 4 FAIL**, les 4 echecs imputables a un ecart metier (honoraires non calcules sur affectation patrimoine), analyse separee ouverte. Mergee `c23fea4` |
 | 2026-06-23 | **R-S04-1 — correctif honoraires patrimoine pousse hors Plan d'Execution, regularise et ferme (PR #76)** | Etendre `calculer_honoraires()` (V8) et `HonoraireRepository.findByBien` aux biens couverts par une affectation **patrimoine** (ecart revele par le smoke PR #75) | jptshilombo@gmail.com | Migration **V14** (`V14__honoraires_patrimoine.sql`) : resolution patrimoine_id -> bien.patrimoine_id dans `calculer_honoraires()`, comportement affectation bien inchange. `HonoraireRepository.findByBien` inclut les honoraires lies a une affectation patrimoine couvrant le bien. `SchemaMigrationTest` aligne 13->14 (compteur initialement oublie, CI backend rouge sur push, corrige dans la meme PR). **Note de gouvernance assumee dans la PR** : le correctif a ete code et pousse directement sur `staging-smoke-s04` apres le merge de la PR #75, sans Plan d'Execution ni revue prealable — ecart **R-S04-1**. CI complete verifiee verte (13/13 : CodeQL Java/Kotlin+JS/TS, Backend, Frontend, Packaging Docker, Securite). **Mergee le 2026-06-23T12:14Z, merge commit `7547341`.** Regularise et **ferme** a posteriori par la revue + CI verte ; re-verification du smoke staging (0 FAIL attendu) restant a executer |
 | 2026-06-24 | **Politique reseau formalisee — IP privee prioritaire pour les acces SSH inter-serveurs (dev/CI, staging/test, SonarQube)** | Le PO signale que ces hotes residant desormais dans le meme VPC/perimetre reseau prive, avec SSH ouvert par IP privee ; formaliser la regle d'usage avant qu'elle ne soit appliquee de maniere incoherente | jptshilombo@gmail.com | Documentation uniquement (aucun code, secret ni regle de securite modifie) : `docs/cgpa/environment-promotion-model.md` (nouvelle section Acces SSH inter-serveurs), `docs/cgpa/07-devsecops/runbook-exploitation.md` (nouvelle section §0.1), `docs/staging-state.md` et `docs/prod-state.md` (notes de coherence croisees). Regle : IP privee prioritaire intra-VPC, IP publique en dernier recours/poste externe autorise. Coherent avec le precedent deja en place en Production (restriction SG du 2026-06-20). **Reserve ouverte** : `SERVER_CONFIG.md` (hors depot, 2026-06-19) documente encore 3 Security Groups distincts et aucun hote SonarQube dedie distinct de `loyerpro-ci-server` — verification/alignement par l'exploitant recommande, pas de verification infrastructure effectuee dans cette session (hors perimetre demande) |
+| 2026-06-24 | **Migration CGPA v5.4 — Gouvernance Staging partagé, Gate `STG-ISOL-01` PASS** | Formaliser l'isolation obligatoire des stacks Docker sur l'environnement Staging mutualisé `ai-test-server` (CGPA v5.4) | jptshilombo@gmail.com | `framework.current_version` 5.3 → 5.4. Audit (`docs/cgpa/migration/audit-initial-v5.4.md`) : isolation namespace/réseau/volume/ports/reverse proxy déjà en place nativement depuis le lot 4b (2026-06-14) ; aucune modification d'infrastructure requise. Nouveau Gate `STG-ISOL-01` statué **PASS** (`docs/cgpa/07-devsecops/gate-stg-isol-01-decision.md`), workflow `staging-isolation-workflow.md`, checklist `stg-isol-01-checklist.md`. Décisions **D-STG-01 à D-STG-05** ajoutées (§16). ADR obligatoire `ADR-STG-001-isolation-staging-partage.md` : rejette explicitement l'alternative « arrêter tous les conteneurs avant chaque déploiement ». Fiches agents (Release Manager, DevSecOps Lead, Governance Officer, Enterprise Architect) mises à jour. Correctifs de cohérence documentaire appliqués à `docs/cgpa/environment-promotion-model.md` (état Production obsolète depuis Gate 10). Décision : **GO sous réserve** — réserve **RSV-STG-01** (confirmation live de l'isolation au prochain déploiement Staging réel). Rapport complet : `docs/cgpa/migration/migration-report-v5.4.md` |
 
 ## 12. Historique des etapes realisees
 
@@ -455,6 +486,10 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 | Correctif honoraires patrimoine codé et poussé hors Plan d'Exécution (R-S04-1, post-PR #75) | Mineur gouvernance | Écart de discipline CGPA (verrou « aucun code sans Plan d'Exécution approuvé ») ; risque de précédent si répété | **Fermé le 2026-06-23** : régularisé a posteriori par la PR #76 (revue complète, CI verte 13/13 dont CodeQL/Sécurité/Backend/Frontend/Packaging) ; migration V14 corrige le calcul (`calculer_honoraires()`) et la lecture (`HonoraireRepository.findByBien`) pour les affectations patrimoine. Leçon retenue : tout correctif applicatif, même mineur, doit être précédé d'un Plan d'Exécution avant push sur une branche partagée | Ferme |
 | Smoke staging non re-vérifié après le correctif honoraires patrimoine (V14, PR #76) | Mineur exploitation | Les 4 FAIL observés lors du smoke PR #75 (43 PASS/4 FAIL) ne sont pas formellement reconfirmés résolus en conditions réelles de staging | **Fermé le 2026-06-23** : staging redéployé sur `sha-75473413` (PR #76) et smoke rejoué — honoraires patrimoine confirmés fonctionnels en live (46 PASS / 1 FAIL, le FAIL résiduel portant uniquement sur le compteur Flyway du script, corrigé via PR #77, revalidé 47 PASS / 0 FAIL) | Ferme |
 | Compteur Flyway du smoke script resté à 13 après l'ajout de V14 (révélé par la re-vérification post-PR #76) | Mineur gouvernance/exploitation | `infra/smoke/smoke-stack.sh` n'a pas été mis à jour par la PR #76 (seuls `HonoraireRepository`/`V14`/`SchemaMigrationTest` l'avaient été) ; même nature que R-S04-1 | Corrigé via branche dédiée + PR #77 (`fix/smoke-flyway-v14`), CI verte 13/13, revalidé en conditions réelles (47 PASS/0 FAIL) avant push — procédure gouvernée respectée cette fois. **Mergée le 2026-06-23T13:33Z (`1d6db31`)**, staging resynchronisé | Ferme |
+| `STG-ISOL-01` statué PASS sur preuves documentaires/historiques, sans confirmation live au moment d’un déploiement réel en présence d’un autre projet (RSV-STG-01, CGPA v5.4) | Mineur gouvernance | Le contrôle d'isolation Staging mutualisé repose sur l'analyse de configuration (`docker-compose.staging.yml`, runbook) et l'historique sans incident (6 redéploiements 2026-06-14→2026-06-24), pas sur une inspection directe de l'hôte au moment du contrôle | À lever au prochain déploiement Staging réel : `docker ps`/`docker network ls`/`docker volume ls` sur `ai-test-server` en présence d'au moins un autre projet hébergé. Suivi par DevSecOps Lead et Release Manager | Ouvert |
+| Collision future de namespace, réseau, volume ou port (RSV-STG-02) | Mineur exploitation | Une nouvelle stack pourrait entrer en conflit avec LoyerTracker ou un autre projet | Vérifier le nom Compose, les réseaux, volumes et ports dans la checklist canonique avant chaque promotion | En surveillance |
+| Introduction future d’une commande Docker globale ou destructive (RSV-STG-03) | Majeur exploitation | Interruption ou suppression de ressources interprojets | Recherche obligatoire dans pipelines, scripts et runbooks ; `FAIL` impose `NO GO` | En surveillance |
+| Dérive du reverse proxy ou de l’inventaire des ressources mutualisées (RSV-STG-04) | Mineur gouvernance | Routage erroné ou dépendance partagée non maîtrisée | Revue de `docs/staging-state.md` et du routage DNS à chaque changement d’infrastructure | En surveillance |
 
 ## 14. Prochaine action claire
 
@@ -472,7 +507,9 @@ Le **plan Production Readiness en 4 lots est livre et integre dans `main`** : lo
 
 **Reprise CGPA du 2026-06-23 (suite) — synchronisation post-merge PR #75/#76 : réserve R-S04-1 fermée.** `origin/main` est désormais à `7547341` (merge PR #76, suivi de PR #75) ; la branche locale `main` a été réalignée (ref simplement périmé, aucune divergence réelle). Le smoke-staging réaligné sur V13+patrimoine (PR #75) avait révélé un écart fonctionnel (43 PASS/4 FAIL : honoraires non calculés sur affectation patrimoine) ; corrigé par la migration V14 (PR #76, CI verte 13/13). La réserve de gouvernance R-S04-1 (correctif poussé hors Plan d'Exécution) est régularisée a posteriori et fermée. **Reste à faire avant toute décision de promotion staging/release ou cadrage Sprint 3** : redéployer le tag `7547341` sur staging et rejouer le smoke (0 FAIL attendu) pour confirmer la correction en conditions réelles.
 
-**Reprise CGPA du 2026-06-23 (suite 2) — re-vérification du smoke staging réalisée : confirmation fonctionnelle, écart cosmétique régularisé via PR #77.** Staging redéployé sur le tag `sha-75473413` (PR #76) : 4/4 services `healthy`, smoke rejoué — **honoraires patrimoine confirmés fonctionnels en conditions réelles** (46 PASS / 1 FAIL). L'unique FAIL est le compteur Flyway du script (`13` au lieu de `14`, V14 non répercutée par la PR #76) ; corrigé via une branche dédiée et la **PR #77** (procédure gouvernée respectée : pas de push direct), revalidé en conditions réelles avant push (**47 PASS / 0 FAIL**), CI verte 13/13. **PR #77 mergée le 2026-06-23T13:33Z (`1d6db31`)** ; staging resynchronisé sur ce HEAD. Le prérequis de re-vérification est désormais **pleinement satisfait** : la décision de promotion staging/release ou de cadrage Sprint 3 peut être prise sans réserve résiduelle.
+**Reprise CGPA du 2026-06-23 (suite 2) — re-vérification du smoke staging réalisée : confirmation fonctionnelle, écart cosmétique régularisé via PR #77.** Staging redéployé sur le tag `sha-75473413` (PR #76) : 4/4 services `healthy`, smoke rejoué — **honoraires patrimoine confirmés fonctionnels en conditions réelles** (46 PASS / 1 FAIL). L'unique FAIL est le compteur Flyway du script (`13` au lieu de `14`, V14 non répercutée par la PR #76) ; corrigé via une branche dédiée et la **PR #77** (procédure gouvernée respectée : pas de push direct), revalidé en conditions réelles avant push (**47 PASS / 0 FAIL**), CI verte 13/13. **PR #77 mergée le 2026-06-23T13:33Z (`1d6db31`)** ; staging resynchronisé sur ce HEAD. Le prérequis de re-vérification’est désormais **pleinement satisfait** : la décision de promotion staging/release ou de cadrage Sprint 3 peut être prise sans réserve résiduelle.
+
+**Migration CGPA v5.4 du 2026-06-24 — Gouvernance Staging partagé : `GO sous réserve`.** L'audit constate que LoyerTracker partage l'hôte Staging `ai-test-server` avec d'autres projets ; le nouveau Gate bloquant `STG-ISOL-01` est statué **PASS** sur la base de l'architecture déjà en place (namespace Docker, réseau/volume dédiés, ports paramétrables, reverse proxy par nom DNS, absence de commande Docker globale) et de l'historique opérationnel sans incident depuis le 2026-06-14. Aucun Gate, décision ou risque historique rejoué ou supprimé. Réserve non bloquante : confirmation live de l'isolation (RSV-STG-01) au prochain déploiement Staging réel. Détail : §16 et `docs/cgpa/migration/migration-report-v5.4.md`.
 
 ## 15. Migration CGPA v5.3 — Release Management et UX/UI Governance
 
@@ -490,8 +527,8 @@ Le **plan Production Readiness en 4 lots est livre et integre dans `main`** : lo
 |--------|------------|-------------------|
 | `STAGING_READY` | Gate Staging validé, déploiement Staging autorisé | Atteint pour le lot Patrimoine le 2026-06-23 |
 | `STAGING_DEPLOYED` | Artefact déployé en Staging et tracé | Atteint historiquement pour `1.0.0` et pour le lot Patrimoine `[Non publié]` le 2026-06-23 |
-| `PRODUCTION_READY` | Gate Production validé, déploiement Production autorisé | Atteint pour `1.0.0` le 2026-06-20 et pour `1.1.0` le 2026-06-23 |
-| `PRODUCTION_DEPLOYED` | Artefact déployé en Production et tracé | Atteint pour `1.0.0` le 2026-06-20 et pour `1.1.0` le 2026-06-23 (`sha-05424aa3`, smoke prod 47/0) |
+| `PRODUCTION_READY` | Gate Production validé, déploiement Production autorisé | Atteint pour `1.0.0` le 2026-06-20, `1.1.0` le 2026-06-23 et `1.1.1` le 2026-06-24 |
+| `PRODUCTION_DEPLOYED` | Artefact déployé en Production et tracé | Atteint pour `1.0.0` le 2026-06-20, `1.1.0` le 2026-06-23 (`sha-05424aa3`) et `1.1.1` le 2026-06-24 (`sha-0adc4941`, smoke prod 47/0) |
 
 ### Décisions Release Management v5.3
 
@@ -499,7 +536,7 @@ Le **plan Production Readiness en 4 lots est livre et integre dans `main`** : lo
 |----------|-------|--------|
 | D-RM-01 | Tout Sprint validé doit être candidat à un déploiement Staging. | Adoptée |
 | D-RM-02 | Le passage en Production nécessite un Gate Production valide. | Adoptée |
-| D-RM-03 | La Production est pilotée par Epic, Release ou Hotfix, pas automatiquement par Sprint. | Adoptée |
+| D-RM-03 | La Production’est pilotée par Epic, Release ou Hotfix, pas automatiquement par Sprint. | Adoptée |
 | D-RM-04 | Tout déploiement Production doit disposer d'un rollback documenté. | Adoptée |
 
 ### Risques Release Management v5.3
@@ -526,3 +563,75 @@ Le projet comporte une interface Angular déjà livrée. Le Gate 02A UX & Design
 - `docs/cgpa/workflows/production-release-workflow.md`
 - `docs/cgpa/checklists/gate-staging-checklist.md`
 - `docs/cgpa/checklists/gate-production-checklist.md`
+
+## 16. Migration CGPA v5.4 — Gouvernance Staging partagé et `STG-ISOL-01`
+
+| Champ | Valeur |
+|-------|--------|
+| Date de migration | 2026-06-24 |
+| Version avant migration | CGPA v5.3 |
+| Version après migration | CGPA v5.4 |
+| Mode | Additif, sans rejeu de Gate ; principalement formalisation documentaire d'un état technique déjà conforme |
+| Décision | GO sous réserve |
+
+### Contexte : Staging mutualisé
+
+L'environnement Staging (`docker-compose.staging.yml` sur `ai-test-server`) est un hôte
+**mutualisé**, hébergeant également d'autres projets (« loyerpro », outils labo —
+`innovtech-ai-lab-sg`) derrière un reverse proxy partagé (nginx-proxy-manager). CGPA v5.4
+s'applique pleinement à cet environnement ; Production (`loyertracker-prod-server`) est un hôte
+dédié, hors périmètre.
+
+### Gate `STG-ISOL-01`
+
+| Critère | Verdict |
+|---------|---------|
+| N'arrête pas les conteneurs d'un autre projet | ✅ |
+| N'écrase ni ne supprime les volumes d'un autre projet | ✅ |
+| N'utilise pas de ressources partagées non inventoriées | ✅ avec réserve (inventaire initial §11 `staging-state.md`) |
+| Respecte les conventions de nommage Docker | ✅ (`name: loyertracker-staging`) |
+| Utilise un nom de projet Compose explicite | ✅ |
+
+**Résultat : PASS** (2026-06-24, `docs/cgpa/07-devsecops/gate-stg-isol-01-decision.md`).
+
+### Décisions Staging partagé v5.4
+
+| Décision | Règle | Statut |
+|----------|-------|--------|
+| D-STG-01 | Un déploiement Staging ne doit pas impacter un autre projet. | Adoptée |
+| D-STG-02 | Chaque stack utilise un nom de projet Docker Compose explicite et unique. | Adoptée |
+| D-STG-03 | `STG-ISOL-01` est obligatoire et bloquant avant déploiement Staging. | Adoptée |
+| D-STG-04 | Les ressources partagées sont inventoriées, maîtrisées et tracées. | Adoptée |
+| D-STG-05 | Une exception exige une décision explicite du Release Manager. | Adoptée |
+
+### Risques Staging partagé v5.4
+
+| Risque | Description | Mitigation | Statut |
+|--------|-------------|------------|--------|
+| RSV-STG-01 | `STG-ISOL-01` PASS sur preuves documentaires/historiques, sans confirmation live au moment d’un déploiement réel | Confirmation live programmée au prochain déploiement Staging réel | Ouvert |
+| RSV-STG-02 | Collision future de namespace, réseau, volume ou port | Contrôle systématique avant promotion | En surveillance |
+| RSV-STG-03 | Introduction future d’une commande Docker globale ou destructive | Recherche dans pipelines, scripts et runbooks ; `FAIL` = `NO GO` | En surveillance |
+| RSV-STG-04 | Dérive du reverse proxy ou de l’inventaire des ressources mutualisées | Revue de `staging-state.md` et du routage DNS | En surveillance |
+
+### ADR obligatoire
+
+`docs/cgpa/adr/ADR-STG-001-staging-isolation.md` — chemin canonique v5.4.1. L’alias historique `docs/cgpa/05-architecture-conception/adr/ADR-STG-001-isolation-staging-partage.md` est conservé et rejette
+explicitement l'alternative « arrêter tous les conteneurs présents sur le serveur avant chaque
+déploiement ».
+
+### Références de migration
+
+- `docs/cgpa/migration/audit-initial-v5.4.md`
+- `docs/cgpa/migration/audit-initial-v5.4.1.md`
+- `docs/cgpa/migration/migration-report-v5.4.1.md`
+- `docs/cgpa/migration/sprints-migration-report-v5.4.md`
+- `docs/cgpa/migration/epics-migration-report-v5.4.md`
+- `docs/cgpa/migration/cicd-validation-report-v5.4.md`
+- `docs/cgpa/migration/migration-report-v5.4.md`
+- `docs/cgpa/migration/sprints-migration-report-v5.4.1.md`
+- `docs/cgpa/migration/epics-migration-report-v5.4.1.md`
+- `docs/cgpa/migration/cicd-validation-report-v5.4.1.md`
+- `docs/cgpa/workflows/staging-isolation-workflow.md`
+- `docs/cgpa/checklists/stg-isol-01-checklist.md`
+- `docs/cgpa/07-devsecops/gate-stg-isol-01-decision.md`
+- `docs/cgpa/05-architecture-conception/adr/ADR-STG-001-isolation-staging-partage.md`

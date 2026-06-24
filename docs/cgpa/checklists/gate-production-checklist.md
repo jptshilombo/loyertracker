@@ -15,6 +15,8 @@
 - [ ] Smoke tests Staging exécutés ou réserves acceptées.
 - [ ] Défauts bloquants résolus ou risque accepté.
 - [ ] Accumulation Staging analysée.
+- [ ] Gate `STG-ISOL-01` du déploiement Staging amont vérifié `PASS` (CGPA v5.4) — un `FAIL` non
+  excepté sur le Staging amont bloque le Gate Production.
 
 ## Validation fonctionnelle
 

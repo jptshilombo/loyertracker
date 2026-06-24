@@ -19,11 +19,17 @@ Dev/Test (le Test est exercé en CI, distinct du Dev local).
 | **Dev** | Intégration locale développeur | `docker-compose.yml` + `.env` local | images **buildées localement** (code monté) | Actif |
 | **Test** | Tests automatiques et fonctionnels | CI GitHub Actions (`ci.yml`, `codeql.yml`) | éphémère : Testcontainers (backend), Chrome headless (frontend), stack Compose jetable (smoke) | Actif |
 | **Staging** | Validation d'un incrément en conditions représentatives | `docker-compose.staging.yml` sur `ai-test-server` | **GHCR** `ghcr.io/jptshilombo`, **tag immuable `sha-<8>`** | Actif, **exposé publiquement** (`https://loyertracker.staging.loyerpro.org`) |
-| **Production** | Utilisateurs finaux | `docker-compose.prod.yml` (+ `docker-compose.yml`) | GHCR, tag immuable `sha-<8>` (cf. réserve d'alignement ci-dessous) | **Non provisionné** |
+| **Production** | Utilisateurs finaux | `docker-compose.prod.yml` (+ `docker-compose.yml`) | GHCR, tag immuable `sha-<8>` | **Provisionné, LIVE depuis le 2026-06-20** (Gate 10 GO) |
 
-**Staging et Production sont distincts** (exigence non négociable v5.2). Production n'est
-pas encore provisionnée ; son ouverture est subordonnée à la Release Governance et au
-**Gate 07A — Release Readiness** (R-V52-5).
+**Staging et Production sont distincts** (exigence non négociable v5.2). Production est
+provisionnée sur un hôte dédié (`loyertracker-prod-server`) depuis le **Gate 10 — Mise en
+production (GO, 2026-06-20)** ; elle est hors périmètre de mutualisation, à la différence de
+Staging (cf. §STG-ISOL-01 ci-dessous, CGPA v5.4).
+
+> Correction de cohérence (migration CGPA v5.4, 2026-06-24) : cette ligne indiquait encore
+> « Non provisionné », état devenu obsolète depuis la mise en Production réelle de la release
+> `1.0.0` (Gate 09 GO sous réserve, Gate 10 GO). Corrigée pour refléter l'état réel, sans
+> suppression du contenu historique du présent document.
 
 ## Règles de promotion
 
@@ -63,8 +69,24 @@ ce stade.
 | Transition | Gate(s) requis | Statut |
 |---|---|---|
 | Dev → Test | CI verte (Test) | ✅ continu |
-| Test → Staging | CI verte + politique de tag immuable | ✅ Gate Staging Readiness GO (2026-06-14) |
-| Staging → Production | **Gate 07A — Release Readiness** + Release Governance | ⬜ non statué (R-V52-5) |
+| Test → Staging | CI verte + politique de tag immuable + **`STG-ISOL-01`** (CGPA v5.4, cf. ci-dessous) | ✅ Gate Staging Readiness GO (2026-06-14) ; `STG-ISOL-01` PASS (2026-06-24) |
+| Staging → Production | **Gate 07A — Release Readiness** + Release Governance | ✅ Gate 07A GO sous réserve (2026-06-19) ; Gate 09 GO sous réserve + Gate 10 GO (2026-06-20), release `1.0.0` puis `1.1.0` `PRODUCTION_DEPLOYED` |
+
+> Correction de cohérence (migration CGPA v5.4, 2026-06-24) : cette ligne indiquait encore
+> « ⬜ non statué (R-V52-5) », état devenu obsolète depuis la levée de R-V52-5 et les Gates
+> 07A/09/10 statués. Corrigée pour refléter l'état réel, sans suppression du contenu historique.
+
+## Isolation du Staging mutualisé — `STG-ISOL-01` (CGPA v5.4)
+
+> Ajouté par la migration CGPA v5.4 (2026-06-24). `ai-test-server` héberge LoyerTracker **et**
+> d'autres projets (« loyerpro », outils labo) derrière un reverse proxy partagé. Le Gate
+> `STG-ISOL-01` (namespace Docker, réseau/volume dédiés, absence de commande Docker globale,
+> reverse proxy par nom DNS) est désormais bloquant à la promotion Test → Staging. Statué
+> **PASS** le 2026-06-24 : `docs/cgpa/07-devsecops/gate-stg-isol-01-decision.md`. Détail :
+> `docs/cgpa/checklists/stg-isol-01-checklist.md`, `docs/cgpa/workflows/staging-isolation-workflow.md`,
+> `docs/cgpa/05-architecture-conception/adr/ADR-STG-001-isolation-staging-partage.md`,
+> inventaire des ressources mutualisées : `docs/staging-state.md` §11. Production
+> (`loyertracker-prod-server`) est un hôte dédié, hors périmètre de ce contrôle.
 
 ## Accès SSH inter-serveurs (réseau privé) — politique réseau
 
