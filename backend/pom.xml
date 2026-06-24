@@ -26,6 +26,8 @@
              patch Spring Boot relèvera ces versions au-delà du seuil. -->
         <tomcat.version>10.1.55</tomcat.version>
         <postgresql.version>42.7.11</postgresql.version>
+        <!-- CVE-2026-54512/54513 (jackson-databind, HIGH) : BOM gère 2.21.2, correctif en 2.21.4. -->
+        <jackson-bom.version>2.21.4</jackson-bom.version>
         <!-- SonarQube — propriétés statiques (token transmis via SONAR_TOKEN en CI). -->
         <sonar.projectKey>loyertracker-backend</sonar.projectKey>
         <sonar.projectName>LoyerTracker – Backend</sonar.projectName>
