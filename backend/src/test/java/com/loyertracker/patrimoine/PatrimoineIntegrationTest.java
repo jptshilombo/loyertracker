@@ -1,5 +1,6 @@
 package com.loyertracker.patrimoine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,6 +9,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -191,6 +194,113 @@ class PatrimoineIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // =====================================================================================
+    // Régression "Historique des biens" : un bailleur/gestionnaire doit voir TOUS les biens
+    // de son périmètre, pas seulement le dernier créé. Aucune trace de ce défaut n'a été
+    // reproduite dans le code actuel (BienRepository.findByBailleurIdOrderByAdresseAsc et
+    // biens_affectes_gestionnaire ne portent ni LIMIT ni Pageable) ; ces tests couvrent
+    // explicitement la matrice demandée pour fermer l'écart de couverture constaté (aucun
+    // test existant ne créait plus d'un bien par bailleur avant de relire GET /api/biens).
+    // =====================================================================================
+
+    @Test
+    void historiqueBiensUnBailleurUnPatrimoineCinqBiens() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoine = creerPatrimoine(bailleur, "Patrimoine unique");
+
+        for (int i = 1; i <= 5; i++) {
+            creerBien(bailleur, patrimoine, "Bien " + i + " du patrimoine unique");
+        }
+
+        mockMvc.perform(get("/api/biens").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(5))
+                .andExpect(jsonPath("$[?(@.adresse == 'Bien 1 du patrimoine unique')]").exists())
+                .andExpect(jsonPath("$[?(@.adresse == 'Bien 5 du patrimoine unique')]").exists());
+    }
+
+    @Test
+    void historiqueBiensUnBailleurPlusieursPatrimoines() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineA = creerPatrimoine(bailleur, "Patrimoine A");
+        String patrimoineB = creerPatrimoine(bailleur, "Patrimoine B");
+
+        creerBien(bailleur, patrimoineA, "Bien A1");
+        creerBien(bailleur, patrimoineA, "Bien A2");
+        creerBien(bailleur, patrimoineB, "Bien B1");
+        creerBien(bailleur, patrimoineB, "Bien B2");
+        creerBien(bailleur, patrimoineB, "Bien B3");
+
+        String body = mockMvc.perform(get("/api/biens").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(5))
+                .andReturn().getResponse().getContentAsString();
+
+        List<?> biensPatrimoineA = JsonPath.read(body, "$[?(@.patrimoineId == '" + patrimoineA + "')]");
+        List<?> biensPatrimoineB = JsonPath.read(body, "$[?(@.patrimoineId == '" + patrimoineB + "')]");
+        assertThat(biensPatrimoineA).hasSize(2);
+        assertThat(biensPatrimoineB).hasSize(3);
+    }
+
+    @Test
+    void historiqueBiensIsolationPlusieursBailleurs() throws Exception {
+        String bailleurA = "kc-" + UUID.randomUUID();
+        String bailleurB = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleurA);
+        inscrireBailleur(bailleurB);
+        String patrimoineA = creerPatrimoine(bailleurA, "Patrimoine bailleur A");
+        String patrimoineB = creerPatrimoine(bailleurB, "Patrimoine bailleur B");
+
+        creerBien(bailleurA, patrimoineA, "Bien 1 bailleur A");
+        creerBien(bailleurA, patrimoineA, "Bien 2 bailleur A");
+        creerBien(bailleurA, patrimoineA, "Bien 3 bailleur A");
+        creerBien(bailleurB, patrimoineB, "Bien 1 bailleur B");
+
+        mockMvc.perform(get("/api/biens").with(bailleurJwt(bailleurA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+        mockMvc.perform(get("/api/biens").with(bailleurJwt(bailleurB)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void historiqueBiensGestionnaireAffectePatrimoineVoitTousLesBiens() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoine = creerPatrimoine(bailleur, "Patrimoine affecté");
+        creerBien(bailleur, patrimoine, "Bien 1 patrimoine affecté");
+        creerBien(bailleur, patrimoine, "Bien 2 patrimoine affecté");
+        creerBien(bailleur, patrimoine, "Bien 3 patrimoine affecté");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "g-patrimoine@test.local");
+
+        creerAffectationPatrimoine(bailleur, patrimoine, gestionnaire);
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    @Test
+    void historiqueBiensGestionnaireAffecteBienSpecifiqueNeVoitQueCeBien() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoine = creerPatrimoine(bailleur, "Patrimoine partiel");
+        String bienAffecte = creerBien(bailleur, patrimoine, "Bien affecté individuellement");
+        creerBien(bailleur, patrimoine, "Bien non affecté 1");
+        creerBien(bailleur, patrimoine, "Bien non affecté 2");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "g-bien@test.local");
+
+        creerAffectationBien(bailleur, bienAffecte, gestionnaire);
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(bienAffecte));
+    }
+
     // ---- helpers --------------------------------------------------------------------
 
     private void inscrireBailleur(String keycloakId) throws Exception {
@@ -205,6 +315,41 @@ class PatrimoineIntegrationTest {
                         .content("{\"nom\":\"" + nom + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
+    private String creerBien(String keycloakId, String patrimoineId, String adresse) throws Exception {
+        return JsonPath.read(mockMvc.perform(post("/api/biens")
+                        .with(bailleurJwt(keycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bienJson(adresse, "APPARTEMENT", "LIBRE", patrimoineId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
+    private void creerAffectationPatrimoine(String bailleurKeycloakId, String patrimoineId, UUID gestionnaireId)
+            throws Exception {
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleurKeycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationJson("patrimoineId", patrimoineId, gestionnaireId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statut").value("ACTIVE"));
+    }
+
+    private void creerAffectationBien(String bailleurKeycloakId, String bienId, UUID gestionnaireId)
+            throws Exception {
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleurKeycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationJson("bienId", bienId, gestionnaireId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statut").value("ACTIVE"));
+    }
+
+    private static String affectationJson(String perimetreField, String perimetreId, UUID gestionnaireId) {
+        return "{\"" + perimetreField + "\":\"" + perimetreId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":5,"
+                + "\"dateDebut\":\"" + LocalDate.now() + "\"}";
     }
 
     private UUID insererGestionnaire(String keycloakId, String email) {
