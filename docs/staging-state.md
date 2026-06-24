@@ -152,10 +152,12 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-14 | `sha-26f16caa` | `main` HEAD courant (post PR #31/#32) | 4/4 | 46/0 | **200** / 404 | Réalignement du tag déployé sur `main` HEAD. Delta depuis `sha-e7067215` = **documentation uniquement** (`runbook-exploitation.md`, `project-state.md`) : images api/web fonctionnellement identiques |
 | 2026-06-16 | _(aucune image)_ | merges PR #34 + #35 | — | — | — | **Chaîne de livraison interrompue** : gate Sécurité (Trivy scan npm) rouge en post-merge sur 3 CVE HIGH Angular (CVE-2026-54266/54268 `@angular/common`, CVE-2026-54267 `@angular/core`) → `Packaging Docker` `skipped`, **aucune image GHCR publiée** pour `sha-8a7fc86f` ni `sha-9cf412ac`. Staging reste sur `sha-26f16caa` |
 | 2026-06-16 | `sha-73359c5c` | correctif CVE Angular PR #36 (merge `73359c5`) | **4/4** | **46/0** | **200** / 404 | Bump Angular 20.3.24 → **20.3.25** (3 CVE corrigées). Redéployé le 2026-06-16 sur l'hôte staging. Issuer basculé au domaine public (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) ; `.env` hôte mis à jour (`APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL`, `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`). **Exposition publique activée** : npm Proxy Host #18 + cert Let's Encrypt + Access List basic-auth (`staging`). 6/6 critères §9 verts. |
+| 2026-06-24 | `sha-0adc4941` | Hotfix bien/patrimoine frontend (`a281705`) + correctif CVE jackson-databind (`0adc494`) | **4/4** | **47/0** | — / — (non re-vérifié, sans rapport avec ce correctif) | `git pull` `1d6db31` → `0adc494` (aucune nouvelle migration). Vérification navigateur réelle (Chrome/Playwright via tunnel SSH) : page de login Keycloak atteinte et rendue correctement (capture d'écran) ; soumission des identifiants bloquée par `KC_HOSTNAME=loyertracker.staging.loyerpro.org` (formulaire Keycloak poste toujours vers le domaine public, indépendamment de l'URL d'accès) — **sans rapport avec le correctif**, non poursuivi (changement plus large de `KC_HOSTNAME` jugé disproportionné). Acceptée comme preuve suffisante : 45 tests Karma sur le composant réel (rendu DOM, validation, payload HTTP) + smoke API 47/0. Accès SSH temporaire ouvert sur le SG `innovtech-ai-lab-sg` (`52.29.80.119/32`, même IP que la règle existante en Production) pour permettre ce déploiement. |
 
 > Réalignements doc-only (`sha-26f16caa`) : aucun changement fonctionnel, traçabilité « tag déployé
-> = `main` HEAD ». Le `sha-73359c5c` embarque le correctif CVE Angular et est le **tag actif en
-> staging** depuis le 2026-06-16, avec exposition publique active sur `https://loyertracker.staging.loyerpro.org`.
+> = `main` HEAD ». Le `sha-0adc4941` (Hotfix bien/patrimoine + correctif jackson-databind) est le
+> **tag actif en staging** depuis le 2026-06-24, avec exposition publique active sur
+> `https://loyertracker.staging.loyerpro.org`.
 
 ## 9. Exposition publique (URL dédiée) — **EXPOSÉ le 2026-06-16** ✅
 

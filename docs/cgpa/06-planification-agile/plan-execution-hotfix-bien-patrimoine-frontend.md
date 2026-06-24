@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **Implémenté et validé localement le 2026-06-24** — `mvn verify` (86 tests, 0 échec), `ng lint`/`ng build`/`ng test` (45 tests, 0 échec) verts. En attente : commit/push, déploiement Staging + vérification navigateur, Gate Production accéléré. |
+| Statut | **Déployé en Staging le 2026-06-24, validé.** Commit/push faits (`a281705` Hotfix + `0adc494` correctif CVE jackson-databind non lié). Staging redéployé (`sha-0adc4941`), 4/4 healthy, smoke 47/0. Vérification navigateur partielle acceptée (cf. §10). En attente : Gate Production accéléré + déploiement Production. |
 | Date | 2026-06-24 |
 | Type | Hotfix (`docs/cgpa/workflows/production-release-workflow.md` §Workflow Hotfix vers Production) |
 | Décision liée | Incident détecté lors du cadrage Sprint 3 Patrimoine (D-PAT-001/ADR-11) |
@@ -101,4 +101,15 @@ La migration V12 a créé un patrimoine « Patrimoine principal » **une seule f
 | Backend | `InscriptionService.inscrire` crée un `Patrimoine` « Patrimoine principal » `ACTIF` dans la même transaction que l'inscription. Test ajouté : `BailleurInscriptionIntegrationTest.inscriptionCreeUnPatrimoineParDefaut`. `PatrimoineIntegrationTest.patrimoineCrudCreerRenommerArchiver` mis à jour (un bailleur a désormais 2 patrimoines après inscription + création manuelle, pas 1). |
 | Frontend | `Bien`/`BienPayload` étendus de `patrimoineId` ; `listerPatrimoines()`/`listerTypesBiens()` ajoutés à `S02ApiService` ; `bienForm` étendu d'un contrôle `patrimoineId` requis ; champ `type` converti en `<select>` alimenté par `/api/types-biens` ; nouveau sélecteur de patrimoine alimenté par `/api/patrimoines` (filtré sur `ACTIF`, sauf le patrimoine déjà sélectionné). Nouveau spec `dashboard.component.spec.ts` (3 tests dédiés à la régression). `s02-api.service.spec.ts` mis à jour (fixtures avec `patrimoineId`). |
 | Tests | `mvn verify` : 86 tests, 0 échec. `ng lint` : 0 erreur. `ng build --configuration production` : OK. `ng test` : 45 tests, 0 échec. |
-| Reste à faire avant Production | Commit/push (PR ou direct selon décision PO) ; déploiement Staging ; smoke `infra/smoke/smoke-stack.sh` ; **vérification manuelle navigateur** (inscription → création bien, absente jusqu'ici de la procédure) ; Gate Production accéléré ; mise à jour `docs/project-state.md`/`docs/staging-state.md`/`docs/prod-state.md`. |
+| Reste à faire avant Production | Gate Production accéléré ; déploiement Production ; mise à jour `docs/project-state.md`/`docs/prod-state.md`. |
+
+## 10. Déploiement Staging et vérification navigateur (2026-06-24)
+
+| Étape | Résultat |
+|-------|----------|
+| Commit/push | `a281705` (Hotfix) puis `0adc494` (CVE jackson-databind, non lié, détecté pendant la surveillance CI) — push direct sur `main`, CI/CodeQL verts sur les deux. |
+| Redéploiement Staging | `git pull` sur l'hôte (`1d6db31` → `0adc494`, aucune nouvelle migration), `LOYERTRACKER_TAG=sha-0adc4941`, `docker compose up -d api nginx` : 4/4 services `healthy`. |
+| Smoke | `infra/smoke/smoke-stack.sh` : **47 PASS / 0 FAIL**, parcours patrimoine/bien inclus. |
+| Vérification navigateur | Chrome headless (Playwright) via tunnel SSH : page de login Keycloak atteinte et rendue correctement (capture d'écran, formulaire « Sign in to your account » conforme). Soumission des identifiants bloquée par `KC_HOSTNAME=loyertracker.staging.loyerpro.org` (le formulaire Keycloak poste toujours vers le domaine public, quel que soit l'hôte d'accès) — **comportement intentionnel de l'exposition publique (2026-06-16), sans rapport avec le correctif**. Poursuite (bascule temporaire de `KC_HOSTNAME` + redémarrage Keycloak, ou contournement de l'Access List basic-auth npm) jugée disproportionnée par le PO. |
+| Décision | **Accepté comme preuve suffisante** : 45 tests Karma sur le composant réel (rendu DOM, validation, payload HTTP exact) + smoke API 47/0 + capture d'écran du flux Keycloak jusqu'à la page de login. |
+| Effets de bord infra | Accès SSH temporaire ajouté sur `sg-025012ed2e0e12a1a` (`52.29.80.119/32`, **conservé**, même IP que la règle déjà active en Production) ; modification temporaire de `redirectUris`/`webOrigins` du client `loyertracker-spa` (**revert immédiat confirmé**, état identique à avant intervention). |
