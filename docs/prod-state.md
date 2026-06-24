@@ -193,6 +193,11 @@ RG-09-1 / RG-09-2 levées**. Production **LIVE** sur `https://loyertracker.loyer
 `0.0.0.0/0` retiré. Le serveur de dev se connecte à la prod par son **IP privée** `172.31.22.90` (pas l'EIP
 publique : le hairpin sourcerait depuis l'IP publique `3.77.128.72`, non autorisée).
 
+**Règle réseau formalisée le 2026-06-24** : ce principe (IP privée prioritaire entre serveurs du
+périmètre dans le même VPC) est désormais documenté comme politique générale — dev/CI, staging/test,
+SonarQube — dans `docs/cgpa/environment-promotion-model.md` (Accès SSH inter-serveurs) et
+`docs/cgpa/07-devsecops/runbook-exploitation.md` §0.1. Production reste conforme sans changement.
+
 **Suite (exploitation, hors gate)** : revue de capacité en exploitation ; drill de rollback à la prochaine
 release ; realm de production sans compte de test (état « excellent », non bloquant).
 

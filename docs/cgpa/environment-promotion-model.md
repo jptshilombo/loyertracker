@@ -66,6 +66,38 @@ ce stade.
 | Test → Staging | CI verte + politique de tag immuable | ✅ Gate Staging Readiness GO (2026-06-14) |
 | Staging → Production | **Gate 07A — Release Readiness** + Release Governance | ⬜ non statué (R-V52-5) |
 
+## Accès SSH inter-serveurs (réseau privé) — politique réseau
+
+> Contexte (2026-06-24) : les hôtes dev/CI (`loyerpro-ci-server`, qui héberge également
+> SonarQube), test/staging (`ai-test-server`) et production (`loyertracker-prod-server`)
+> résident dans le **même VPC** (`vpc-01a99b76679b8e92e`). Un accès SSH inter-serveurs par
+> **IP privée** est ouvert entre eux (déjà en place entre `loyerpro-ci-server` et
+> `loyertracker-prod-server`, cf. `docs/prod-state.md` §SG — IP privée `172.31.30.45/32`
+> autorisée sur le SG production).
+
+**Règle** : pour tout accès SSH d'un serveur du périmètre LoyerTracker vers un autre serveur
+du même périmètre (dev/CI, test/staging, SonarQube), **l'IP privée est prioritaire** sur l'IP
+publique dès que la source et la cible sont dans le même VPC et que le Security Group
+applicable (qu'il s'agisse d'un SG unique partagé ou de SG distincts avec règles croisées par
+IP privée) l'autorise. L'IP publique reste réservée :
+
+- aux accès depuis un poste externe autorisé (hors VPC) ;
+- au dernier recours si l'accès par IP privée échoue et n'est pas réparable immédiatement.
+
+Cette règle est cohérente avec ENV-01 (la chaîne d'environnements reste Dev → Test → Staging →
+Production, inchangée) et avec le principe déjà appliqué en Production (restriction SG SSH du
+2026-06-20, `docs/prod-state.md`). Coordonnées réelles (IP privées, clés) : voir
+`SERVER_CONFIG.md` (hors dépôt, source de vérité de l'exploitant) — **à vérifier/mettre à jour**
+si la topologie des Security Groups a évolué depuis le 2026-06-19 (cf. réserve ci-dessous).
+Détail opérationnel : `docs/cgpa/07-devsecops/runbook-exploitation.md` §0.1.
+
+> **Réserve ouverte** : `SERVER_CONFIG.md` (2026-06-19) documente 3 Security Groups distincts
+> (`loyerpro-ci-server-sg`, `innovtech-ai-lab-sg`, `loyertracker-prod-sg`), chacun avec ses
+> propres règles d'entrée, et non un Security Group unique partagé par les trois hôtes. Si une
+> consolidation en un SG commun a été réalisée depuis, `SERVER_CONFIG.md` doit être mis à jour
+> en conséquence pour rester la source de vérité ; à défaut, cette section documente le modèle
+> *fonctionnel* (IP privée prioritaire intra-VPC) indépendamment du détail d'implémentation SG.
+
 ## Réserve d'alignement (avant provisioning production)
 
 * **Cohérence images prod** : `docker-compose.prod.yml` référence encore

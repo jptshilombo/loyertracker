@@ -18,6 +18,11 @@
 La stack LoyerTracker est déployée de façon **isolée** (projet Compose `loyertracker-staging`,
 réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks voisines.
 
+> **Accès SSH à l'hôte (2026-06-24)** : règle réseau formalisée — IP privée prioritaire pour
+> tout accès inter-serveurs (dev/CI, staging, SonarQube) dans le même VPC. Détail :
+> `docs/cgpa/environment-promotion-model.md` (Accès SSH inter-serveurs), procédure :
+> `docs/cgpa/07-devsecops/runbook-exploitation.md` §0.1/§2.
+
 ## 2. Configuration du déploiement
 
 | Paramètre | Valeur |
