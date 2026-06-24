@@ -11,8 +11,10 @@ import {
   BailPayload,
   Bien,
   BienPayload,
+  Patrimoine,
   S02ApiService,
   StatutBien,
+  TypeBien,
   TypeHonoraires,
 } from '../../core/s02/s02-api.service';
 import { AlertesListeComponent } from '../../alertes/alertes-liste.component';
@@ -59,7 +61,20 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         </label>
         <label>
           Type
-          <input type="text" formControlName="type" />
+          <select formControlName="type">
+            @for (typeBien of typesBiensDisponibles(); track typeBien.code) {
+              <option [value]="typeBien.code">{{ typeBien.libelle }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Patrimoine
+          <select formControlName="patrimoineId">
+            <option value="" disabled>Choisir un patrimoine</option>
+            @for (patrimoine of patrimoinesDisponibles(); track patrimoine.id) {
+              <option [value]="patrimoine.id">{{ patrimoine.nom }}</option>
+            }
+          </select>
         </label>
         <label>
           Statut
@@ -330,6 +345,16 @@ export class BailleurDashboardComponent implements OnInit {
   readonly message = signal('Prêt');
   readonly chargement = signal(false);
   readonly biens = signal<Bien[]>([]);
+  readonly patrimoines = signal<Patrimoine[]>([]);
+  readonly typesBiens = signal<TypeBien[]>([]);
+  readonly patrimoinesDisponibles = computed(() => {
+    const selectionne = this.bienSelectionne()?.patrimoineId;
+    return this.patrimoines().filter((p) => p.statut === 'ACTIF' || p.id === selectionne);
+  });
+  readonly typesBiensDisponibles = computed(() => {
+    const selectionne = this.bienSelectionne()?.type;
+    return this.typesBiens().filter((t) => t.actif || t.code === selectionne);
+  });
   readonly baux = signal<Bail[]>([]);
   readonly affectations = signal<Affectation[]>([]);
   readonly bienSelectionne = signal<Bien | null>(null);
@@ -344,6 +369,7 @@ export class BailleurDashboardComponent implements OnInit {
     adresse: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     type: new FormControl('APPARTEMENT', { nonNullable: true, validators: [Validators.required] }),
     statut: new FormControl<StatutBien>('LIBRE', { nonNullable: true, validators: [Validators.required] }),
+    patrimoineId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   readonly bailForm = new FormGroup({
@@ -378,9 +404,15 @@ export class BailleurDashboardComponent implements OnInit {
       next: (result) => {
         this.inscriptionStatus.set(result.status === 'created' ? 'créée' : 'déjà existante');
         this.chargerBiens();
+        this.chargerReferentielsBien();
       },
       error: (err: HttpErrorResponse) => this.inscriptionStatus.set(`erreur ${err.status}`),
     });
+  }
+
+  private chargerReferentielsBien(): void {
+    this.api.listerPatrimoines().subscribe({ next: (patrimoines) => this.patrimoines.set(patrimoines) });
+    this.api.listerTypesBiens().subscribe({ next: (typesBiens) => this.typesBiens.set(typesBiens) });
   }
 
   chargerBiens(): void {
@@ -403,14 +435,19 @@ export class BailleurDashboardComponent implements OnInit {
   selectionnerBien(bien: Bien): void {
     this.bienSelectionne.set(bien);
     this.bailSelectionne.set(null);
-    this.bienForm.setValue({ adresse: bien.adresse, type: bien.type, statut: bien.statut });
+    this.bienForm.setValue({
+      adresse: bien.adresse,
+      type: bien.type,
+      statut: bien.statut,
+      patrimoineId: bien.patrimoineId,
+    });
     this.chargerDetails(bien.id);
   }
 
   reinitialiserBien(): void {
     this.bienSelectionne.set(null);
     this.bailSelectionne.set(null);
-    this.bienForm.reset({ adresse: '', type: 'APPARTEMENT', statut: 'LIBRE' });
+    this.bienForm.reset({ adresse: '', type: 'APPARTEMENT', statut: 'LIBRE', patrimoineId: '' });
     this.baux.set([]);
     this.affectations.set([]);
   }

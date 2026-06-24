@@ -89,6 +89,21 @@ class BailleurInscriptionIntegrationTest {
     }
 
     @Test
+    void inscriptionCreeUnPatrimoineParDefaut() throws Exception {
+        String keycloakId = "kc-" + UUID.randomUUID();
+        String email = "bailleur-" + UUID.randomUUID() + "@test.local";
+
+        mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/patrimoines").with(bailleurJwt(keycloakId, email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nom").value("Patrimoine principal"))
+                .andExpect(jsonPath("$[0].statut").value("ACTIF"));
+    }
+
+    @Test
     void inscriptionSansRoleBailleurEstRefusee() throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(jwt()))
                 .andExpect(status().isForbidden());

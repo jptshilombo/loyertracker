@@ -30,11 +30,30 @@ describe('S02ApiService', () => {
 
     const req = http.expectOne('/api/biens');
     expect(req.request.method).toBe('GET');
-    req.flush([{ id: 'bien-1', adresse: '10 rue A', type: 'APPARTEMENT', statut: 'LIBRE' }]);
+    req.flush([
+      { id: 'bien-1', adresse: '10 rue A', type: 'APPARTEMENT', statut: 'LIBRE', patrimoineId: 'patrimoine-1' },
+    ]);
+  });
+
+  it('liste les patrimoines et les types de biens', () => {
+    service.listerPatrimoines().subscribe();
+    let req = http.expectOne('/api/patrimoines');
+    expect(req.request.method).toBe('GET');
+    req.flush([{ id: 'patrimoine-1', nom: 'Patrimoine principal', statut: 'ACTIF' }]);
+
+    service.listerTypesBiens().subscribe();
+    req = http.expectOne('/api/types-biens');
+    expect(req.request.method).toBe('GET');
+    req.flush([{ code: 'APPARTEMENT', libelle: 'Appartement', actif: true }]);
   });
 
   it('cree modifie et archive un bien', () => {
-    const payload = { adresse: '20 rue B', type: 'MAISON', statut: 'LIBRE' as const };
+    const payload = {
+      adresse: '20 rue B',
+      type: 'MAISON',
+      statut: 'LIBRE' as const,
+      patrimoineId: 'patrimoine-1',
+    };
 
     service.creerBien(payload).subscribe();
     let req = http.expectOne('/api/biens');

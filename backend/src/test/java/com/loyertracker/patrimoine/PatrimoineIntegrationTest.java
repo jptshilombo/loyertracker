@@ -82,10 +82,12 @@ class PatrimoineIntegrationTest {
                 .andExpect(jsonPath("$.statut").value("ACTIF"))
                 .andReturn().getResponse().getContentAsString(), "$.id");
 
+        // 2 patrimoines : celui créé ci-dessus + le « Patrimoine principal » posé par défaut à
+        // l'inscription (Hotfix 2026-06-24, cf. InscriptionService).
         mockMvc.perform(get("/api/patrimoines").with(bailleurJwt(bailleur)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].nom").value("Patrimoine A"));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.nom == 'Patrimoine A')]").exists());
 
         mockMvc.perform(put("/api/patrimoines/{id}", patrimoineId)
                         .with(bailleurJwt(bailleur))
@@ -99,11 +101,13 @@ class PatrimoineIntegrationTest {
                 .andExpect(jsonPath("$.statut").value("ARCHIVE"));
 
         // RS-06 (garde d'archivage si biens actifs) est différé au Sprint 2 : l'archivage reste
-        // inconditionnel et le patrimoine archivé demeure visible dans la liste.
+        // inconditionnel et le patrimoine archivé demeure visible dans la liste, aux côtés du
+        // « Patrimoine principal » par défaut qui reste ACTIF.
         mockMvc.perform(get("/api/patrimoines").with(bailleurJwt(bailleur)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].statut").value("ARCHIVE"));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.id == '" + patrimoineId + "' && @.statut == 'ARCHIVE')]").exists())
+                .andExpect(jsonPath("$[?(@.id != '" + patrimoineId + "' && @.statut == 'ACTIF')]").exists());
     }
 
     @Test

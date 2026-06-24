@@ -7,7 +7,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
-_Aucune évolution non publiée à ce stade._
+### Corrigé — Hotfix création/édition de bien cassée en Production (2026-06-24)
+
+- Le tableau de bord bailleur n'envoyait pas `patrimoineId` (devenu obligatoire depuis `1.1.0`/V12) lors
+  de la création ou la modification d'un bien : toute soumission échouait en 400. Le formulaire propose
+  désormais un sélecteur de patrimoine (`GET /api/patrimoines`) et un sélecteur de type de bien
+  (`GET /api/types-biens`), au lieu d'un champ texte libre.
+- Tout nouveau bailleur se voit désormais créer automatiquement un patrimoine par défaut
+  (« Patrimoine principal ») à l'inscription ; auparavant seuls les bailleurs déjà existants au moment
+  de la migration V12 en disposaient, bloquant l'onboarding de tout nouveau bailleur.
+- Aucune migration de schéma, aucun changement de contrat API existant.
 
 ## [1.1.0] — 2026-06-23
 

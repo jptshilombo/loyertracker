@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.loyertracker.patrimoine.Patrimoine;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 
@@ -60,6 +62,10 @@ public class InscriptionService {
             }
             throw e;
         }
+        // Patrimoine par défaut (Hotfix 2026-06-24) : sans cela, un nouveau bailleur n'a aucun
+        // patrimoine et ne peut créer aucun bien (Bien.patrimoineId est NOT NULL depuis V12).
+        // Même contexte RLS que l'INSERT bailleur ci-dessus (même transaction).
+        em.persist(new Patrimoine(UUID.randomUUID(), id, "Patrimoine principal"));
         return bailleur;
     }
 

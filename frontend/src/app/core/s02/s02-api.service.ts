@@ -12,12 +12,26 @@ export interface Bien {
   adresse: string;
   type: string;
   statut: StatutBien;
+  patrimoineId: string;
 }
 
 export interface BienPayload {
   adresse: string;
   type: string;
   statut: StatutBien;
+  patrimoineId: string;
+}
+
+export interface Patrimoine {
+  id: string;
+  nom: string;
+  statut: string;
+}
+
+export interface TypeBien {
+  code: string;
+  libelle: string;
+  actif: boolean;
 }
 
 export interface Bail {
@@ -71,6 +85,14 @@ export class S02ApiService {
 
   listerBiens(): Observable<Bien[]> {
     return this.http.get<Bien[]>(`${API_BASE_URL}/biens`);
+  }
+
+  listerPatrimoines(): Observable<Patrimoine[]> {
+    return this.http.get<Patrimoine[]>(`${API_BASE_URL}/patrimoines`);
+  }
+
+  listerTypesBiens(): Observable<TypeBien[]> {
+    return this.http.get<TypeBien[]>(`${API_BASE_URL}/types-biens`);
   }
 
   creerBien(payload: BienPayload): Observable<Bien> {
