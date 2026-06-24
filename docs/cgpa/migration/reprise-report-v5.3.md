@@ -1,6 +1,6 @@
 # État du projet
 
-LoyerTracker est un projet existant en production, gouverné par CGPA v5.3 après migration additive du 2026-06-23. La release `1.0.0` est LIVE depuis le 2026-06-20 sur `https://loyertracker.loyerpro.org`. Les lots post-go-live Quittances et Patrimoine sont intégrés côté `main` mais restent `[Non publié]` tant qu'une décision de promotion/release n'est pas prise.
+LoyerTracker est un projet existant en production, gouverné par CGPA v5.3 après migration additive du 2026-06-23. La release `1.1.0` est LIVE depuis le 2026-06-23 sur `https://loyertracker.loyerpro.org` (tag immuable GHCR `sha-05424aa3`). La release précédente `1.0.0` (tag `sha-73359c5c`) reste en historique. Les lots post-go-live Quittances et Patrimoine Sprint 1/2 sont intégrés et déployés en Production.
 
 # Version CGPA détectée
 
@@ -17,8 +17,9 @@ LoyerTracker est un projet existant en production, gouverné par CGPA v5.3 aprè
 |-------|--------|--------|
 | Gate 02A UX/UI non historique | Accepté sous réserve | Appliquer aux futurs lots UI proportionnés |
 | Gate Staging v5.3 du lot Patrimoine | Fermé | Décision créée : `docs/cgpa/07-devsecops/gate-staging-patrimoine-v5.3-decision.md` |
-| Drill de rollback production significatif non encore réalisé sur release ultérieure | Ouvert | Planifier à la prochaine release |
-| Plan Quittances non formalisé en fichier dédié | Mineur, ouvert | Formaliser a posteriori si le lot s'étend |
+| Gate Production v5.3 release `1.1.0` | Fermé | Décision créée : `docs/cgpa/09-production/gate-production-v1.1.0-decision.md` ; `PRODUCTION_DEPLOYED` atteint le 2026-06-23 |
+| Drill de rollback production significatif non encore réalisé sur release ultérieure | Ouvert | Planifier à la prochaine release (RSV-RM-03) |
+| Plan Quittances non formalisé en fichier dédié | Mineur, ouvert | Formaliser a posteriori si le lot s'étend (R-V52-8) |
 
 # Résultat des contrôles de continuité
 
@@ -26,12 +27,12 @@ LoyerTracker est un projet existant en production, gouverné par CGPA v5.3 aprè
 |----------|----------|---------------|
 | Migration Governance Check | PASS | Migration v5.3 additive, phase et Gates conservés |
 | Architecture Continuity Check | PASS | ADR et choix structurants conservés ; architecture Spring Boot / Angular / Keycloak / PostgreSQL cohérente |
-| Delivery Continuity Check | PASS | Sprints historiques et Patrimoine tracés ; Patrimoine statué `STAGING_DEPLOYED` |
-| Release History Check | PASS | `1.0.0` en production, Gate 10 GO, release notes et changelog présents |
+| Delivery Continuity Check | PASS | Sprints historiques et Patrimoine tracés ; Patrimoine statué `STAGING_DEPLOYED` ; `1.1.0` `PRODUCTION_DEPLOYED` |
+| Release History Check | PASS | `1.0.0` et `1.1.0` en production, Gates 10 et Production v5.3 GO, release notes et changelog présents |
 | UX/UI Continuity Check | PASS sous réserve | UI Angular existante ; Gate 02A non rétroactif, futurs lots UI à cadrer |
-| DevSecOps Continuity Check | PASS | CI/CD, SonarQube, CodeQL, Gitleaks, Trivy, tests et artefacts présents |
+| DevSecOps Continuity Check | PASS | CI/CD, SonarQube, CodeQL, Gitleaks, Trivy, tests et artefacts présents ; smoke prod 47/0 |
 | Staging Continuity Check | PASS sous réserve | Staging opérationnel ; lot Patrimoine Gate Staging v5.3 GO (`STAGING_DEPLOYED`) |
-| Production Readiness Check | PASS | Production LIVE, Gate 10 GO, monitoring, alerting, backup et rollback documentés |
+| Production Readiness Check | PASS | Production `1.1.0` LIVE, Gate Production v5.3 GO sous réserve, monitoring, alerting, backup et rollback documentés |
 
 # Phase actuelle
 
@@ -39,7 +40,7 @@ Phase 7 — Développement, pour les lots post-go-live.
 
 # Gate actuel
 
-Gate 07 — Développement, non statué globalement. Gates transverses déjà validés : Gate Staging Readiness GO, Gate 06A GO, Gate 07A GO sous réserve, Gate 09 GO sous réserve, Gate 10 GO.
+Gate 07 — Développement, non statué globalement. Gates transverses déjà validés : Gate Staging Readiness GO, Gate 06A GO, Gate 07A GO sous réserve, Gate 09 GO sous réserve, Gate 10 GO, Gate Staging Patrimoine v5.3 GO, Gate Production v5.3 `1.1.0` GO sous réserve.
 
 # Sprint actuel
 
@@ -47,7 +48,7 @@ Aucun Sprint actif. Sprint 1 Patrimoine et Sprint 2 Patrimoine sont clôturés c
 
 # Release actuelle
 
-`1.0.0`, SemVer, `PRODUCTION_DEPLOYED` depuis le 2026-06-20.
+`1.1.0`, SemVer, `PRODUCTION_DEPLOYED` depuis le 2026-06-23 (tag `sha-05424aa3`).
 
 # État DevSecOps
 
@@ -58,7 +59,7 @@ Conforme CGPA v5.3 : GitHub Actions, Maven verify, Angular lint/build/test, Sona
 | Environnement | État |
 |---------------|------|
 | Staging | Opérationnel, exposé publiquement, Gate Staging historique GO, smoke validé |
-| Production | LIVE, Gate 10 GO, release `1.0.0`, monitoring/alerting/backup opérationnels |
+| Production | LIVE en `1.1.0`, Gate Production v5.3 GO sous réserve, release `1.1.0`, monitoring/alerting/backup opérationnels |
 
 # Sous-agents mobilisés
 
@@ -67,8 +68,8 @@ Conforme CGPA v5.3 : GitHub Actions, Maven verify, Angular lint/build/test, Sona
 | Governance Officer | Resume Approved with Reservations : historique conservé, réserves v5.3 non bloquantes |
 | UX/UI Design Lead | GO sous réserve : UI existante, Gate 02A à appliquer aux futurs lots UI |
 | Enterprise Architect | GO : architecture et environnements cohérents |
-| DevSecOps Lead | GO : CI/CD et sécurité automatisée conformes |
-| Release Manager | GO sous réserve : production `1.0.0` conforme, prochaine release à piloter par Gate Production |
+| DevSecOps Lead | GO : CI/CD et sécurité automatisée conformes ; smoke prod 47/0 |
+| Release Manager | GO sous réserve : production `1.1.0` conforme, prochaine release à piloter par Gate Production |
 
 # Analyse consolidée
 
@@ -92,7 +93,7 @@ La reprise peut se faire sans retour Phase 00, sans rejeu de Gate et sans recons
 
 # Actions correctives nécessaires
 
-1. Arbitrer le prochain axe : cadrage Sprint 3 Patrimoine ou préparation d'une Release candidate incluant Quittances + Patrimoine.
+1. Arbitrer le prochain axe : cadrage Sprint 3 Patrimoine ou préparation d'une Release candidate ultérieure.
 2. Formaliser le périmètre de la prochaine release par Epic ou Release fonctionnelle.
 3. Planifier le drill de rollback production au prochain changement de version.
 4. Documenter les livrables UX/UI minimaux avant tout lot UI substantiel.
