@@ -164,6 +164,12 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 > = `main` HEAD ». Le `sha-5bf187af` (Lot CORS Compose + Sprint 3 Patrimoine) est le
 > **tag actif en staging** depuis le 2026-06-25, avec exposition publique active sur
 > `https://loyertracker.staging.loyerpro.org`.
+>
+> **Incident npm 2026-06-25** : le conteneur `nginx-proxy-manager` n'était pas démarré ;
+> `docker compose up -d` dans `~/` a créé de nouveaux volumes vides (`ubuntu_npm_*`) au lieu de
+> réutiliser l'historique (`tools_npm_data` / `tools_npm_letsencrypt`). Corrigé en redémarrant npm
+> explicitement avec `docker run … -v tools_npm_data:/data -v tools_npm_letsencrypt:/etc/letsencrypt`.
+> Proxy Host #18 et Access List basic-auth `staging` restaurés depuis les volumes existants.
 
 ## 9. Exposition publique (URL dédiée) — **EXPOSÉ le 2026-06-16** ✅
 
@@ -182,7 +188,7 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | Route 53 — `A loyertracker.staging.loyerpro.org → 51.102.234.232` (TTL 300) | Claude Code | ✅ créé (résout) |
 | Realm — `redirectUris`/`webOrigins`/`post.logout` + domaine public (localhost conservé) | Claude Code | ✅ appliqué au KC vivant via kcadm (sans réimport) |
 | `.env` hôte — `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`, `APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL` = domaine public | Claude Code | ✅ basculé (`KEYCLOAK_JWK_SET_URI` reste interne) |
-| nginx-proxy-manager — Proxy Host #18 → `https://172.31.11.102:18443` (`proxy_ssl_verify off`), cert Let's Encrypt #18 (valide jusqu'au 2026-09-14), Access List basic-auth `staging` | Claude Code (API npm) | ✅ opérationnel |
+| nginx-proxy-manager — Proxy Host #18 → `https://172.31.11.102:18443` (`proxy_ssl_verify off`), cert Let's Encrypt #18 ~~(valide jusqu'au 2026-09-14)~~ → **cert RSA #18 valide jusqu'au 2026-09-23** (voir §9.1), Access List basic-auth `staging` | Claude Code (API npm) | ✅ opérationnel |
 | Redéploiement (`up -d`, restart `keycloak`) + vérifs + smoke local | Claude Code | ✅ 4/4 healthy, smoke 46/0 |
 
 **Critères d'acceptation — tous validés le 2026-06-16 :**
@@ -199,6 +205,42 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 **Rollback :** supprimer le *Proxy Host* npm + l'enregistrement Route 53 ; restaurer `.env`
 (`KC_HOSTNAME=localhost`, issuer/CORS/invitation `https://localhost`), `up -d`, restart Keycloak ;
 `git revert` de l'édit realm. Aucune donnée détruite (pas de reimport realm).
+
+## 9.1 Correctif certificat TLS — remplacement ECDSA → RSA (2026-06-25)
+
+> Incident déclenché lors du redémarrage de npm le 2026-06-25 : le cert ECDSA précédemment servi
+> utilisait la chaîne `YE2` → `Root YE` → `ISRG Root X2` (nouveaux cross-certs émis mai 2026,
+> absent de certains trust stores navigateurs) → erreur « certificat invalide » côté client.
+
+**Cause :** Let's Encrypt émet désormais les certs ECDSA via la nouvelle chaîne `YE2`/`Root YE`
+(mai 2026). Les navigateurs non mis à jour depuis mai 2026 ne possèdent pas `Root YE` ni le
+nouveau cross-cert `ISRG Root X2` dans leur trust store.
+
+**Fix appliqué le 2026-06-25 :**
+
+| Étape | Détail |
+|---|---|
+| Arrêt npm (libération port 80) | `docker stop nginx-proxy-manager` |
+| Obtention cert RSA | `sudo certbot certonly --standalone --key-type rsa --email jptshilombo@gmail.com -d loyertracker.staging.loyerpro.org` |
+| Injection dans npm | Fichiers copiés dans `tools_npm_letsencrypt:/archive/npm-18/cert3.pem` (+ chain, fullchain, privkey) ; symlinks `live/npm-18` mis à jour vers `cert3.pem` |
+| Reload npm + nginx | `docker restart nginx-proxy-manager` + `nginx -s reload` |
+| Vérification | Chaîne : `YR2` → `Root YR` → **`ISRG Root X1`** (RSA, universellement reconnu depuis 2021). `GET /healthz` → 200. |
+
+**Nouveau certificat :**
+
+| Paramètre | Valeur |
+|---|---|
+| Type de clé | RSA 2048-bit |
+| Intermédiaire | `YR2` (Let's Encrypt RSA) |
+| Chaîne | `Root YR` → `ISRG Root X1` |
+| Émis le | 2026-06-25 17:19 UTC |
+| Expire le | **2026-09-23 17:19 UTC** |
+| Renouvellement automatique | `certbot renew` via cron système (`/etc/cron.d/certbot`) |
+
+> **Note exploitation :** le renouvellement automatique certbot (cron) s'exécute sur l'hôte et
+> écrase les fichiers dans `/etc/letsencrypt/live/loyertracker.staging.loyerpro.org/`. Il faudra,
+> lors du prochain renouvellement, re-copier les fichiers dans `tools_npm_letsencrypt:/archive/npm-18/`
+> et recharger nginx — ou configurer un hook certbot pour le faire automatiquement (cf. §9.2 à créer).
 
 ## 10. Validation de l'alerting (RR-1) — Gate Staging enrichi (CGPA v5.2) — **GO le 2026-06-19** ✅
 
