@@ -158,10 +158,11 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-16 | _(aucune image)_ | merges PR #34 + #35 | — | — | — | **Chaîne de livraison interrompue** : gate Sécurité (Trivy scan npm) rouge en post-merge sur 3 CVE HIGH Angular (CVE-2026-54266/54268 `@angular/common`, CVE-2026-54267 `@angular/core`) → `Packaging Docker` `skipped`, **aucune image GHCR publiée** pour `sha-8a7fc86f` ni `sha-9cf412ac`. Staging reste sur `sha-26f16caa` |
 | 2026-06-16 | `sha-73359c5c` | correctif CVE Angular PR #36 (merge `73359c5`) | **4/4** | **46/0** | **200** / 404 | Bump Angular 20.3.24 → **20.3.25** (3 CVE corrigées). Redéployé le 2026-06-16 sur l'hôte staging. Issuer basculé au domaine public (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) ; `.env` hôte mis à jour (`APP_CORS_ALLOWED_ORIGIN`, `APP_INVITATION_BASE_URL`, `KC_HOSTNAME`, `KEYCLOAK_ISSUER_URI`). **Exposition publique activée** : npm Proxy Host #18 + cert Let's Encrypt + Access List basic-auth (`staging`). 6/6 critères §9 verts. |
 | 2026-06-24 | `sha-0adc4941` | Hotfix bien/patrimoine frontend (`a281705`) + correctif CVE jackson-databind (`0adc494`) | **4/4** | **47/0** | — / — (non re-vérifié, sans rapport avec ce correctif) | `git pull` `1d6db31` → `0adc494` (aucune nouvelle migration). Vérification navigateur réelle (Chrome/Playwright via tunnel SSH) : page de login Keycloak atteinte et rendue correctement (capture d'écran) ; soumission des identifiants bloquée par `KC_HOSTNAME=loyertracker.staging.loyerpro.org` (formulaire Keycloak poste toujours vers le domaine public, indépendamment de l'URL d'accès) — **sans rapport avec le correctif**, non poursuivi (changement plus large de `KC_HOSTNAME` jugé disproportionné). Acceptée comme preuve suffisante : 45 tests Karma sur le composant réel (rendu DOM, validation, payload HTTP) + smoke API 47/0. Accès SSH temporaire ouvert sur le SG `innovtech-ai-lab-sg` (`52.29.80.119/32`, même IP que la règle existante en Production) pour permettre ce déploiement. |
+| 2026-06-25 | `sha-5bf187af` | Lot CORS Compose + Sprint 3 Patrimoine (`964ebfb` CORS, `1c06085` Sprint 3 PR #81, `8c79e3d` smoke V15, docs) | **4/4** | **47/0** | — / — (non re-vérifié, sans rapport) | CORS câblé au conteneur api : `APP_CORS_ALLOWED_ORIGIN` et `APP_INVITATION_BASE_URL` désormais transmises depuis `docker-compose.staging.yml`. Migration V15 (`affectations_exceptions`) appliquée par Flyway. **RSV-STG-01 levée** : avant (session précédente) = 8 conteneurs `loyertracker-staging-*` exclusivement ; après = 8 conteneurs `loyertracker-staging-*` — aucun autre projet affecté. Gate Staging GO, `STAGING_DEPLOYED`. |
 
 > Réalignements doc-only (`sha-26f16caa`) : aucun changement fonctionnel, traçabilité « tag déployé
-> = `main` HEAD ». Le `sha-0adc4941` (Hotfix bien/patrimoine + correctif jackson-databind) est le
-> **tag actif en staging** depuis le 2026-06-24, avec exposition publique active sur
+> = `main` HEAD ». Le `sha-5bf187af` (Lot CORS Compose + Sprint 3 Patrimoine) est le
+> **tag actif en staging** depuis le 2026-06-25, avec exposition publique active sur
 > `https://loyertracker.staging.loyerpro.org`.
 
 ## 9. Exposition publique (URL dédiée) — **EXPOSÉ le 2026-06-16** ✅
@@ -270,6 +271,7 @@ réseau/volume dédiés, ports internes non publiés, absence de commande Docker
 runbook et la CI) et sur l'historique des redéploiements §8 (6 déploiements entre le 2026-06-14 et
 le 2026-06-24, sans incident rapporté sur un autre projet de l'hôte).
 
-**Réserve ouverte (RSV-STG-01)** : confirmation *live* (`docker ps` / `docker network ls` /
-`docker volume ls` sur l'hôte, en présence d'au moins un autre projet) non encore exécutée au
-moment du contrôle formel — à réaliser au prochain déploiement Staging réel.
+**Réserve RSV-STG-01 — LEVÉE le 2026-06-25** : confirmation *live* réalisée lors du déploiement
+`sha-5bf187af` (lot CORS + Sprint 3) — avant (session précédente) = 8 conteneurs
+`loyertracker-staging-*` exclusivement ; après = 8 conteneurs `loyertracker-staging-*` — aucun
+autre projet de l'hôte affecté. Isolation prouvée en présence de la stack LoyerTracker active.
