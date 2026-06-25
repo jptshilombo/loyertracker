@@ -29,6 +29,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
   SonarQube nouvelles sur `AffectationService.creer()` (complexité cognitive, ternaire imbriqué,
   faux-positif NPE), sans changement de comportement.
 
+### Corrigé — Câblage CORS Compose (2026-06-25)
+
+- `APP_CORS_ALLOWED_ORIGIN` et `APP_INVITATION_BASE_URL` sont définies dans `.env` sur les hôtes
+  staging et production depuis l'exposition publique (2026-06-16) mais n'étaient jamais transmises
+  au conteneur `api` dans aucun fichier Compose — Spring utilisait le fallback `https://localhost`,
+  cassant les requêtes CORS depuis l'origine publique et générant des liens d'invitation incorrects.
+- Ajout des deux variables dans `docker-compose.yml` (couvre dev et prod par héritage Compose) et
+  `docker-compose.staging.yml`. `docker-compose.prod.yml` non modifié : le service `api` n'y déclare
+  pas de bloc `environment`, l'héritage du fichier de base est donc suffisant.
+- Aucun code applicatif, aucune migration SQL. Commit `964ebfb`.
+
 ## [1.1.1] — 2026-06-24
 
 ### Release — Hotfix Production `1.1.1`
@@ -203,5 +214,7 @@ go-live production différé à un lot ultérieur.
 - Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
-[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.0.0...HEAD
+[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/jptshilombo/loyertracker/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/jptshilombo/loyertracker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jptshilombo/loyertracker/releases/tag/v1.0.0
