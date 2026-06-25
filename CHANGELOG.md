@@ -24,14 +24,22 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - Kickoff confirmé par le PO le 2026-06-25 ; validation locale `mvn verify` 99 tests / 0 échec,
   Gitleaks 168 commits / no leaks, Trivy SCA 0 HIGH/CRITICAL. Rapport :
   `docs/cgpa/06-planification-agile/sprint-3-patrimoine-rapport-validation.md`.
+- Intégrée à `main` via la PR #81 (`1c06085`, 2026-06-25) après correction d'un défaut latent de CI
+  (clone Git superficiel cassant le blame SonarQube du job Backend) et résolution de 3 violations
+  SonarQube nouvelles sur `AffectationService.creer()` (complexité cognitive, ternaire imbriqué,
+  faux-positif NPE), sans changement de comportement.
 
-### Release candidate — Hotfix `1.1.1` (2026-06-24)
+## [1.1.1] — 2026-06-24
+
+### Release — Hotfix Production `1.1.1`
 
 - Candidat Production recevable : commit `0adc4941`, images API/Web `sha-0adc4941`.
 - CI, CodeQL, SonarQube et scans de sécurité verts ; Staging 4/4 healthy, smoke 47/0 et parcours navigateur réel validé.
 - Gate Production accéléré : GO sous réserve acceptée ; `PRODUCTION_READY` atteint.
 - Préflight Production PASS et backup `loyertracker-20260624-140441.dump` vérifié.
 - Production `1.1.1` déployée sur `sha-0adc4941` ; smoke 47/0, nettoyage complet et `PRODUCTION_DEPLOYED` atteint.
+- Hypercare 24 h : T0 PASS sous surveillance (2026-06-24 16:11:35 UTC), T+12 PASS sous surveillance (2026-06-25 06:21:54 UTC, fenêtre étendue par décision CDO), T+24 PASS sous surveillance (2026-06-25 16:48:05 UTC) — aucune alerte critique, tous seuils respectés.
+- Statut CGPA v5.4.1 : **`PRODUCTION_DEPLOYED` — RELEASE CLÔTURÉE** (CDO : GO le 2026-06-25). Réserves maintenues : `RSV-STG-01`, dette CORS Compose.
 
 ### Gouvernance — Migration corrective CGPA v5.4.1 (2026-06-24)
 

@@ -221,7 +221,7 @@ SonarQube — dans `docs/cgpa/environment-promotion-model.md` (Accès SSH inter-
 release ; realm de production sans compte de test (état « excellent », non bloquant).
 
 
-## 13A. Production Hotfix `1.1.1` — `PRODUCTION_DEPLOYED` le 2026-06-24 ✅
+## 13A. Production Hotfix `1.1.1` — `PRODUCTION_DEPLOYED` le 2026-06-24 ; hypercare clôturée le 2026-06-25 ✅
 
 | Contrôle | Résultat |
 |---|---|
@@ -232,8 +232,9 @@ release ; realm de production sans compte de test (état « excellent », non bl
 | Santé | API/Web healthy, cinq cibles Prometheus up, aucune alerte |
 | Smoke métier | **47 PASS / 0 FAIL** |
 | Statut | **`PRODUCTION_DEPLOYED`** |
+| Hypercare 24 h | T0 (2026-06-24 16:11:35 UTC) PASS sous surveillance ; T+12 (2026-06-25 06:21:54 UTC, fenêtre étendue CDO) PASS sous surveillance ; T+24 (2026-06-25 16:48:05 UTC) PASS sous surveillance → **CDO : GO — RELEASE CLÔTURÉE le 2026-06-25** |
 
-Rapports : `docs/cgpa/09-production/deploiement-technique-v1.1.1-report.md` et `docs/cgpa/09-production/validation-finale-v1.1.1-report.md`. Après validation finale, le tag candidat a été persisté dans `.env` avec sauvegarde en permissions 600 ; le rollback `sha-05424aa3` reste disponible.
+Rapports : `docs/cgpa/09-production/deploiement-technique-v1.1.1-report.md`, `docs/cgpa/09-production/validation-finale-v1.1.1-report.md`, `docs/cgpa/09-production/cloture-release-v1.1.1.md`. Tag `sha-0adc4941` persisté dans `.env` ; rollback `sha-05424aa3` disponible. Réserves maintenues après clôture : `RSV-STG-01`, dette CORS Compose.
 
 ## 13. Gate Production v5.3 — Release `1.1.0` : **PRODUCTION_DEPLOYED le 2026-06-23** ✅
 
