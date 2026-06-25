@@ -7,13 +7,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
-### Release candidate — Hotfix `1.1.1` (2026-06-24)
+## [1.1.1] — 2026-06-24
+
+### Release — Hotfix Production `1.1.1`
 
 - Candidat Production recevable : commit `0adc4941`, images API/Web `sha-0adc4941`.
 - CI, CodeQL, SonarQube et scans de sécurité verts ; Staging 4/4 healthy, smoke 47/0 et parcours navigateur réel validé.
 - Gate Production accéléré : GO sous réserve acceptée ; `PRODUCTION_READY` atteint.
 - Préflight Production PASS et backup `loyertracker-20260624-140441.dump` vérifié.
 - Production `1.1.1` déployée sur `sha-0adc4941` ; smoke 47/0, nettoyage complet et `PRODUCTION_DEPLOYED` atteint.
+- Statut CGPA v5.4.1 : `PRODUCTION_DEPLOYED`, Hypercare en cours (T0 PASS le 2026-06-24).
 
 ### Gouvernance — Migration corrective CGPA v5.4.1 (2026-06-24)
 
