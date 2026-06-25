@@ -10,4 +10,8 @@ public interface AffectationRepository extends JpaRepository<Affectation, UUID> 
     List<Affectation> findByBienIdOrderByDateDebutDesc(UUID bienId);
 
     boolean existsByPatrimoineIdAndStatut(UUID patrimoineId, StatutAffectation statut);
+
+    /** RS-04 : une affectation bien EXCLUSION exige une affectation patrimoine ACTIVE de ce gestionnaire. */
+    boolean existsByPatrimoineIdAndGestionnaireIdAndStatut(UUID patrimoineId, UUID gestionnaireId,
+            StatutAffectation statut);
 }

@@ -7,6 +7,28 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Patrimoine (Sprint 3, exceptions fines par bien, US-85)
+
+- **Exceptions `INCLUSION`/`EXCLUSION`** sur les affectations bien : une affectation bien `ACTIVE`
+  court-circuite désormais toujours l'héritage d'une affectation patrimoine (RM-98) — `INCLUSION`
+  accorde l'accès (comportement historique inchangé, US-23/24), `EXCLUSION` le refuse précisément
+  sur ce bien tout en conservant l'accès aux autres biens du patrimoine.
+- **RS-04** : une `EXCLUSION` sans affectation patrimoine `ACTIVE` du même gestionnaire est rejetée
+  en 400 (état incohérent) ; une `INCLUSION` redondante reste tolérée (idempotente).
+- **Migration V15** : colonne `affectation.type_exception`, backfill `INCLUSION` sur les
+  affectations bien existantes, réécriture à priorité de `gestionnaire_affecte_actif` et
+  `biens_affectes_gestionnaire`, et correctif ciblé de `calculer_honoraires` pour qu'une
+  `EXCLUSION` ne génère jamais d'honoraire (carve-out d'accès, pas un mandat de gestion).
+- **Backend-only** (périmètre tranché par le PO le 2026-06-24) : aucune UI livrée pour les
+  exceptions, différée à un lot ultérieur.
+- Kickoff confirmé par le PO le 2026-06-25 ; validation locale `mvn verify` 99 tests / 0 échec,
+  Gitleaks 168 commits / no leaks, Trivy SCA 0 HIGH/CRITICAL. Rapport :
+  `docs/cgpa/06-planification-agile/sprint-3-patrimoine-rapport-validation.md`.
+- Intégrée à `main` via la PR #81 (`1c06085`, 2026-06-25) après correction d'un défaut latent de CI
+  (clone Git superficiel cassant le blame SonarQube du job Backend) et résolution de 3 violations
+  SonarQube nouvelles sur `AffectationService.creer()` (complexité cognitive, ternaire imbriqué,
+  faux-positif NPE), sans changement de comportement.
+
 ## [1.1.1] — 2026-06-24
 
 ### Release — Hotfix Production `1.1.1`

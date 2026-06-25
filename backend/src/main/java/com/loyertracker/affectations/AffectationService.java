@@ -41,31 +41,67 @@ public class AffectationService {
     @Transactional
     public AffectationDto creer(Jwt jwt, AffectationRequest requete) {
         UUID bailleurId = tenant.activerDepuisKeycloak(jwt.getSubject());
+        validerPerimetre(requete);
+        Bien bien = resoudreBien(requete);
+        if (!gestionnaires.existsById(requete.gestionnaireId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Gestionnaire introuvable.");
+        }
+        TypeException typeException = resoudreTypeException(requete, bien);
+        Affectation affectation = construireAffectation(requete, bailleurId, bien, typeException);
+        return enregistrer(affectation);
+    }
+
+    private static void validerPerimetre(AffectationRequest requete) {
         if (!requete.aExactementUnPerimetre()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Une affectation doit cibler exactement un bien ou un patrimoine.");
         }
-        if (requete.bienId() != null) {
-            Bien bien = biens.findById(requete.bienId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Bien introuvable."));
-            if (bien.getStatut().name().equals("ARCHIVE")) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Un bien archivé ne peut pas être affecté.");
+        if (requete.exceptionSansBien()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Une exception (INCLUSION/EXCLUSION) ne s'applique qu'à une affectation sur un bien.");
+        }
+    }
+
+    private Bien resoudreBien(AffectationRequest requete) {
+        if (requete.bienId() == null) {
+            if (!patrimoines.existsById(requete.patrimoineId())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patrimoine introuvable.");
             }
-        } else if (!patrimoines.existsById(requete.patrimoineId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patrimoine introuvable.");
+            return null;
         }
-        if (!gestionnaires.existsById(requete.gestionnaireId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Gestionnaire introuvable.");
+        Bien bien = biens.findById(requete.bienId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bien introuvable."));
+        if (bien.getStatut().name().equals("ARCHIVE")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Un bien archivé ne peut pas être affecté.");
         }
+        return bien;
+    }
+
+    private TypeException resoudreTypeException(AffectationRequest requete, Bien bien) {
+        if (bien == null) {
+            return null;
+        }
+        TypeException typeException = requete.typeException() != null ? requete.typeException()
+                : TypeException.INCLUSION;
+        if (typeException == TypeException.EXCLUSION) {
+            verifierExclusionAdossee(bien, requete.gestionnaireId());
+        }
+        return typeException;
+    }
+
+    private static Affectation construireAffectation(AffectationRequest requete, UUID bailleurId, Bien bien,
+            TypeException typeException) {
         HonorairesAffectation honoraires = new HonorairesAffectation(requete.typeHonoraires(),
                 requete.montantHonoraires(), requete.dateDebut(), requete.dateFin());
-        Affectation affectation = requete.bienId() != null
-                ? Affectation.surBien(UUID.randomUUID(), bailleurId, requete.bienId(),
-                        requete.gestionnaireId(), honoraires)
-                : Affectation.surPatrimoine(UUID.randomUUID(), bailleurId, requete.patrimoineId(),
-                        requete.gestionnaireId(), honoraires);
+        if (bien != null) {
+            return Affectation.surBien(UUID.randomUUID(), bailleurId, requete.bienId(),
+                    requete.gestionnaireId(), typeException, honoraires);
+        }
+        return Affectation.surPatrimoine(UUID.randomUUID(), bailleurId, requete.patrimoineId(),
+                requete.gestionnaireId(), honoraires);
+    }
+
+    private AffectationDto enregistrer(Affectation affectation) {
         try {
             return AffectationDto.from(affectations.saveAndFlush(affectation));
         } catch (DataIntegrityViolationException e) {
@@ -108,6 +144,20 @@ public class AffectationService {
         return affectations.findByBienIdOrderByDateDebutDesc(bienId).stream()
                 .map(AffectationDto::from)
                 .toList();
+    }
+
+    /**
+     * RS-04 (validé PO 2026-06-21) : une EXCLUSION sans affectation patrimoine ACTIVE
+     * correspondante du même gestionnaire est un état incohérent (rien à exclure) — rejetée en 400.
+     */
+    private void verifierExclusionAdossee(Bien bien, UUID gestionnaireId) {
+        if (bien.getPatrimoineId() == null
+                || !affectations.existsByPatrimoineIdAndGestionnaireIdAndStatut(
+                        bien.getPatrimoineId(), gestionnaireId, StatutAffectation.ACTIVE)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Une exclusion nécessite une affectation patrimoine active de ce gestionnaire "
+                            + "sur le patrimoine de ce bien.");
+        }
     }
 
     private static boolean estViolationUnicite(Throwable t) {
