@@ -34,6 +34,10 @@ public class Affectation {
     @Column(name = "patrimoine_id", updatable = false)
     private UUID patrimoineId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_exception", updatable = false)
+    private TypeException typeException;
+
     @Column(name = "gestionnaire_id", nullable = false, updatable = false)
     private UUID gestionnaireId;
 
@@ -62,21 +66,23 @@ public class Affectation {
     }
 
     public static Affectation surBien(UUID id, UUID bailleurId, UUID bienId, UUID gestionnaireId,
-            HonorairesAffectation honoraires) {
-        return new Affectation(id, bailleurId, bienId, null, gestionnaireId, honoraires);
+            TypeException typeException, HonorairesAffectation honoraires) {
+        return new Affectation(id, bailleurId, bienId, null,
+                typeException != null ? typeException : TypeException.INCLUSION, gestionnaireId, honoraires);
     }
 
     public static Affectation surPatrimoine(UUID id, UUID bailleurId, UUID patrimoineId,
             UUID gestionnaireId, HonorairesAffectation honoraires) {
-        return new Affectation(id, bailleurId, null, patrimoineId, gestionnaireId, honoraires);
+        return new Affectation(id, bailleurId, null, patrimoineId, null, gestionnaireId, honoraires);
     }
 
     private Affectation(UUID id, UUID bailleurId, UUID bienId, UUID patrimoineId,
-            UUID gestionnaireId, HonorairesAffectation honoraires) {
+            TypeException typeException, UUID gestionnaireId, HonorairesAffectation honoraires) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.bienId = bienId;
         this.patrimoineId = patrimoineId;
+        this.typeException = typeException;
         this.gestionnaireId = gestionnaireId;
         this.typeHonoraires = honoraires.typeHonoraires();
         this.montantHonoraires = honoraires.montantHonoraires();
@@ -94,6 +100,7 @@ public class Affectation {
     public UUID getBailleurId() { return bailleurId; }
     public UUID getBienId() { return bienId; }
     public UUID getPatrimoineId() { return patrimoineId; }
+    public TypeException getTypeException() { return typeException; }
     public UUID getGestionnaireId() { return gestionnaireId; }
     public TypeHonoraires getTypeHonoraires() { return typeHonoraires; }
     public BigDecimal getMontantHonoraires() { return montantHonoraires; }

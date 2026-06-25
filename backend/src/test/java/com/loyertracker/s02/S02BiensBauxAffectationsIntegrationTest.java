@@ -307,6 +307,73 @@ class S02BiensBauxAffectationsIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void affectationExclusionSansAffectationPatrimoineEstRejetee400() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille RS04");
+        String bienId = creerBienDansPatrimoine(bailleur, patrimoineId, "70 rue RS04");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "grs04@test.local");
+
+        // RS-04 : aucune affectation patrimoine active pour ce gestionnaire -> EXCLUSION incohérente.
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationBienAvecExceptionJson(bienId, gestionnaire, "EXCLUSION")))
+                .andExpect(status().isBadRequest());
+
+        // Une fois l'affectation patrimoine active posée, la même EXCLUSION devient recevable.
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationBienAvecExceptionJson(bienId, gestionnaire, "EXCLUSION")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.typeException").value("EXCLUSION"));
+    }
+
+    @Test
+    void affectationPatrimoineAvecExclusionBienExcluDeLaListeDesBiens() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille Exclusion");
+        String bienExclu = creerBienDansPatrimoine(bailleur, patrimoineId, "80 rue Exclue");
+        String bienAutre = creerBienDansPatrimoine(bailleur, patrimoineId, "81 rue Incluse");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gexcl@test.local");
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationBienAvecExceptionJson(bienExclu, gestionnaire, "EXCLUSION")))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/biens").with(gestionnaireJwt(keycloakId(gestionnaire))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(bienAutre));
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienExclu)
+                        .with(gestionnaireJwt(keycloakId(gestionnaire)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bailJson("Locataire Exclu")))
+                .andExpect(status().isForbidden());
+    }
+
     private void inscrireBailleur(String keycloakId) throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId)))
                 .andExpect(status().isCreated());
@@ -361,6 +428,13 @@ class S02BiensBauxAffectationsIntegrationTest {
         return "{\"bienId\":\"" + bienId + "\",\"gestionnaireId\":\"" + gestionnaireId
                 + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
                 + "\"dateDebut\":\"2026-06-01\"}";
+    }
+
+    private static String affectationBienAvecExceptionJson(String bienId, UUID gestionnaireId,
+            String typeException) {
+        return "{\"bienId\":\"" + bienId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
+                + "\"dateDebut\":\"2026-06-01\",\"typeException\":\"" + typeException + "\"}";
     }
 
     private static String affectationPatrimoineJson(String patrimoineId, UUID gestionnaireId) {
