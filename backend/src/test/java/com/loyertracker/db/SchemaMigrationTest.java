@@ -53,7 +53,8 @@ class SchemaMigrationTest {
         // + V12 (Patrimoine + TypeBien administrable — US-80/81/82).
         // + V13 (affectations au périmètre patrimoine — Sprint 2 Patrimoine).
         // + V14 (honoraires sur affectations patrimoine — Sprint 2 Patrimoine).
-        assertThat(result.migrationsExecuted).isEqualTo(14);
+        // + V15 (exceptions fines par bien, résolution à priorité — Sprint 3 Patrimoine, US-85).
+        assertThat(result.migrationsExecuted).isEqualTo(15);
         assertThat(result.success).isTrue();
     }
 

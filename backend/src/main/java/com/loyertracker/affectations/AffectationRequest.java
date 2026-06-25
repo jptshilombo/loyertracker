@@ -14,9 +14,15 @@ public record AffectationRequest(
         @NotNull TypeHonoraires typeHonoraires,
         @NotNull @DecimalMin("0.00") BigDecimal montantHonoraires,
         @NotNull LocalDate dateDebut,
-        LocalDate dateFin) {
+        LocalDate dateFin,
+        TypeException typeException) {
 
     public boolean aExactementUnPerimetre() {
         return (bienId != null) ^ (patrimoineId != null);
+    }
+
+    /** US-85/RS-04 : une exception n'a de sens qu'en présence d'un {@code bienId}. */
+    public boolean exceptionSansBien() {
+        return bienId == null && typeException != null;
     }
 }

@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **✅ Approuvé — GO, le 2026-06-21**. Sprint 1 et Sprint 2 implémentés et clôturés côté `main` (PR #72/#73, PR #74). **Sprint 3 cadré en détail le 2026-06-24** (état réel du code vérifié) — **en attente d'un arbitrage PO sur le périmètre frontend et du point de contrôle Kickoff Sprint 3 (GO/NO GO distinct), aucun code produit**. Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
+| Statut | **✅ Approuvé — GO, le 2026-06-21**. Sprint 1 et Sprint 2 implémentés et clôturés côté `main` (PR #72/#73, PR #74). **Sprint 3 cadré en détail le 2026-06-24**, périmètre frontend tranché (backend-only), **Kickoff confirmé le 2026-06-25 — GO sans réserve**. **Sprint 3 implémenté et validé localement le 2026-06-25** sur la branche `codex/sprint-3-patrimoine-exceptions` (`mvn verify` 99 tests/0 échec, Gitleaks/Trivy verts) — rapport `sprint-3-patrimoine-rapport-validation.md`. Reste : push branche, PR dédiée, CI GitHub, puis décision de fusion/promotion. Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
 | Date | 2026-06-21 (proposé) — **approuvé le 2026-06-21** |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Backlog couvert | EP-09, US-80→85 (`addendum-patrimoine-backlog.md`) |
@@ -46,7 +46,7 @@
 
 **Objectif :** finaliser les exceptions fines, clore la non-régression du contrat actif, et durcir la suite de tests de sécurité avant fusion finale.
 
-> **Cadrage détaillé produit le 2026-06-24** (post-Sprint 2, état réel du code vérifié) — **statut : cadré, en attente du point de contrôle Kickoff Sprint 3 (GO/NO GO distinct)**. Aucun code produit à ce stade.
+> **Cadrage détaillé produit le 2026-06-24** (post-Sprint 2, état réel du code vérifié). **Kickoff confirmé par le PO le 2026-06-25 — GO sans réserve.** **Implémenté et validé localement le 2026-06-25** (`mvn verify` 99 tests/0 échec) ; reste la PR dédiée et la CI GitHub avant fusion `main`.
 
 | Élément | Détail |
 |---------|--------|
@@ -71,7 +71,7 @@
 | Confirmation du rôle autorisé à administrer la typologie (RS-05) | Début Sprint 1 | **✅ Validé par le PO le 2026-06-21** — rôle `BAILLEUR` existant, aucun nouveau rôle Keycloak créé |
 | Comportement d'archivage d'un patrimoine avec affectations actives (RS-06) | Avant Sprint 3 | **✅ Validé par le PO le 2026-06-21** — archivage bloqué (400) tant qu'une affectation patrimoine `ACTIVE` existe ; révocation explicite préalable requise (cohérent EF-22) |
 | Périmètre frontend de Sprint 3 (backend-only comme S1/S2, ou UI minimale affectation patrimoine + exceptions) | Avant kickoff Sprint 3 | **✅ Tranché par le PO le 2026-06-24 — backend-only**, cohérent avec Sprint 1/2 ; l'UI d'affectation patrimoine et d'exceptions `INCLUSION`/`EXCLUSION` est différée à un lot ultérieur |
-| Kickoff Sprint 3 (GO/NO GO de démarrage, distinct du cadrage) | Début Sprint 3 | **Ouvert** — cadrage produit le 2026-06-24, kickoff non encore demandé |
+| Kickoff Sprint 3 (GO/NO GO de démarrage, distinct du cadrage) | Début Sprint 3 | **✅ Confirmé par le PO le 2026-06-25** — GO sans réserve |
 
 ## Ce que ce plan ne couvre pas (hors périmètre, par construction de cette analyse)
 
