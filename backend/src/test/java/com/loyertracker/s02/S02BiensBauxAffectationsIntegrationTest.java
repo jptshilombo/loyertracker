@@ -338,6 +338,21 @@ class S02BiensBauxAffectationsIntegrationTest {
     }
 
     @Test
+    void affectationPatrimoineAvecExceptionEstRejetee400() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoineId = creerPatrimoine(bailleur, "Portefeuille Exception Invalide");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "ginvalide@test.local");
+
+        // US-85/RS-04 : typeException n'a de sens que sur une affectation bien (bienId requis).
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineAvecExceptionJson(patrimoineId, gestionnaire, "INCLUSION")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void affectationPatrimoineAvecExclusionBienExcluDeLaListeDesBiens() throws Exception {
         String bailleur = "kc-" + UUID.randomUUID();
         inscrireBailleur(bailleur);
@@ -441,6 +456,13 @@ class S02BiensBauxAffectationsIntegrationTest {
         return "{\"patrimoineId\":\"" + patrimoineId + "\",\"gestionnaireId\":\"" + gestionnaireId
                 + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
                 + "\"dateDebut\":\"2026-06-01\"}";
+    }
+
+    private static String affectationPatrimoineAvecExceptionJson(String patrimoineId, UUID gestionnaireId,
+            String typeException) {
+        return "{\"patrimoineId\":\"" + patrimoineId + "\",\"gestionnaireId\":\"" + gestionnaireId
+                + "\",\"typeHonoraires\":\"POURCENTAGE\",\"montantHonoraires\":10.00,"
+                + "\"dateDebut\":\"2026-06-01\",\"typeException\":\"" + typeException + "\"}";
     }
 
     private static String affectationJson(String bienId, String patrimoineId, UUID gestionnaireId) {
