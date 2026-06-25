@@ -112,6 +112,8 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID}
       KEYCLOAK_API_CLIENT_SECRET: ${KEYCLOAK_API_CLIENT_SECRET}
+      APP_CORS_ALLOWED_ORIGIN: ${APP_CORS_ALLOWED_ORIGIN:-https://localhost}
+      APP_INVITATION_BASE_URL: ${APP_INVITATION_BASE_URL:-https://localhost}
     depends_on:
       postgres:
         condition: service_healthy
