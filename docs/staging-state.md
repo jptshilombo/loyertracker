@@ -179,7 +179,20 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 > d'image** : SPA agnostique à l'origine, backend/Keycloak pilotés par `.env`.
 
 **URL active :** `https://loyertracker.staging.loyerpro.org`
-**Accès :** basic-auth `staging` / `P@55w0rd!!` → puis login OIDC/PKCE Keycloak.
+
+**Étape 1 — Basic-auth npm (page d'accès restreint) :**
+
+| Paramètre | Valeur |
+|---|---|
+| Login | `staging` |
+| Mot de passe | `P@55w0rd!!` |
+
+**Étape 2 — Login OIDC/PKCE Keycloak (application) :**
+
+| Compte | Email / Username | Mot de passe | Rôle | Note |
+|---|---|---|---|---|
+| Principal | `jordan.test@loyerpro.org` | `Staging2026!` | `BAILLEUR` | Réinitialisé le 2026-06-25 |
+| Backup | `bailleur-test@test.local` | `Staging2026!` | `BAILLEUR` | Réinitialisé le 2026-06-25 |
 
 Étapes réalisées le 2026-06-16 :
 
