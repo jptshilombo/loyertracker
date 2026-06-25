@@ -38,7 +38,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - Gate Production accéléré : GO sous réserve acceptée ; `PRODUCTION_READY` atteint.
 - Préflight Production PASS et backup `loyertracker-20260624-140441.dump` vérifié.
 - Production `1.1.1` déployée sur `sha-0adc4941` ; smoke 47/0, nettoyage complet et `PRODUCTION_DEPLOYED` atteint.
-- Statut CGPA v5.4.1 : `PRODUCTION_DEPLOYED`, Hypercare en cours (T0 PASS le 2026-06-24).
+- Hypercare 24 h : T0 PASS sous surveillance (2026-06-24 16:11:35 UTC), T+12 PASS sous surveillance (2026-06-25 06:21:54 UTC, fenêtre étendue par décision CDO), T+24 PASS sous surveillance (2026-06-25 16:48:05 UTC) — aucune alerte critique, tous seuils respectés.
+- Statut CGPA v5.4.1 : **`PRODUCTION_DEPLOYED` — RELEASE CLÔTURÉE** (CDO : GO le 2026-06-25). Réserves maintenues : `RSV-STG-01`, dette CORS Compose.
 
 ### Gouvernance — Migration corrective CGPA v5.4.1 (2026-06-24)
 
