@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import {
@@ -400,11 +401,12 @@ export class BailleurDashboardComponent implements OnInit {
       return;
     }
 
-    this.inscription.inscrire().subscribe({
+    this.chargerReferentielsBien();
+    this.inscription.inscrire().pipe(
+      finalize(() => this.chargerBiens()),
+    ).subscribe({
       next: (result) => {
         this.inscriptionStatus.set(result.status === 'created' ? 'créée' : 'déjà existante');
-        this.chargerBiens();
-        this.chargerReferentielsBien();
       },
       error: (err: HttpErrorResponse) => this.inscriptionStatus.set(`erreur ${err.status}`),
     });
