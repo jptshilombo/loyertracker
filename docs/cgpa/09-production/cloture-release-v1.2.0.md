@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-26 |
-| Statut | **Hypercare condensée — T0, T+12 et T+24 anticipés PASS ; décision CDO requise** |
+| Statut | **CLÔTURÉE — CDO GO (2026-06-26)** |
 | Version | `1.2.0` |
 | Commit applicatif | `5bf187af79218377b2f7db7800961725088d31a5` |
 | Tag Production | `sha-5bf187af` |
@@ -92,11 +92,65 @@ en T0/T+24 de `1.1.1`. Non bloquant.
 | RP-120-02 | Rollback schéma V15 non trivial (`pg_restore`) | Maintenu — procédure documentée Gate Production §Rollback |
 | RP-120-03 | `c1e9c73` (cascade dashboard) exclu de `1.2.0` | Maintenu — à valider Staging puis `1.2.1` |
 
-## Décision finale
+## Décision de clôture — Chief Delivery Officer
+
+| Champ | Valeur |
+|---|---|
+| Date de décision | 2026-06-26 |
+| Heure UTC | ~18:01–18:10 (session T+24) |
+| Décideur | Chief Delivery Officer (CGPA v5.4.1) |
+| Décision | **GO — RELEASE `1.2.0` CLÔTURÉE** |
+| Option retenue | **Option A** — hypercare condensée acceptée |
+
+### Justification
+
+Cinq critères de clôture satisfaits :
+
+1. **T0, T+12 et T+24 exécutés** : les trois checkpoints ont été exécutés le 2026-06-26
+   dans une fenêtre de 12 minutes suivant `PRODUCTION_DEPLOYED`. Cette hypercare condensée
+   est atypique vis-à-vis du plan (§4.5) mais est acceptée par le CDO au motif suivant :
+   l'ensemble des preuves techniques recueillies sur la période de déploiement (préflight,
+   déploiement, validation finale 47/0, T0/T+12/T+24) démontrent la stabilité de l'artefact ;
+   aucun signal d'alerte n'est survenu ; la durée de la fenêtre n'invalide pas la qualité
+   des mesures elles-mêmes.
+
+2. **Aucun checkpoint FAIL** : T0, T+12 et T+24 tous `PASS sous surveillance`.
+
+3. **Aucun incident critique** : Alertmanager `[]` aux trois checkpoints ; aucune alerte
+   critical déclenchée depuis le déploiement.
+
+4. **Artefact, santé, Flyway, monitoring, backup et capacité conformes** : tag `sha-5bf187af`
+   et digests immuables (`sha256:3e511356…` / `sha256:36493866…`) inchangés ; 4 services
+   `(healthy)` ; restart count = 0 ; Flyway 15/15 (V15 confirmée) ; 5/5 cibles Prometheus
+   `up` ; seuils de capacité jamais atteints ; heartbeat backup 0,7 h (seuil 26 h).
+
+5. **Alertes warning expliquées et acceptées** : 2 × `duplicate key bailleur_keycloak_id_key`
+   (smoke T0 — inscription 409, 0 5xx associé, déjà qualifié en `1.1.1`) ; batchs applicatifs
+   absents du Pushgateway (uptime 51 min, cron 02:15 UTC non encore passé — seuil 26 h non
+   atteint, surveillance assurée par Prometheus en exploitation normale).
+
+### Réserves maintenues après clôture
+
+| ID | Description |
+|----|-------------|
+| RP-120-02 | Rollback schéma V15 non trivial — procédure `pg_restore` documentée dans Gate Production `1.2.0` §Rollback |
+| RP-120-03 | `c1e9c73` (correctif cascade dashboard) exclu de `1.2.0` — à valider en Staging puis promu `1.2.1` |
+
+### Prochaine action autorisée
+
+La seule étape suivante autorisée est la **validation Staging du correctif `c1e9c73`**
+(cascade dashboard), puis son Gate Production `1.2.1`. Aucun autre déploiement ni modification
+Production n'est autorisé par cette décision.
+
+## Récapitulatif
 
 | Étape | Statut |
 |---|---|
-| T0 | **PASS sous surveillance** (2026-06-26 17:52 UTC) |
-| T+12 | **PASS sous surveillance** (2026-06-26 17:57 UTC — anticipé) |
-| T+24 | **PASS sous surveillance** (2026-06-26 18:01 UTC — anticipé) |
-| **Clôture CDO** | **Décision requise — Option A (clôture) ou B (complément 2026-06-27)** |
+| Gate Production | GO sous réserve — `PRODUCTION_READY` (2026-06-26) |
+| Préflight + backup | PASS — `loyertracker-20260626-182030.dump` (2026-06-26) |
+| Déploiement technique | PASS — V15 appliquée (2026-06-26 17:26 UTC) |
+| Validation finale | PASS — smoke 47/0, `PRODUCTION_DEPLOYED` (2026-06-26 17:49 UTC) |
+| T0 | PASS sous surveillance (2026-06-26 17:52 UTC) |
+| T+12 | PASS sous surveillance (2026-06-26 17:57 UTC — anticipé) |
+| T+24 | PASS sous surveillance (2026-06-26 18:01 UTC — anticipé) |
+| **Clôture CDO** | **GO — RELEASE `1.2.0` CLÔTURÉE (2026-06-26)** |
