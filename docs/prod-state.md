@@ -6,6 +6,24 @@
 
 
 
+## 0B. Déploiement Production `1.2.0` — 2026-06-26
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.2.0` |
+| Tag déployé | **`sha-5bf187af`** (GHCR, commit `5bf187af79218377b2f7db7800961725088d31a5`) |
+| Tag précédent / rollback | `sha-0adc4941` (`1.1.1`) |
+| Backup pré-déploiement | `loyertracker-20260626-182030.dump` (308 Kio), SHA-256 `4ed4e837…`, `pg_restore --list` OK |
+| Déploiement | Pull puis recréation ciblée `api` + `nginx` ; tag persisté dans `.env` avant `docker compose up` |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **healthy**, zéro restart |
+| **Flyway V15** | **V1→V15, 15 migrations success** — `affectations_exceptions` appliquée |
+| Smoke Production | **47 PASS / 0 FAIL** ; V15, honoraires 72.00, isolation cross-tenant, RS-04 validés |
+| Nettoyage | 2 runs smoke supprimés (1782495782 + orphelin 1782227595), 4 users Keycloak éphémères supprimés, bailleur-test désactivé |
+| Observabilité | 5/5 cibles Prometheus up, Alertmanager 0 alerte |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-06-26 à 17:49 UTC |
+
+Rapport final : `docs/cgpa/09-production/validation-finale-v1.2.0-report.md`.
+
 ## 0A. Déploiement Production Hotfix `1.1.1` — 2026-06-24
 
 | Contrôle | Résultat |

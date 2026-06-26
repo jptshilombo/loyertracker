@@ -7,6 +7,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.2.0] — 2026-06-26
+
 ### Ajouts — Patrimoine (Sprint 3, exceptions fines par bien, US-85)
 
 - **Exceptions `INCLUSION`/`EXCLUSION`** sur les affectations bien : une affectation bien `ACTIVE`
@@ -214,7 +216,8 @@ go-live production différé à un lot ultérieur.
 - Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
-[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.1.1...HEAD
+[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/jptshilombo/loyertracker/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/jptshilombo/loyertracker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/jptshilombo/loyertracker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jptshilombo/loyertracker/releases/tag/v1.0.0
