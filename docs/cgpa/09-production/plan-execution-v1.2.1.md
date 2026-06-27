@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-27 |
-| Statut | **Étape 5 PASS (2026-06-27) — `sha-47172297` actif en Production — En attente décision Validation finale** |
+| Statut | **`PRODUCTION_DEPLOYED` 2026-06-27 09:08 UTC — Hypercare T0 PASS — En attente T+12** |
 | Type | Release PATCH — correctif frontend uniquement |
 | Version cible | `1.2.1` |
 | Commit applicatif unique | `c1e9c735e39c0375b907be9da3302e67f5cb10d4` |
@@ -244,6 +244,8 @@ l'hypercare 24 h et clore la release `1.2.1`.
 
 **Décision requise avant exécution :** décision distincte après Étape 5.
 
+**Statut : EN COURS — `PRODUCTION_DEPLOYED` 2026-06-27 09:08 UTC.** Smoke 47/0 PASS (note : `bailleur-test` désactivé dans Keycloak — rétabli manuellement avant le 2e run). Correctif `c1e9c73` confirmé (POST inscription 409 → biens chargés via `finalize`). `.env` persisté `sha-47172297`. Hypercare T0 PASS. T+12 en attente (21:08 UTC). Documents : `validation-finale-v1.2.1-report.md`, `plan-etape-hypercare-v1.2.1.md`.
+
 ---
 
 ## 4. Registre des documents du cycle `1.2.1`
@@ -257,9 +259,9 @@ l'hypercare 24 h et clore la release `1.2.1`.
 | `gate-production-v1.2.1-decision.md` | 3 | À créer |
 | `preflight-backup-v1.2.1-report.md` | 4 | **Créé 2026-06-27 — PASS** |
 | `deploiement-technique-v1.2.1-report.md` | 5 | **Créé 2026-06-27 — PASS** |
-| `validation-finale-v1.2.1-report.md` | 6 | À créer |
-| `plan-etape-hypercare-v1.2.1.md` | 6 | À créer |
-| `cloture-release-v1.2.1.md` | 6 | À créer |
+| `validation-finale-v1.2.1-report.md` | 6 | **Créé 2026-06-27 — PASS** |
+| `plan-etape-hypercare-v1.2.1.md` | 6 | **Créé 2026-06-27 — T0 PASS, T+12 en attente** |
+| `cloture-release-v1.2.1.md` | 6 | À créer (après T+24 PASS + CDO GO) |
 | `CHANGELOG.md` — promotion `[Non publié]` → `[1.2.1]` | 6 (post-`PRODUCTION_DEPLOYED`) | En attente |
 
 ## 5. Risques et réserves

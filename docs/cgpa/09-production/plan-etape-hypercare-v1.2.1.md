@@ -1,0 +1,88 @@
+# Plan Hypercare — Release `1.2.1`
+
+| Champ | Valeur |
+|---|---|
+| `PRODUCTION_DEPLOYED` | 2026-06-27 09:08 UTC |
+| T0 | 2026-06-27 09:08 UTC |
+| T+12 | 2026-06-27 21:08 UTC ± 30 min |
+| T+24 | 2026-06-28 09:08 UTC ± 30 min |
+| Tag surveillé | `sha-47172297` |
+| Rollback disponible | `sha-5bf187af` — applicatif seul, sans pg_restore |
+
+## Critères de suspension (tout FAIL → rollback immédiat)
+
+- Restart inattendu d'un conteneur applicatif (`api`, `nginx`, `keycloak`, `postgres`).
+- Régression fonctionnelle détectée sur le parcours bailleur (biens non chargés, dashboard vide).
+- Augmentation anormale des erreurs 5xx sur Prometheus.
+- Alerte Alertmanager hors `BackupHeartbeatMissing` (alerte pré-existante, cf. rapport déploiement).
+
+## Rollback immédiat si nécessaire
+
+```
+LOYERTRACKER_TAG=sha-5bf187af \
+  docker compose \
+    --project-directory /home/ubuntu/loyertracker \
+    -f /home/ubuntu/loyertracker/docker-compose.yml \
+    -f /home/ubuntu/loyertracker/docker-compose.prod.yml \
+    up -d nginx api
+```
+
+Aucun pg_restore requis — aucune migration entre `1.2.0` et `1.2.1`.
+
+---
+
+## Checkpoint T0 — 2026-06-27 09:08 UTC
+
+**Statut : PASS**
+
+| Contrôle | Résultat |
+|---|---|
+| Smoke 47/0 | ✅ PASS — `validation-finale-v1.2.1-report.md` |
+| `bailleur-test` désactivé dans Keycloak | ⚠️ Pré-existant — rétabli manuellement (runbook à mettre à jour) |
+| Correctif `c1e9c73` vérifié (POST inscription 409 + biens chargés) | ✅ PASS |
+| `LOYERTRACKER_TAG=sha-47172297` persisté dans `.env` | ✅ PASS |
+| 8/8 conteneurs Up, 4/4 healthy, restart=0 | ✅ PASS |
+| Actuator UP | ✅ PASS |
+| Prometheus 5/5 | ✅ PASS |
+| Alertmanager | ⚠️ `BackupHeartbeatMissing` pré-existante — hors périmètre `1.2.1` |
+
+**Décision T0 : PASS — hypercare sous surveillance.**
+
+---
+
+## Checkpoint T+12 — 2026-06-27 21:08 UTC ± 30 min
+
+**Statut : EN ATTENTE**
+
+Contrôles à effectuer :
+- `docker ps` — 8/8 Up, 4/4 healthy, restart=0
+- Actuator `{"status":"UP"}`
+- Prometheus 5/5 cibles `up`
+- Alertmanager — vérifier si `BackupHeartbeatMissing` s'est résolue (cron 02:15 UTC demain)
+- Absence d'erreurs critiques dans les logs api (`docker logs loyertracker-api-1 --since 12h`)
+
+---
+
+## Checkpoint T+24 — 2026-06-28 09:08 UTC ± 30 min
+
+**Statut : EN ATTENTE**
+
+Contrôles à effectuer :
+- `docker ps` — 8/8 Up, 4/4 healthy, restart=0
+- Actuator `{"status":"UP"}`
+- Prometheus 5/5 cibles `up`
+- Alertmanager — `BackupHeartbeatMissing` doit être résolue (cron 02:15 UTC repassé)
+- Metric `loyertracker_backup_last_success_epoch` présente dans Pushgateway
+- Absence d'erreurs critiques dans les logs api (`docker logs loyertracker-api-1 --since 24h`)
+- Vérification comportementale facultative : parcours dashboard bailleur
+
+**Après T+24 PASS : décision CDO de clôture `1.2.1`.**
+
+---
+
+## Post-clôture (après décision CDO GO)
+
+- Promouvoir `CHANGELOG.md` : `[Non publié]` → `[1.2.1] — 2026-06-27`
+- Mettre à jour `docs/project-state.md` (bandeau, §1, §3A, lever RP-120-03)
+- Mettre à jour `docs/prod-state.md`
+- Créer `docs/cgpa/09-production/cloture-release-v1.2.1.md`
