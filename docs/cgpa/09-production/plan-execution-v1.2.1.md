@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-27 |
-| Statut | **Étape 2 PASS (2026-06-27) — En attente décision Gate Production** |
+| Statut | **Étape 3 PASS (2026-06-27) — `PRODUCTION_READY` — En attente décision Préflight** |
 | Type | Release PATCH — correctif frontend uniquement |
 | Version cible | `1.2.1` |
 | Commit applicatif unique | `c1e9c735e39c0375b907be9da3302e67f5cb10d4` |
@@ -152,7 +152,7 @@ exécuter le smoke 47/0, puis statuer le Gate Staging v5.3.
 
 **Document à créer :** `docs/cgpa/09-production/gate-production-v1.2.1-decision.md`
 
-**Décision requise avant exécution :** décision CDO/Release Manager distincte après Étape 2.
+**Statut : EXÉCUTÉE le 2026-06-27 — GO sous réserve, `PRODUCTION_READY`.** Réserve RP-121-01 (backup pré-déploiement) bloquante. Décision : `gate-production-v1.2.1-decision.md`.
 
 ---
 
