@@ -10,7 +10,7 @@ COPY src ./src
 RUN mvn -q -B clean package -DskipTests
 
 # ---- Étape run : JRE minimal, utilisateur non-root ----
-FROM eclipse-temurin:21-jre-alpine@sha256:3f08b13888f595cc49edabea7250ba69499ba25602b267da591720769400e08c
+FROM eclipse-temurin:25-jre-alpine@sha256:28db6fdf60e38945e43d840c0333aeaec66c15943070104f7586fd3c9d1665b0
 # Patche les paquets OS au-delà de l'image de base (ex. CVE-2026-45447 openssl 3.5.7-r0,
 # gate Trivy HIGH/CRITICAL) sans attendre la reconstruction upstream d'eclipse-temurin.
 RUN apk -U upgrade --no-cache
