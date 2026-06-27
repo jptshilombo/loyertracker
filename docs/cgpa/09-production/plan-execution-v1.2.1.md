@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-27 |
-| Statut | **Étape 3 PASS (2026-06-27) — `PRODUCTION_READY` — En attente décision Préflight** |
+| Statut | **Étape 4 PASS (2026-06-27) — `PRODUCTION_READY` + backup vérifié — En attente décision Déploiement** |
 | Type | Release PATCH — correctif frontend uniquement |
 | Version cible | `1.2.1` |
 | Commit applicatif unique | `c1e9c735e39c0375b907be9da3302e67f5cb10d4` |
@@ -177,6 +177,8 @@ applicative seule suffit — le backup reste la procédure de sécurité standar
 
 **Décision requise avant exécution :** décision distincte après Gate Production (Étape 3).
 
+**Statut : EXÉCUTÉE le 2026-06-27 — PASS, RP-121-01 LEVÉE.** 8/8 conteneurs Up, 4/4 healthy, restart=0. Flyway 15/15. Actuator UP. Prometheus 5/5, Alertmanager 0. Capacité OK. Backup `loyertracker-20260627-085033.dump` (311 Kio, 730 entrées pg_restore, permissions 600, SHA-256 consigné). Rapport : `preflight-backup-v1.2.1-report.md`.
+
 ---
 
 ### Étape 5 — Déploiement technique `1.2.1`
@@ -251,7 +253,7 @@ l'hypercare 24 h et clore la release `1.2.1`.
 | `docs/release-notes-v1.2.1.md` | 1 | À créer |
 | `gate-staging-v1.2.1-decision.md` | 2 | À créer |
 | `gate-production-v1.2.1-decision.md` | 3 | À créer |
-| `preflight-backup-v1.2.1-report.md` | 4 | À créer |
+| `preflight-backup-v1.2.1-report.md` | 4 | **Créé 2026-06-27 — PASS** |
 | `deploiement-technique-v1.2.1-report.md` | 5 | À créer |
 | `validation-finale-v1.2.1-report.md` | 6 | À créer |
 | `plan-etape-hypercare-v1.2.1.md` | 6 | À créer |
