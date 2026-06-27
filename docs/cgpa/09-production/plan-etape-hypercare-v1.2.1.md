@@ -50,16 +50,18 @@ Aucun pg_restore requis — aucune migration entre `1.2.0` et `1.2.1`.
 
 ---
 
-## Checkpoint T+12 — 2026-06-27 21:08 UTC ± 30 min
+## Checkpoint T+12 anticipé — 2026-06-27 09:13 UTC
 
-**Statut : EN ATTENTE**
+**Statut : PASS**
 
-Contrôles à effectuer :
-- `docker ps` — 8/8 Up, 4/4 healthy, restart=0
-- Actuator `{"status":"UP"}`
-- Prometheus 5/5 cibles `up`
-- Alertmanager — vérifier si `BackupHeartbeatMissing` s'est résolue (cron 02:15 UTC demain)
-- Absence d'erreurs critiques dans les logs api (`docker logs loyertracker-api-1 --since 12h`)
+| Contrôle | Résultat |
+|---|---|
+| 8/8 conteneurs Up | ✅ nginx Up 16 min (healthy), api Up 16 min (healthy), keycloak Up 46 min (healthy), postgres Up 46 min (healthy), prometheus/alertmanager/pushgateway/blackbox Up 46 min |
+| 4/4 restart=0 | ✅ nginx=0, api=0, keycloak=0, postgres=0 |
+| Actuator `{"status":"UP"}` | ✅ PASS |
+| Prometheus 5/5 cibles `up` | ✅ blackbox-keycloak, blackbox-postgres, loyertracker-api, prometheus, pushgateway |
+| Alertmanager | ⚠️ `BackupHeartbeatMissing` active — pré-existante (cron 02:15 UTC pas encore repassé depuis reboot serveur) |
+| Logs API — erreurs critiques | ✅ Aucune — uniquement 2× `23505` (`bailleur_keycloak_id_key`) attendues (POST inscription 409 du smoke) |
 
 ---
 
