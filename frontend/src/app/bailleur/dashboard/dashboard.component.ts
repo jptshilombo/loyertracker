@@ -252,6 +252,174 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
     }
 
     <section class="grid two detail">
+      <form [formGroup]="affectationPatrimoineForm" (ngSubmit)="creerAffectationPatrimoine()" class="panel">
+        <h2>Affectation patrimoine</h2>
+        <label>
+          Patrimoine
+          <select formControlName="patrimoineId">
+            <option value="" disabled>Choisir un patrimoine</option>
+            @for (p of patrimoinesDisponibles(); track p.id) {
+              <option [value]="p.id">{{ p.nom }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Gestionnaire ID
+          <input type="text" formControlName="gestionnaireId" />
+        </label>
+        <div class="fields">
+          <label>
+            Honoraires
+            <select formControlName="typeHonoraires">
+              <option value="POURCENTAGE">POURCENTAGE</option>
+              <option value="FORFAIT">FORFAIT</option>
+            </select>
+          </label>
+          <label>
+            Montant
+            <input type="number" formControlName="montantHonoraires" min="0" step="0.01" />
+          </label>
+        </div>
+        <div class="fields">
+          <label>
+            Début
+            <input type="date" formControlName="dateDebut" />
+          </label>
+          <label>
+            Fin
+            <input type="date" formControlName="dateFin" />
+          </label>
+        </div>
+        <button type="submit" [disabled]="affectationPatrimoineForm.invalid || chargement()">
+          Créer l'affectation
+        </button>
+      </form>
+
+      <div class="panel">
+        <h2>Affectations patrimoine</h2>
+        @for (p of patrimoinesDisponibles(); track p.id) {
+          @for (aff of (affectationsPatrimoine()[p.id] ?? []); track aff.id) {
+            <div class="item">
+              <span>
+                <strong>{{ p.nom }}</strong>
+                <small>{{ aff.gestionnaireId }}</small>
+              </span>
+              <span>
+                {{ aff.typeHonoraires }} {{ aff.montantHonoraires }} ·
+                {{ aff.dateDebut }} → {{ aff.dateFin || 'en cours' }}
+              </span>
+              <span class="badge">{{ aff.statut }}</span>
+              @if (aff.statut === 'ACTIVE') {
+                <button type="button" class="danger" (click)="revoquerAffectationPatrimoine(aff.id)">
+                  Révoquer
+                </button>
+              }
+            </div>
+          }
+        }
+        @if (patrimoinesAvecAffectationActive().length === 0) {
+          <p class="muted">Aucune affectation patrimoine active.</p>
+        }
+      </div>
+    </section>
+
+    @if (patrimoinesAvecAffectationActive().length > 0) {
+      <section class="grid two detail">
+        <form [formGroup]="exceptionForm" (ngSubmit)="creerException()" class="panel">
+          <h2>Exception sur bien</h2>
+          <label>
+            Patrimoine affecté
+            <select
+              #patrimoineExcSel
+              formControlName="patrimoineId"
+              (change)="selectionnerPatrimoineException(patrimoineExcSel.value)"
+            >
+              <option value="" disabled>Choisir un patrimoine</option>
+              @for (p of patrimoinesAvecAffectationActive(); track p.id) {
+                <option [value]="p.id">{{ p.nom }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Bien
+            <select
+              #bienExcSel
+              formControlName="bienId"
+              (change)="selectionnerBienException(bienExcSel.value)"
+              [attr.disabled]="patrimoineExceptionId() ? null : true"
+            >
+              <option value="" disabled>Choisir un bien</option>
+              @for (b of biensPatrimoineException(); track b.id) {
+                <option [value]="b.id">{{ b.adresse }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Gestionnaire ID
+            <input type="text" formControlName="gestionnaireId" />
+          </label>
+          <label>
+            Type d'exception
+            <select formControlName="typeException">
+              <option value="EXCLUSION">EXCLUSION</option>
+              <option value="INCLUSION">INCLUSION</option>
+            </select>
+          </label>
+          <div class="fields">
+            <label>
+              Honoraires
+              <select formControlName="typeHonoraires">
+                <option value="POURCENTAGE">POURCENTAGE</option>
+                <option value="FORFAIT">FORFAIT</option>
+              </select>
+            </label>
+            <label>
+              Montant
+              <input type="number" formControlName="montantHonoraires" min="0" step="0.01" />
+            </label>
+          </div>
+          <div class="fields">
+            <label>
+              Début
+              <input type="date" formControlName="dateDebut" />
+            </label>
+            <label>
+              Fin
+              <input type="date" formControlName="dateFin" />
+            </label>
+          </div>
+          <button type="submit" [disabled]="exceptionForm.invalid || chargement()">
+            Créer l'exception
+          </button>
+        </form>
+
+        <div class="panel">
+          <h2>Exceptions du bien</h2>
+          @if (!bienExceptionId()) {
+            <p class="muted">Choisir un bien pour voir ses exceptions.</p>
+          }
+          @for (aff of exceptionsBien(); track aff.id) {
+            <div class="item">
+              <span class="badge">{{ aff.typeException }}</span>
+              <strong>{{ aff.gestionnaireId }}</strong>
+              <span>{{ aff.dateDebut }} → {{ aff.dateFin || 'en cours' }}</span>
+              <span class="badge">{{ aff.statut }}</span>
+              @if (aff.statut === 'ACTIVE') {
+                <button type="button" class="danger" (click)="revoquerException(aff.id)">
+                  Révoquer
+                </button>
+              }
+            </div>
+          } @empty {
+            @if (bienExceptionId()) {
+              <p class="muted">Aucune exception pour ce bien.</p>
+            }
+          }
+        </div>
+      </section>
+    }
+
+    <section class="grid two detail">
       <app-alertes-liste [peutGenerer]="true" />
       <app-audit-journal />
     </section>
