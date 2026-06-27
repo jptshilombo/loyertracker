@@ -18,6 +18,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - Décision CDO **GO sous réserve** et Plan d’Exécution additif avant toute correction applicative.
 - Synchronisation de l’état projet, de la release Production `1.2.1` et du tag Staging courant.
 - Correction des procédures de rollback Production `1.2.1` afin de combiner le Compose de base et l’overlay Production.
+- Activation de Dependabot et des correctifs automatiques ; mise à jour Angular DevKit/CLI `20.3.30` et override ciblé `http-proxy-middleware` `3.0.7` : `npm audit` passe de 3 alertes High à **0 High/Critical** (5 Moderate, 5 Low résiduelles dans la chaîne de build).
+- Correction du clone superficiel du job Frontend (`fetch-depth: 0`) afin de restaurer le blame SonarQube et le calcul fiable du code nouveau.
 
 ## [1.2.1] — 2026-06-27
 
