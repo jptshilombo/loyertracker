@@ -7,6 +7,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.2.1] — À publier après PRODUCTION_DEPLOYED
+
+### Corrigé — Dashboard bailleur
+
+- **Chargement des biens garanti même en cas d'erreur d'inscription** : `chargerBiens()` et
+  `chargerReferentielsBien()` n'étaient appelés que dans le callback `next` de `inscrire()` ;
+  une erreur d'inscription (401, 500, réseau) laissait le tableau de bord vide. `finalize`
+  garantit désormais que `chargerBiens()` s'exécute en succès comme en erreur ;
+  `chargerReferentielsBien()` est lancé immédiatement en parallèle de l'inscription.
+  (`dashboard.component.ts` — `c1e9c73`)
+
 ## [1.2.0] — 2026-06-26
 
 ### Ajouts — Patrimoine (Sprint 3, exceptions fines par bien, US-85)
