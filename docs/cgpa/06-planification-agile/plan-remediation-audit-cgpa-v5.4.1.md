@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | **GO sous réserve confirmé — exécution autorisée le 2026-06-27** |
+| Statut | **Exécuté — GO technique sous réserves de clôture le 2026-06-27** |
 | Déclencheur | Audit transversal CGPA v5.4.1 du 2026-06-27 |
 | Décision CDO | **GO sous réserve** |
 | Branche | `codex/remediation-audit-cgpa-v5.4.1` |
@@ -90,3 +90,9 @@ nécessiterait un endpoint et un arbitrage produit distincts. Une aide de saisie
 | RA-03 | Fausse clôture d'une alerte sécurité | Corriger le SQL ; documenter factuellement le modèle CSRF avant qualification |
 | RA-04 | SHA d'Action invalide | Résoudre chaque tag par l'API GitHub et laisser la CI valider |
 | RA-05 | Dérive documentaire supplémentaire | Recherche globale des tags, versions et commandes Production après modification |
+
+## 9. Résultat d’exécution
+
+Le plan a été exécuté dans la PR #83. Les validations locales et GitHub Actions sont vertes ; la protection de `main`, Dependabot et les correctifs automatiques sont actifs. La clôture définitive reste conditionnée à la fusion de la PR et au contrôle post-merge des alertes CodeQL et Dependabot sur la branche par défaut. Rapport : `docs/cgpa/06-planification-agile/rapport-remediation-audit-cgpa-v5.4.1.md`.
+
+Aucun déploiement Staging ou Production n’a été exécuté ou autorisé.
