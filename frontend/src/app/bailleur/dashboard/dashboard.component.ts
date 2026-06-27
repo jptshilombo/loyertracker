@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin, map } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import {
@@ -361,6 +361,21 @@ export class BailleurDashboardComponent implements OnInit {
   readonly bienSelectionne = signal<Bien | null>(null);
   readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
   readonly bailSelectionne = signal<Bail | null>(null);
+  readonly affectationsPatrimoine = signal<Record<string, Affectation[]>>({});
+  readonly patrimoineExceptionId = signal('');
+  readonly bienExceptionId = signal('');
+  readonly exceptionsBien = signal<Affectation[]>([]);
+
+  readonly patrimoinesAvecAffectationActive = computed(() => {
+    const parPatrimoine = this.affectationsPatrimoine();
+    return this.patrimoines().filter(p =>
+      (parPatrimoine[p.id] ?? []).some(a => a.statut === 'ACTIVE'),
+    );
+  });
+
+  readonly biensPatrimoineException = computed(() =>
+    this.biens().filter(b => b.patrimoineId === this.patrimoineExceptionId()),
+  );
 
   selectionnerBail(bail: Bail): void {
     this.bailSelectionne.set(bail);
@@ -394,6 +409,35 @@ export class BailleurDashboardComponent implements OnInit {
     dateFin: new FormControl('', { nonNullable: true }),
   });
 
+  readonly affectationPatrimoineForm = new FormGroup({
+    patrimoineId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    gestionnaireId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    typeHonoraires: new FormControl<TypeHonoraires>('POURCENTAGE', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    montantHonoraires: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    dateFin: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly exceptionForm = new FormGroup({
+    patrimoineId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    bienId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    gestionnaireId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    typeHonoraires: new FormControl<TypeHonoraires>('POURCENTAGE', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    montantHonoraires: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    dateFin: new FormControl('', { nonNullable: true }),
+    typeException: new FormControl<'INCLUSION' | 'EXCLUSION'>('EXCLUSION', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
+
   ngOnInit(): void {
     if (!this.auth.hasRole('BAILLEUR')) {
       this.inscriptionStatus.set('non applicable');
@@ -413,8 +457,35 @@ export class BailleurDashboardComponent implements OnInit {
   }
 
   private chargerReferentielsBien(): void {
-    this.api.listerPatrimoines().subscribe({ next: (patrimoines) => this.patrimoines.set(patrimoines) });
+    this.api.listerPatrimoines().subscribe({
+      next: (patrimoines) => {
+        this.patrimoines.set(patrimoines);
+        this.chargerAffectationsPatrimoine(patrimoines);
+      },
+    });
     this.api.listerTypesBiens().subscribe({ next: (typesBiens) => this.typesBiens.set(typesBiens) });
+  }
+
+  private chargerAffectationsPatrimoine(patrimoines: Patrimoine[] = this.patrimoines()): void {
+    if (!patrimoines.length) {
+      return;
+    }
+    forkJoin(
+      patrimoines.map(p =>
+        this.api.listerAffectationsPatrimoine(p.id).pipe(map(a => [p.id, a] as const)),
+      ),
+    ).subscribe({
+      next: (resultats) => this.affectationsPatrimoine.set(Object.fromEntries(resultats)),
+      error: (err: unknown) => this.signalerErreur(err),
+    });
+  }
+
+  private chargerExceptionsBien(bienId: string): void {
+    this.api.listerAffectations(bienId).subscribe({
+      next: (affectations) =>
+        this.exceptionsBien.set(affectations.filter(a => a.typeException !== null)),
+      error: (err: unknown) => this.signalerErreur(err),
+    });
   }
 
   chargerBiens(): void {
@@ -557,6 +628,117 @@ export class BailleurDashboardComponent implements OnInit {
         next: () => {
           this.message.set('Affectation révoquée');
           this.chargerDetails(bienId);
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  creerAffectationPatrimoine(): void {
+    if (this.affectationPatrimoineForm.invalid) {
+      return;
+    }
+    const form = this.affectationPatrimoineForm.getRawValue();
+    const payload: AffectationPayload = {
+      patrimoineId: form.patrimoineId,
+      gestionnaireId: form.gestionnaireId,
+      typeHonoraires: form.typeHonoraires,
+      montantHonoraires: form.montantHonoraires,
+      dateDebut: form.dateDebut,
+      dateFin: form.dateFin || null,
+    };
+    this.executer('Création affectation patrimoine', () =>
+      this.api.creerAffectation(payload).subscribe({
+        next: () => {
+          this.message.set('Affectation patrimoine créée');
+          this.affectationPatrimoineForm.reset({
+            patrimoineId: '',
+            gestionnaireId: '',
+            typeHonoraires: 'POURCENTAGE',
+            montantHonoraires: 0,
+            dateDebut: '',
+            dateFin: '',
+          });
+          this.chargerAffectationsPatrimoine();
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  revoquerAffectationPatrimoine(id: string): void {
+    this.executer('Révocation', () =>
+      this.api.revoquerAffectation(id).subscribe({
+        next: () => {
+          this.message.set('Affectation révoquée');
+          this.chargerAffectationsPatrimoine();
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  selectionnerPatrimoineException(patrimoineId: string): void {
+    this.patrimoineExceptionId.set(patrimoineId);
+    this.bienExceptionId.set('');
+    this.exceptionsBien.set([]);
+    const gestionnaireActif = (this.affectationsPatrimoine()[patrimoineId] ?? []).find(
+      a => a.statut === 'ACTIVE',
+    )?.gestionnaireId ?? '';
+    this.exceptionForm.patchValue({ patrimoineId, bienId: '', gestionnaireId: gestionnaireActif });
+  }
+
+  selectionnerBienException(bienId: string): void {
+    this.bienExceptionId.set(bienId);
+    this.exceptionForm.patchValue({ bienId });
+    this.chargerExceptionsBien(bienId);
+  }
+
+  creerException(): void {
+    if (this.exceptionForm.invalid) {
+      return;
+    }
+    const form = this.exceptionForm.getRawValue();
+    const payload: AffectationPayload = {
+      bienId: form.bienId,
+      gestionnaireId: form.gestionnaireId,
+      typeHonoraires: form.typeHonoraires,
+      montantHonoraires: form.montantHonoraires,
+      dateDebut: form.dateDebut,
+      dateFin: form.dateFin || null,
+      typeException: form.typeException,
+    };
+    this.executer("Création de l'exception", () =>
+      this.api.creerAffectation(payload).subscribe({
+        next: () => {
+          this.message.set('Exception créée');
+          this.exceptionForm.patchValue({
+            gestionnaireId: '',
+            montantHonoraires: 0,
+            dateDebut: '',
+            dateFin: '',
+            typeException: 'EXCLUSION',
+          });
+          this.chargerExceptionsBien(form.bienId);
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  revoquerException(id: string): void {
+    const bienId = this.bienExceptionId();
+    this.executer('Révocation exception', () =>
+      this.api.revoquerAffectation(id).subscribe({
+        next: () => {
+          this.message.set('Exception révoquée');
+          if (bienId) {
+            this.chargerExceptionsBien(bienId);
+          }
         },
         error: (err: unknown) => this.signalerErreur(err),
         complete: () => this.chargement.set(false),
