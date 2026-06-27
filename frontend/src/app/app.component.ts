@@ -7,8 +7,9 @@ import { NavbarComponent } from './shared/navbar/navbar.component';
     selector: 'app-root',
     imports: [RouterOutlet, NavbarComponent],
     template: `
+    <a class="skip-link" href="#main-content">Aller au contenu principal</a>
     <app-navbar></app-navbar>
-    <main class="container">
+    <main id="main-content" class="container">
       <router-outlet></router-outlet>
     </main>
   `

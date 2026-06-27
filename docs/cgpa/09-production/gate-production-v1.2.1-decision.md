@@ -84,7 +84,7 @@ en Staging le 2026-06-27 sous le tag `sha-47172297`.
 | Digests rollback | ✅ | API `sha256:3e511356…`, Web `sha256:36493866…` (cf. `deploiement-technique-v1.2.0-report.md`) |
 | Responsable rollback | ✅ | DevSecOps Lead, coordination Release Manager |
 | Migration V16+ et rollback | ✅ | **Aucune migration supplémentaire** entre `1.2.0` et `1.2.1` — rollback applicatif seul suffisant |
-| Rollback Staging | ✅ | `sha-5bf187af` disponible sur GHCR ; procédure : `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.prod.yml up -d nginx` |
+| Rollback Production | ✅ | `sha-5bf187af` disponible sur GHCR ; procédure : `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx api` |
 | RP-120-02 | Maintenue | Rollback au-delà de `1.2.0` (vers `1.1.x`) toujours non trivial (pg_restore V15) — inchangé |
 
 ## 4. Réserves et conditions

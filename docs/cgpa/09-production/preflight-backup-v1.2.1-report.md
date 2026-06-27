@@ -98,7 +98,7 @@ imputable aux données d'exploitation depuis le 2026-06-26.
 
 | Scénario | Procédure |
 |---|---|
-| Rollback `1.2.1` → `1.2.0` (applicatif) | `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.prod.yml up -d nginx` |
+| Rollback `1.2.1` → `1.2.0` (applicatif) | `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx api` |
 | Rollback avec perte de données post-1.2.1 | `pg_restore` du dump `loyertracker-20260627-085033.dump` (procédure : `infra/backup/restore-postgres.sh`) |
 | pg_restore requis entre 1.2.0 et 1.2.1 ? | **Non** — aucune migration entre les deux versions |
 

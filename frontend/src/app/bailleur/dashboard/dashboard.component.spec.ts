@@ -9,6 +9,7 @@ import { BailleurDashboardComponent } from './dashboard.component';
 describe('BailleurDashboardComponent', () => {
   let fixture: ComponentFixture<BailleurDashboardComponent>;
   let http: HttpTestingController;
+  let confirmSpy: jasmine.Spy;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -29,6 +30,7 @@ describe('BailleurDashboardComponent', () => {
     });
     fixture = TestBed.createComponent(BailleurDashboardComponent);
     http = TestBed.inject(HttpTestingController);
+    confirmSpy = spyOn(globalThis, 'confirm').and.returnValue(true);
 
     fixture.detectChanges(); // ngOnInit -> inscription, puis chargement biens/référentiels
 
@@ -100,6 +102,23 @@ describe('BailleurDashboardComponent', () => {
     const cmp = fixture.componentInstance;
     expect(cmp.typesBiensDisponibles().map((t) => t.code)).toEqual(['APPARTEMENT']);
     expect(cmp.patrimoinesDisponibles().map((p) => p.id)).toEqual(['patrimoine-1']);
+  });
+
+  it('annule l’archivage du bien quand la confirmation est refusée', () => {
+    const cmp = fixture.componentInstance;
+    cmp.bienSelectionne.set({
+      id: 'bien-1',
+      adresse: '12 rue des Lilas',
+      type: 'APPARTEMENT',
+      statut: 'LIBRE',
+      patrimoineId: 'patrimoine-1',
+    });
+    confirmSpy.and.returnValue(false);
+
+    cmp.archiverBien();
+
+    expect(confirmSpy).toHaveBeenCalledWith('Archiver ce bien ?');
+    http.expectNone('/api/biens/bien-1/archivage');
   });
 
   describe('Sprint 4 — affectations patrimoine et exceptions', () => {
@@ -202,5 +221,14 @@ describe('BailleurDashboardComponent', () => {
 
       http.expectOne('/api/patrimoines/patrimoine-1/affectations').flush([]);
     });
+    it('annule une révocation patrimoine refusée par l’utilisateur', () => {
+      confirmSpy.and.returnValue(false);
+
+      fixture.componentInstance.revoquerAffectationPatrimoine('aff-pat-1');
+
+      expect(confirmSpy).toHaveBeenCalled();
+      http.expectNone('/api/affectations/aff-pat-1/revocation');
+    });
+
   });
 });
