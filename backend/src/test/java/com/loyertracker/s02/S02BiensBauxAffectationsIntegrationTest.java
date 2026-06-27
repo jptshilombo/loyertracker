@@ -389,6 +389,40 @@ class S02BiensBauxAffectationsIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void historiqueAffectationsPatrimoineScopeParBailleur() throws Exception {
+        String bailleurA = "kc-" + UUID.randomUUID();
+        String bailleurB = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleurA);
+        inscrireBailleur(bailleurB);
+
+        String patrimoineId = creerPatrimoine(bailleurA, "Portefeuille Historique");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "ghist@test.local");
+
+        mockMvc.perform(post("/api/affectations")
+                        .with(bailleurJwt(bailleurA))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(affectationPatrimoineJson(patrimoineId, gestionnaire)))
+                .andExpect(status().isCreated());
+
+        // Bailleur A voit son historique (1 affectation ACTIVE)
+        mockMvc.perform(get("/api/patrimoines/{id}/affectations", patrimoineId)
+                        .with(bailleurJwt(bailleurA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].statut").value("ACTIVE"));
+
+        // Bailleur B ne peut pas accéder au patrimoine d'autrui (RLS → 404 via peutAccederPatrimoine)
+        mockMvc.perform(get("/api/patrimoines/{id}/affectations", patrimoineId)
+                        .with(bailleurJwt(bailleurB)))
+                .andExpect(status().isForbidden());
+
+        // Patrimoine inexistant → 403 (peutAccederPatrimoine échoue avant la couche service)
+        mockMvc.perform(get("/api/patrimoines/{id}/affectations", UUID.randomUUID())
+                        .with(bailleurJwt(bailleurA)))
+                .andExpect(status().isForbidden());
+    }
+
     private void inscrireBailleur(String keycloakId) throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId)))
                 .andExpect(status().isCreated());

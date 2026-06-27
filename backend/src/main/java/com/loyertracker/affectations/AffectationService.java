@@ -146,6 +146,17 @@ public class AffectationService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<AffectationDto> historiquePatrimoine(UUID patrimoineId, Jwt jwt) {
+        tenant.activerDepuisKeycloak(jwt.getSubject());
+        if (!patrimoines.existsById(patrimoineId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patrimoine introuvable.");
+        }
+        return affectations.findByPatrimoineIdOrderByDateDebutDesc(patrimoineId).stream()
+                .map(AffectationDto::from)
+                .toList();
+    }
+
     /**
      * RS-04 (validé PO 2026-06-21) : une EXCLUSION sans affectation patrimoine ACTIVE
      * correspondante du même gestionnaire est un état incohérent (rien à exclure) — rejetée en 400.
