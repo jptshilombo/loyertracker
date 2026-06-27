@@ -104,6 +104,23 @@ describe('BailleurDashboardComponent', () => {
     expect(cmp.patrimoinesDisponibles().map((p) => p.id)).toEqual(['patrimoine-1']);
   });
 
+  it('annule l’archivage du bien quand la confirmation est refusée', () => {
+    const cmp = fixture.componentInstance;
+    cmp.bienSelectionne.set({
+      id: 'bien-1',
+      adresse: '12 rue des Lilas',
+      type: 'APPARTEMENT',
+      statut: 'LIBRE',
+      patrimoineId: 'patrimoine-1',
+    });
+    confirmSpy.and.returnValue(false);
+
+    cmp.archiverBien();
+
+    expect(confirmSpy).toHaveBeenCalledWith('Archiver ce bien ?');
+    http.expectNone('/api/biens/bien-1/archivage');
+  });
+
   describe('Sprint 4 — affectations patrimoine et exceptions', () => {
     const affectationPatrimoineActive = {
       id: 'aff-pat-1',
