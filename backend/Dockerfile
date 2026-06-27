@@ -2,7 +2,7 @@
 # Image API multi-stage. Le durcissement/scan (Trivy) est ajouté à l'étape 07 (CI/CD).
 
 # ---- Étape build : compile + package (tests exécutés en CI, pas ici) ----
-FROM maven:3.9-eclipse-temurin-21@sha256:d7e7f57407437c014571f1ad5a9955f03fc3edcb1d964067ef351fa38e798665 AS build
+FROM maven:3-eclipse-temurin-26@sha256:6ce830fe4c216ab9baaf63d3899d8d178432658bdeb9092cca2bf573475b6b6e AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn -q -B dependency:go-offline
