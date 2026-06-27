@@ -9,6 +9,8 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Sprint 4 UI Patrimoine — Kickoff GO PO (2026-06-27).** Périmètre : affectation gestionnaire au niveau patrimoine + exceptions fines INCLUSION/EXCLUSION, en un seul sprint (A1). Interface dans le dashboard bailleur existant (C1), gestionnaire par UUID brut (B1). Backend référence : `1.2.0` / V15 en Production. Prochaines étapes : développement → PR dédiée → CI → Gate Staging (STG-ISOL-01) → Gate Production distinct. Document de cadrage : `docs/cgpa/06-planification-agile/sprint-4-patrimoine-ui-plan.md`.
+>
 > **Release `1.2.1` CLÔTURÉE — CDO GO (2026-06-27).** Hypercare anticipé (T0/T+12/T+24 en 7 min) PASS. Smoke 47/0 (note : `bailleur-test` réactivé manuellement). Correctif `c1e9c73` confirmé en Production (`finalize` → biens chargés même sur erreur 409). RP-120-03 levée. Tag `sha-47172297` en Production. Dossier : `docs/cgpa/09-production/cloture-release-v1.2.1.md`.
 >
 > **Release `1.2.0` CLÔTURÉE — CDO GO (2026-06-26).** Hypercare condensée (T0/T+12/T+24 en 12 min) acceptée par le CDO — Option A. Toutes mesures PASS : 8/8 healthy, restart 0, Flyway 15/15, Prometheus 5/5, 0 alerte, 0 5xx, Hikari pending 0. Réserves maintenues : RP-120-02 (rollback V15 via pg_restore), RP-120-03 (`c1e9c73` cascade → `1.2.1`). Prochaine action autorisée : validation Staging `c1e9c73` → Gate Production `1.2.1`. Dossier : `docs/cgpa/09-production/cloture-release-v1.2.0.md`.
