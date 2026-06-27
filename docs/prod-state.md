@@ -6,6 +6,25 @@
 
 
 
+## 0C. Déploiement Production `1.2.1` — 2026-06-27
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.2.1` |
+| Tag déployé | **`sha-47172297`** (GHCR, commit applicatif `c1e9c735e39c0375b907be9da3302e67f5cb10d4`) |
+| Tag précédent / rollback | `sha-5bf187af` (`1.2.0`) — applicatif seul, sans pg_restore |
+| Backup pré-déploiement | `loyertracker-20260627-085033.dump` (311 Kio), SHA-256 `511ef7a7…`, `pg_restore --list` 730 entrées OK |
+| Déploiement | `nginx` + `api` recréés (`api` : dépendance + --pull always ; code Java identique à `1.2.0`) |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **healthy**, zéro restart |
+| Flyway | V1→V15, **15 migrations success** — inchangé (`1.2.1` = correctif frontend pur) |
+| Smoke Production | **47 PASS / 0 FAIL** ; correctif `c1e9c73` confirmé (POST inscription 409 → biens chargés via `finalize`) |
+| Note smoke | `bailleur-test@test.local` était désactivé — réactivé manuellement avant le 2e run (pré-existant `1.2.0`) |
+| Observabilité | 5/5 cibles Prometheus up ; alerte `BackupHeartbeatMissing` pré-existante (Pushgateway volatil post-reboot) |
+| Réserves levées | **RP-120-03** levée (`c1e9c73` en Production) ; RP-121-01 levée (backup vérifié) |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-06-27 à 09:08 UTC ; **RELEASE CLÔTURÉE** |
+
+Rapports : `docs/cgpa/09-production/validation-finale-v1.2.1-report.md`, `docs/cgpa/09-production/cloture-release-v1.2.1.md`.
+
 ## 0B. Déploiement Production `1.2.0` — 2026-06-26
 
 | Contrôle | Résultat |

@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-27 |
-| Statut | **`PRODUCTION_DEPLOYED` 2026-06-27 09:08 UTC — Hypercare T0+T+12 anticipé PASS — En attente T+24** |
+| Statut | **RELEASE CLÔTURÉE — CDO GO 2026-06-27 09:15 UTC — T0/T+12/T+24 anticipés PASS** |
 | Type | Release PATCH — correctif frontend uniquement |
 | Version cible | `1.2.1` |
 | Commit applicatif unique | `c1e9c735e39c0375b907be9da3302e67f5cb10d4` |
@@ -260,8 +260,8 @@ l'hypercare 24 h et clore la release `1.2.1`.
 | `preflight-backup-v1.2.1-report.md` | 4 | **Créé 2026-06-27 — PASS** |
 | `deploiement-technique-v1.2.1-report.md` | 5 | **Créé 2026-06-27 — PASS** |
 | `validation-finale-v1.2.1-report.md` | 6 | **Créé 2026-06-27 — PASS** |
-| `plan-etape-hypercare-v1.2.1.md` | 6 | **Créé 2026-06-27 — T0 PASS, T+12 anticipé PASS, T+24 en attente** |
-| `cloture-release-v1.2.1.md` | 6 | À créer (après T+24 PASS + CDO GO) |
+| `plan-etape-hypercare-v1.2.1.md` | 6 | **Créé 2026-06-27 — T0/T+12/T+24 anticipés PASS** |
+| `cloture-release-v1.2.1.md` | 6 | **Créé 2026-06-27 — CDO GO, RELEASE CLÔTURÉE** |
 | `CHANGELOG.md` — promotion `[Non publié]` → `[1.2.1]` | 6 (post-`PRODUCTION_DEPLOYED`) | En attente |
 
 ## 5. Risques et réserves
@@ -269,7 +269,7 @@ l'hypercare 24 h et clore la release `1.2.1`.
 | ID | Description | Niveau | Traitement |
 |----|-------------|--------|------------|
 | RP-120-02 | Rollback schéma V15 non trivial | Maintenu | Rollback `1.2.1` → `1.2.0` applicatif seul (aucune migration entre les deux) ; rollback au-delà de `1.2.0` requiert pg_restore |
-| RP-120-03 | `c1e9c73` exclu de `1.2.0` | À lever | Levée après `PRODUCTION_DEPLOYED` `1.2.1` |
+| RP-120-03 | `c1e9c73` exclu de `1.2.0` | ✅ **LEVÉE** | `c1e9c73` en Production depuis le 2026-06-27 |
 | RSV-STG-02 | Collision namespace/réseau/volume/port future | En surveillance | Checklist STG-ISOL-01 à l'Étape 2 |
 | RSV-STG-03 | Commande Docker globale introduite accidentellement | En surveillance | Vérification pipeline et runbooks à l'Étape 2 |
 | RSV-STG-04 | Dérive reverse proxy ou inventaire mutualisé | En surveillance | Revue `staging-state.md` à l'Étape 2 |

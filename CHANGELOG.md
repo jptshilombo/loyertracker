@@ -7,7 +7,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
-## [1.2.1] — À publier après PRODUCTION_DEPLOYED
+## [1.2.1] — 2026-06-27
 
 ### Corrigé — Dashboard bailleur
 
@@ -227,7 +227,8 @@ go-live production différé à un lot ultérieur.
 - Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
-[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.2.0...HEAD
+[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/jptshilombo/loyertracker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/jptshilombo/loyertracker/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/jptshilombo/loyertracker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/jptshilombo/loyertracker/compare/v1.0.0...v1.1.0

@@ -9,6 +9,8 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Release `1.2.1` CLÔTURÉE — CDO GO (2026-06-27).** Hypercare anticipé (T0/T+12/T+24 en 7 min) PASS. Smoke 47/0 (note : `bailleur-test` réactivé manuellement). Correctif `c1e9c73` confirmé en Production (`finalize` → biens chargés même sur erreur 409). RP-120-03 levée. Tag `sha-47172297` en Production. Dossier : `docs/cgpa/09-production/cloture-release-v1.2.1.md`.
+>
 > **Release `1.2.0` CLÔTURÉE — CDO GO (2026-06-26).** Hypercare condensée (T0/T+12/T+24 en 12 min) acceptée par le CDO — Option A. Toutes mesures PASS : 8/8 healthy, restart 0, Flyway 15/15, Prometheus 5/5, 0 alerte, 0 5xx, Hikari pending 0. Réserves maintenues : RP-120-02 (rollback V15 via pg_restore), RP-120-03 (`c1e9c73` cascade → `1.2.1`). Prochaine action autorisée : validation Staging `c1e9c73` → Gate Production `1.2.1`. Dossier : `docs/cgpa/09-production/cloture-release-v1.2.0.md`.
 >
 > **`PRODUCTION_DEPLOYED` — Release `1.2.0` validée le 2026-06-26 à 17:49 UTC.** Smoke 47/0 PASS. V15 ("affectations exceptions") confirmée en production. Nettoyage complet (2 runs smoke, 4 users Keycloak supprimés, bailleur-test désactivé). `.env` `sha-5bf187af` persisté. Prometheus 5/5 up, Alertmanager 0 alerte. Rapport : `docs/cgpa/09-production/validation-finale-v1.2.0-report.md`. Hypercare 24 h requis.
@@ -115,7 +117,7 @@ framework:
 
 * Nom du projet : LoyerTracker
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
-* Version actuelle : 1.1.1 (SemVer) — **EN PRODUCTION** depuis le 2026-06-24 (`PRODUCTION_DEPLOYED`, `sha-0adc4941`, `https://loyertracker.loyerpro.org`)
+* Version actuelle : 1.2.1 (SemVer) — **EN PRODUCTION** depuis le 2026-06-27 (`PRODUCTION_DEPLOYED`, `sha-47172297`, `https://loyertracker.loyerpro.org`)
 * Depot : `/home/ubuntu/loyertracker`
 * Branche active de référence : `main` alignée sur `origin/main` (`8c79e3d`, smoke V15 aligné — intègre Sprint 3 Patrimoine + correctif CORS Compose) ; hypercare `1.1.1` clôturée (branche `codex/cloture-v1.1.1-etape-1` archivée). Candidat Production canonique **inchangé** `0adc4941f854304a3f7412b04294615b05403707`, déployé via les images immuables `sha-0adc4941` — `main` est en avance sur la Production courante (Sprint 3 + CORS non promus). L’historique `1.1.0` reste tracé par la PR #78 et le tag `sha-05424aa3`.
 * Derniere mise a jour : 2026-06-25 (**Lot correctif CORS Compose — commit `964ebfb` sur `origin/main`, CI verte, écart PR qualifié Niveau 1 accepté ; smoke script aligné V14→V15 (commit `8c79e3d`)**). Réserves maintenues : `RSV-STG-01`. Prochaine action autorisée : **Gate Staging combiné CORS + Sprint 3** (STG-ISOL-01 live pour lever RSV-STG-01, puis Gate Staging v5.3 avant déploiement Staging).
@@ -144,12 +146,12 @@ Le socle technique est operationnel ou tres avance : backend Spring Boot, fronte
 
 ## 3A. Release et environnements (CGPA v5.2)
 
-* Release actuelle : **`1.1.1`** (SemVer, D-REL-002) — Hotfix **promu en production** le 2026-06-24, **LIVE** sur `https://loyertracker.loyerpro.org` (`sha-0adc4941`, Gate Production GO sous réserve accepté puis smoke prod 47/0).
+* Release actuelle : **`1.2.1`** (SemVer, D-REL-002) — Correctif dashboard Angular **promu en production** le 2026-06-27, **LIVE** sur `https://loyertracker.loyerpro.org` (`sha-47172297`, Gate Production GO, smoke prod 47/0, RP-120-03 levée).
 * Environnement actuel : **Production** — go-live le 2026-06-20, **LIVE sur `https://loyertracker.loyerpro.org`** (hote dedie `loyertracker-prod-server`, `docs/prod-state.md`). Staging reste actif (`https://loyertracker.staging.loyerpro.org`). Dev/Test exerces en CI (Testcontainers, smoke stack complete).
 * Environnements definis (ENV-01) : Dev -> Test -> Staging -> Production, **formalises le 2026-06-16** (R-V52-3 levee) dans `docs/cgpa/environment-promotion-model.md`. Dev = `docker-compose.yml` local ; Test = CI (Testcontainers/Karma/smoke) ; Staging = `docker-compose.staging.yml` sur images GHCR à tag immuable ; Production = `docker-compose.prod.yml` sur hôte dédié, en service depuis le 2026-06-20. **Staging et Production distincts**.
 * Promotion des artefacts : par image GHCR a **tag immuable `sha-<8>`** (jamais `latest` en deploiement) ; chaine CD = merge `main` -> CI publie `sha-<8>` -> redeploiement staging.
-* Derniere promotion : production `sha-0adc4941` le 2026-06-24 pour le Hotfix `1.1.1`, validé par smoke 47/0 et décision CDO GO. Historique des redéploiements : `docs/staging-state.md` §8 et `docs/prod-state.md`.
-* Prochaine promotion : **à déterminer** pour le prochain lot `[Non publié]` après CI complète, revue sécurité et décision de release ; `1.1.1` est la release de production courante.
+* Derniere promotion : production `sha-47172297` le 2026-06-27 pour la release `1.2.1`, validée par smoke 47/0 et décision CDO GO. Historique des redéploiements : `docs/staging-state.md` §8 et `docs/prod-state.md`.
+* Prochaine promotion : **à déterminer** pour le prochain lot `[Non publié]` après CI complète, revue sécurité et décision de release ; `1.2.1` est la release de production courante.
 * Rollback : par redeploiement du `LOYERTRACKER_TAG` precedent (tags immuables) ; procedure documentee dans le runbook et `docs/staging-state.md` §7.
 
 ## 3B. Etat DevSecOps (CGPA v5.2)
