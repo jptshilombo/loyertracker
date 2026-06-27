@@ -17,12 +17,12 @@ Projet gouverné par le **CGPA**. Le projet a été démarré avec le référent
 | Gate 6 | DevSecOps | ✅ Go (16/20) — **ratifié le 2026-06-06** ; R1 clôturée, R2→R5 ouvertes avant prod, R6 partielle |
 | Gate Staging | Staging Readiness | ✅ Go — staging réel et smoke validés |
 | Gate 09 | Production Readiness | ✅ Go sous réserve — réserves traitées au Gate 10 |
-| Gate 10 | Mise en production | ✅ Go — production `1.0.0` LIVE (puis `1.1.0` et `1.1.1`) |
+| Gate 10 | Mise en production | ✅ Go — production `1.2.1` LIVE depuis le 2026-06-27 |
 | Gate `STG-ISOL-01` | Isolation Staging mutualisé (CGPA v5.4.1) | ✅ PASS — `ai-test-server` mutualisé, isolation Docker conforme |
 
 ## Phase actuelle
 
-CGPA v5.4.1 : **Phase 7 — Développement** pour les lots post-go-live. Production `1.1.1` (Hotfix) LIVE depuis le 2026-06-24 (`sha-0adc4941`, Hypercare en cours) ; les lots `[Non publié]` suivent désormais les workflows v5.3 Sprint -> Staging puis Epic/Release/Hotfix -> Production, avec contrôle d'isolation `STG-ISOL-01` (v5.4.1) avant toute promotion Staging sur l'hôte mutualisé `ai-test-server`.
+CGPA v5.4.1 : **Phase 7 — Développement** pour les lots post-go-live. Production `1.2.1` LIVE depuis le 2026-06-27 (`sha-47172297`, release clôturée). Le Sprint 4 UI Patrimoine est intégré à `main` via la PR #82 mais non promu ; il suit le workflow Sprint -> Staging avec `STG-ISOL-01`, puis un Gate Production distinct.
 
 ## Stack
 
@@ -30,7 +30,7 @@ Spring Boot (Java 21) · Angular 20 · Keycloak (OIDC/PKCE) · PostgreSQL · Ngi
 
 ## Démarrage rapide (dev)
 
-> Stack de développement largement opérationnelle pour le socle S01. Certaines validations runtime restent ouvertes, notamment R6 (OIDC/PKCE complet et Admin API Keycloak gestionnaire).
+> Stack de développement complète ; les parcours OIDC/PKCE, Admin API Keycloak et isolation RLS sont couverts par les tests d’intégration et le smoke runtime.
 
 ```bash
 cp .env.example .env      # renseigner les secrets locaux

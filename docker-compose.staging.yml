@@ -17,7 +17,7 @@ name: loyertracker-staging
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:e013e867e712fec275706a6c51c966f0bb0c93cfa8f51000f85a15f9865a28cb
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -38,7 +38,7 @@ services:
           memory: 512M
 
   keycloak:
-    image: quay.io/keycloak/keycloak:24.0
+    image: quay.io/keycloak/keycloak:24.0@sha256:f8ade94c1d0ad2f2fa7734a455fee5392764f402c43ca35e9af6bf63a2541dc9
     command: ["start-dev", "--import-realm", "--http-relative-path=/auth"]
     environment:
       KC_DB: postgres
@@ -74,7 +74,7 @@ services:
 
   # One-shot : injecte les secrets de comptes/clients (depuis .env) après l'import du realm.
   keycloak-init:
-    image: quay.io/keycloak/keycloak:24.0
+    image: quay.io/keycloak/keycloak:24.0@sha256:f8ade94c1d0ad2f2fa7734a455fee5392764f402c43ca35e9af6bf63a2541dc9
     entrypoint: ["bash", "/opt/keycloak/data/bootstrap-test-account.sh"]
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}

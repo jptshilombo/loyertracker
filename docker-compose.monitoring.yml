@@ -13,7 +13,7 @@
 
 services:
   prometheus:
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:v2.54.1@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
     profiles: [monitoring]
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:v0.28.1
+    image: prom/alertmanager:v0.28.1@sha256:27c475db5fb156cab31d5c18a4251ac7ed567746a2483ff264516437a39b15ba
     profiles: [monitoring]
     # Alertmanager n'étend PAS les variables d'environnement dans sa conf (aucun flag
     # `--config.expand-environment-variables` ; contrairement à Prometheus). Le secret de
@@ -47,7 +47,7 @@ services:
     restart: unless-stopped
 
   blackbox:
-    image: prom/blackbox-exporter:v0.25.0
+    image: prom/blackbox-exporter:v0.25.0@sha256:b04a9fef4fa086a02fc7fcd8dcdbc4b7b35cc30cdee860fdc6a19dd8b208d63e
     profiles: [monitoring]
     command: ["--config.file=/etc/blackbox/blackbox.yml"]
     volumes:
@@ -59,7 +59,7 @@ services:
   # Exposé sur la loopback uniquement (127.0.0.1) : joignable par le cron de l'hôte,
   # jamais public. Scrapé en interne par Prometheus via le réseau Docker.
   pushgateway:
-    image: prom/pushgateway:v1.9.0
+    image: prom/pushgateway:v1.9.0@sha256:98a458415f8f5afcfd45622d289a0aa67063563bec0f90d598ebc76783571936
     profiles: [monitoring]
     ports:
       - "127.0.0.1:9091:9091"

@@ -379,7 +379,7 @@ class SchemaMigrationTest {
     private int countBiensVu(Connection c, String role, UUID bailleurCourant) throws SQLException {
         try (Statement s = c.createStatement()) {
             if (bailleurCourant != null) {
-                s.execute("SET app.current_bailleur_id = '" + bailleurCourant + "'");
+                positionnerTenant(c, bailleurCourant);
             } else {
                 s.execute("RESET app.current_bailleur_id");
             }

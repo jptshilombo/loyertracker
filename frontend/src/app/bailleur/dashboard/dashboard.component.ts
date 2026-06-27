@@ -50,7 +50,7 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
 
     <section class="toolbar">
       <button type="button" (click)="chargerBiens()" [disabled]="chargement()">Rafraîchir</button>
-      <span>{{ message() }}</span>
+      <span role="status" aria-live="polite" aria-atomic="true">{{ message() }}</span>
     </section>
 
     <section class="grid two">
@@ -265,7 +265,11 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         </label>
         <label>
           Gestionnaire ID
-          <input type="text" formControlName="gestionnaireId" />
+          <input type="text" formControlName="gestionnaireId" autocomplete="off" aria-describedby="gestionnaire-patrimoine-aide" [attr.aria-invalid]="affectationPatrimoineForm.controls.gestionnaireId.invalid && affectationPatrimoineForm.controls.gestionnaireId.touched" />
+          <small id="gestionnaire-patrimoine-aide" class="field-help">UUID du gestionnaire, au format fourni lors de sa création.</small>
+          @if (affectationPatrimoineForm.controls.gestionnaireId.invalid && affectationPatrimoineForm.controls.gestionnaireId.touched) {
+            <small class="field-error">Identifiant gestionnaire requis.</small>
+          }
         </label>
         <div class="fields">
           <label>
@@ -356,10 +360,14 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
           </label>
           <label>
             Gestionnaire ID
-            <input type="text" formControlName="gestionnaireId" />
+            <input type="text" formControlName="gestionnaireId" autocomplete="off" aria-describedby="gestionnaire-exception-aide" [attr.aria-invalid]="exceptionForm.controls.gestionnaireId.invalid && exceptionForm.controls.gestionnaireId.touched" />
+            <small id="gestionnaire-exception-aide" class="field-help">UUID prérempli depuis l’affectation patrimoine active ; modifiable pour une inclusion ciblée.</small>
+            @if (exceptionForm.controls.gestionnaireId.invalid && exceptionForm.controls.gestionnaireId.touched) {
+              <small class="field-error">Identifiant gestionnaire requis.</small>
+            }
           </label>
           <label>
-            Type d'exception
+            Type d’exception
             <select formControlName="typeException">
               <option value="EXCLUSION">EXCLUSION</option>
               <option value="INCLUSION">INCLUSION</option>
@@ -499,6 +507,26 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
       .danger {
         border-color: #7f1d1d;
         color: #fecaca;
+      }
+      .field-help {
+        color: #94a3b8;
+      }
+      .field-error {
+        color: #fecaca;
+        font-weight: 600;
+      }
+      @media (max-width: 640px) {
+        .page-head,
+        .toolbar,
+        .fields,
+        .item {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .status {
+          display: grid;
+          gap: 0.5rem;
+        }
       }
     `,
   ],
@@ -718,7 +746,7 @@ export class BailleurDashboardComponent implements OnInit {
 
   archiverBien(): void {
     const bien = this.bienSelectionne();
-    if (!bien) {
+    if (!bien || !this.confirmerAction('Archiver ce bien ?')) {
       return;
     }
     this.executer('Archivage du bien', () =>
@@ -767,7 +795,7 @@ export class BailleurDashboardComponent implements OnInit {
     if (!bienId || this.affectationForm.invalid) {
       return;
     }
-    this.executer('Création de l affectation', () =>
+    this.executer('Création de l’affectation', () =>
       this.api.creerAffectation(this.affectationPayload(bienId)).subscribe({
         next: () => {
           this.message.set('Affectation créée');
@@ -788,7 +816,7 @@ export class BailleurDashboardComponent implements OnInit {
 
   revoquerAffectation(id: string): void {
     const bienId = this.bienSelectionneId();
-    if (!bienId) {
+    if (!bienId || !this.confirmerAction('Révoquer cette affectation ?')) {
       return;
     }
     this.executer('Révocation', () =>
@@ -837,6 +865,9 @@ export class BailleurDashboardComponent implements OnInit {
   }
 
   revoquerAffectationPatrimoine(id: string): void {
+    if (!this.confirmerAction('Révoquer cette affectation patrimoine ?')) {
+      return;
+    }
     this.executer('Révocation', () =>
       this.api.revoquerAffectation(id).subscribe({
         next: () => {
@@ -900,6 +931,9 @@ export class BailleurDashboardComponent implements OnInit {
 
   revoquerException(id: string): void {
     const bienId = this.bienExceptionId();
+    if (!this.confirmerAction('Révoquer cette exception ?')) {
+      return;
+    }
     this.executer('Révocation exception', () =>
       this.api.revoquerAffectation(id).subscribe({
         next: () => {
@@ -941,6 +975,10 @@ export class BailleurDashboardComponent implements OnInit {
   private affectationPayload(bienId: string): AffectationPayload {
     const form = this.affectationForm.getRawValue();
     return { ...form, bienId, dateFin: form.dateFin || null };
+  }
+
+  private confirmerAction(message: string): boolean {
+    return globalThis.confirm(message);
   }
 
   private executer(message: string, action: () => void): void {

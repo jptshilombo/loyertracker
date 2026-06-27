@@ -186,7 +186,7 @@ applicative seule suffit — le backup reste la procédure de sécurité standar
 **Objectif :** promouvoir l'artefact `1.2.1` en Production.
 
 **Contenu du plan d'étape :**
-- `LOYERTRACKER_TAG=sha-<candidat> docker compose -f docker-compose.prod.yml up -d --pull always nginx`
+- `LOYERTRACKER_TAG=sha-<candidat> docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --pull always nginx api`
   — uniquement le service **`nginx`** (contient le bundle Angular compilé).
   Le service `api` reste inchangé (`sha-5bf187af`) : aucun changement backend entre `1.2.0` et `1.2.1`.
 - Vérifier les digests de l'image `web` tirée (`docker inspect`).
@@ -194,8 +194,8 @@ applicative seule suffit — le backup reste la procédure de sécurité standar
 - Prometheus 5/5 up, Alertmanager `[]`.
 - **`PRODUCTION_DEPLOYED`** non atteint — réservé à la validation finale (Étape 6).
 
-**Rollback immédiat :** `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.prod.yml
-up -d nginx` — retour instantané (aucune migration à réverter).
+**Rollback immédiat :** `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.yml -f docker-compose.prod.yml
+up -d nginx api` — retour instantané (aucune migration à réverter).
 
 **Document à créer :** `docs/cgpa/09-production/deploiement-technique-v1.2.1-report.md`
 

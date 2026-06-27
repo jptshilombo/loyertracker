@@ -9,6 +9,7 @@ import { BailleurDashboardComponent } from './dashboard.component';
 describe('BailleurDashboardComponent', () => {
   let fixture: ComponentFixture<BailleurDashboardComponent>;
   let http: HttpTestingController;
+  let confirmSpy: jasmine.Spy;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -29,6 +30,7 @@ describe('BailleurDashboardComponent', () => {
     });
     fixture = TestBed.createComponent(BailleurDashboardComponent);
     http = TestBed.inject(HttpTestingController);
+    confirmSpy = spyOn(globalThis, 'confirm').and.returnValue(true);
 
     fixture.detectChanges(); // ngOnInit -> inscription, puis chargement biens/référentiels
 
@@ -202,5 +204,14 @@ describe('BailleurDashboardComponent', () => {
 
       http.expectOne('/api/patrimoines/patrimoine-1/affectations').flush([]);
     });
+    it('annule une révocation patrimoine refusée par l’utilisateur', () => {
+      confirmSpy.and.returnValue(false);
+
+      fixture.componentInstance.revoquerAffectationPatrimoine('aff-pat-1');
+
+      expect(confirmSpy).toHaveBeenCalled();
+      http.expectNone('/api/affectations/aff-pat-1/revocation');
+    });
+
   });
 });

@@ -45,6 +45,26 @@ import { AuthService } from '../../core/auth/auth.service';
         color: #94a3b8;
         font-size: 0.9rem;
       }
+      @media (max-width: 640px) {
+        .navbar {
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+        }
+        .brand {
+          flex-basis: 100%;
+        }
+        .spacer {
+          display: none;
+        }
+        .user {
+          margin-left: auto;
+          max-width: 45%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
     `,
     ]
 })

@@ -89,7 +89,7 @@ bord ne reste plus vide lors d'une erreur d'inscription (401, 500, réseau).
 
 | Étape de rollback | Procédure |
 |---|---|
-| Rollback applicatif `1.2.1` → `1.2.0` | `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.prod.yml up -d nginx` |
+| Rollback applicatif `1.2.1` → `1.2.0` | `LOYERTRACKER_TAG=sha-5bf187af docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx api` |
 | pg_restore requis ? | **Non** — aucune migration entre `1.2.0` et `1.2.1` |
 | Rollback au-delà de `1.2.0` | Requiert `pg_restore` (V15 additive non réversible par Flyway) — RP-120-02 maintenue |
 

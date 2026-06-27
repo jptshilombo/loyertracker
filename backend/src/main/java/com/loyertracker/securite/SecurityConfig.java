@@ -39,6 +39,10 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // API OAuth2 Resource Server strictement stateless : authentification uniquement par
+            // Bearer JWT dans Authorization, aucun cookie de session ni credential implicite. Un
+            // navigateur tiers ne peut donc pas fabriquer une requête authentifiée par CSRF. Cette
+            // exception est revue dans le plan de remédiation CGPA v5.4.1 (alerte CodeQL #1).
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
