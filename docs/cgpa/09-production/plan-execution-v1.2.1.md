@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-27 |
-| Statut | **Étape 4 PASS (2026-06-27) — `PRODUCTION_READY` + backup vérifié — En attente décision Déploiement** |
+| Statut | **Étape 5 PASS (2026-06-27) — `sha-47172297` actif en Production — En attente décision Validation finale** |
 | Type | Release PATCH — correctif frontend uniquement |
 | Version cible | `1.2.1` |
 | Commit applicatif unique | `c1e9c735e39c0375b907be9da3302e67f5cb10d4` |
@@ -201,6 +201,8 @@ up -d nginx` — retour instantané (aucune migration à réverter).
 
 **Décision requise avant exécution :** décision distincte après Étape 4.
 
+**Statut : EXÉCUTÉE le 2026-06-27 — PASS.** Tag `sha-47172297` déployé. `nginx` + `api` recréés (api : dépendance + --pull always, code Java identique). Digests conformes. 8/8 Up, 4/4 healthy, restart=0. Web HTTP 200, Actuator UP, Prometheus 5/5. Alerte `BackupHeartbeatMissing` pré-existante (Pushgateway volatil post-reboot serveur — hors périmètre déploiement). Rapport : `deploiement-technique-v1.2.1-report.md`.
+
 ---
 
 ### Étape 6 — Validation finale, hypercare et clôture
@@ -254,7 +256,7 @@ l'hypercare 24 h et clore la release `1.2.1`.
 | `gate-staging-v1.2.1-decision.md` | 2 | À créer |
 | `gate-production-v1.2.1-decision.md` | 3 | À créer |
 | `preflight-backup-v1.2.1-report.md` | 4 | **Créé 2026-06-27 — PASS** |
-| `deploiement-technique-v1.2.1-report.md` | 5 | À créer |
+| `deploiement-technique-v1.2.1-report.md` | 5 | **Créé 2026-06-27 — PASS** |
 | `validation-finale-v1.2.1-report.md` | 6 | À créer |
 | `plan-etape-hypercare-v1.2.1.md` | 6 | À créer |
 | `cloture-release-v1.2.1.md` | 6 | À créer |
