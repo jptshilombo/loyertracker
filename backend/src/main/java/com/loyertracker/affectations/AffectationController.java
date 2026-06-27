@@ -47,4 +47,11 @@ public class AffectationController {
             @AuthenticationPrincipal Jwt jwt) {
         return affectationService.historique(bienId, jwt);
     }
+
+    @GetMapping("/patrimoines/{patrimoineId}/affectations")
+    @PreAuthorize("hasRole('BAILLEUR') and @authz.peutAccederPatrimoine(#patrimoineId, authentication)")
+    public List<AffectationDto> historiquePatrimoine(@PathVariable UUID patrimoineId,
+            @AuthenticationPrincipal Jwt jwt) {
+        return affectationService.historiquePatrimoine(patrimoineId, jwt);
+    }
 }
