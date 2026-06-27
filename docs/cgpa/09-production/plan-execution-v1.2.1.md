@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date de préparation | 2026-06-27 |
-| Statut | **Étape 1 PASS (2026-06-27) — En attente décision Gate Staging** |
+| Statut | **Étape 2 PASS (2026-06-27) — En attente décision Gate Production** |
 | Type | Release PATCH — correctif frontend uniquement |
 | Version cible | `1.2.1` |
 | Commit applicatif unique | `c1e9c735e39c0375b907be9da3302e67f5cb10d4` |
@@ -112,7 +112,7 @@ exécuter le smoke 47/0, puis statuer le Gate Staging v5.3.
 
 **Document à créer :** `docs/cgpa/07-devsecops/gate-staging-v1.2.1-decision.md`
 
-**Décision requise avant exécution :** décision PO/Release Manager distincte après Étape 1.
+**Statut : EXÉCUTÉE le 2026-06-27 — GO, `STAGING_DEPLOYED`.** Tag `sha-47172297` déployé, STG-ISOL-01 PASS live, Flyway 15/15, smoke **47/0**. Décision : `gate-staging-v1.2.1-decision.md`.
 
 ---
 
