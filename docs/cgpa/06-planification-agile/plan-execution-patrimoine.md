@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **✅ Approuvé — GO, le 2026-06-21**. Sprint 1 et Sprint 2 implémentés et clôturés côté `main` (PR #72/#73, PR #74). **Sprint 3 cadré en détail le 2026-06-24**, périmètre frontend tranché (backend-only), **Kickoff confirmé le 2026-06-25 — GO sans réserve**. **Sprint 3 implémenté et validé localement le 2026-06-25** sur la branche `codex/sprint-3-patrimoine-exceptions` (`mvn verify` 99 tests/0 échec, Gitleaks/Trivy verts) — rapport `sprint-3-patrimoine-rapport-validation.md`. Reste : push branche, PR dédiée, CI GitHub, puis décision de fusion/promotion. Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
+| Statut | **✅ Approuvé — GO, le 2026-06-21**. Sprint 1 et Sprint 2 implémentés et clôturés côté `main` (PR #72/#73, PR #74). **Sprint 3 cadré en détail le 2026-06-24**, périmètre frontend tranché (backend-only), **Kickoff confirmé le 2026-06-25 — GO sans réserve**. **Sprint 3 implémenté et validé localement le 2026-06-25** sur la branche `codex/sprint-3-patrimoine-exceptions` (`mvn verify` 99 tests/0 échec, Gitleaks/Trivy verts) — rapport `sprint-3-patrimoine-rapport-validation.md`. **Sprint 4 UI cadré et Kickoff GO PO le 2026-06-27** — détail : `sprint-4-patrimoine-ui-plan.md`. Chaque sprint reste un point de contrôle GO/NO GO ; aucun codage ne doit dépasser les livrables du sprint en cours sans nouveau point de contrôle. |
 | Date | 2026-06-21 (proposé) — **approuvé le 2026-06-21** |
 | Décision liée | D-PAT-001 / ADR-11 |
 | Backlog couvert | EP-09, US-80→85 (`addendum-patrimoine-backlog.md`) |
@@ -61,6 +61,25 @@
 
 ---
 
+## Sprint 4 — UI Affectation patrimoine + Exceptions INCLUSION/EXCLUSION
+
+**Objectif :** exposer via le dashboard bailleur l'affectation d'un gestionnaire à un patrimoine entier, et la gestion des exceptions fines par bien (INCLUSION/EXCLUSION) différées depuis Sprint 3.
+
+> **Kickoff GO PO — 2026-06-27.** Décisions actées : A1 (sprint complet), B1 (UUID brut), C1 (dashboard extension). Détail complet dans `sprint-4-patrimoine-ui-plan.md`.
+
+| Élément | Détail |
+|---|---|
+| Statut | **✅ Kickoff GO PO — 2026-06-27** |
+| Stories couvertes | US-84 (UI affectation patrimoine), US-85 (UI exceptions INCLUSION/EXCLUSION) |
+| Périmètre frontend | Extension du dashboard bailleur existant : Section A (affectation patrimoine) + Section B (exceptions par bien) ; gestionnaire par UUID brut ; pas de nouvelle page/route |
+| Livrables techniques | Extension `Affectation` + `AffectationPayload` (+ `patrimoineId?`, `typeException?`) ; méthode `listerAffectationsPatrimoine()` dans `S02ApiService` ; props + méthodes dans `DashboardComponent` ; templates Sections A/B ; tests Karma Sprint 4 |
+| Dépendances | Sprint 3 mergé côté `main` (V15, RS-04) — endpoints `POST /api/affectations` + `GET /api/patrimoines/{id}/affectations` + `PUT /api/affectations/{id}/revoquer` disponibles en Production depuis `1.2.0` |
+| Risques | RS-F01 (`bienId` optionnel), RS-F02 (garde RS-04 UI), RS-F03 (performances `forkJoin`), RS-F04 (smoke API-only non affecté) — détail `sprint-4-patrimoine-ui-plan.md` §6 |
+| Critères GO (fin de sprint) | `ng test` verts (régression 41 + nouveaux) · `mvn verify` 99/0 (backend inchangé) · UI fonctionnelle vérifiée navigateur · Section B masquée sans affectation active (RS-04) · CI verte (CodeQL, SonarQube, Gitleaks, Trivy, Packaging) · `CHANGELOG.md` mis à jour avant fusion |
+| Hors périmètre | Lookup gestionnaire par e-mail · Nouvelle page dédiée · Dashboard gestionnaire (lot ultérieur) · Déploiement Production (Gate distinct) |
+
+---
+
 ## Synthèse des points de contrôle PO
 
 | Point de contrôle | Avant quoi | Bloquant |
@@ -72,6 +91,7 @@
 | Comportement d'archivage d'un patrimoine avec affectations actives (RS-06) | Avant Sprint 3 | **✅ Validé par le PO le 2026-06-21** — archivage bloqué (400) tant qu'une affectation patrimoine `ACTIVE` existe ; révocation explicite préalable requise (cohérent EF-22) |
 | Périmètre frontend de Sprint 3 (backend-only comme S1/S2, ou UI minimale affectation patrimoine + exceptions) | Avant kickoff Sprint 3 | **✅ Tranché par le PO le 2026-06-24 — backend-only**, cohérent avec Sprint 1/2 ; l'UI d'affectation patrimoine et d'exceptions `INCLUSION`/`EXCLUSION` est différée à un lot ultérieur |
 | Kickoff Sprint 3 (GO/NO GO de démarrage, distinct du cadrage) | Début Sprint 3 | **✅ Confirmé par le PO le 2026-06-25** — GO sans réserve |
+| Kickoff Sprint 4 UI (GO/NO GO — périmètre A1/B1/C1) | Début Sprint 4 | **✅ Confirmé par le PO le 2026-06-27** — GO sans réserve |
 
 ## Ce que ce plan ne couvre pas (hors périmètre, par construction de cette analyse)
 
