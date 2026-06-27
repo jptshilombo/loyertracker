@@ -13,7 +13,7 @@ COPY frontend/ ./
 RUN npm run build -- --configuration production
 
 # ---- Étape run : Nginx servant les assets + config reverse-proxy ----
-FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+FROM nginx:1.31-alpine@sha256:54f2a904c251d5a34adf545a72d32515a15e08418dae0266e23be2e18c66fefa
 # Patche les paquets OS au-delà de l'image de base (gate Trivy HIGH/CRITICAL en CI),
 # même approche que l'image API : ne pas attendre la reconstruction upstream.
 RUN apk -U upgrade --no-cache
