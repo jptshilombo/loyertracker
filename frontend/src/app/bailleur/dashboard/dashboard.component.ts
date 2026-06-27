@@ -529,7 +529,7 @@ export class BailleurDashboardComponent implements OnInit {
   readonly bienSelectionne = signal<Bien | null>(null);
   readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
   readonly bailSelectionne = signal<Bail | null>(null);
-  readonly affectationsPatrimoine = signal<Record<string, Affectation[]>>({});
+  readonly affectationsPatrimoine = signal<Partial<Record<string, Affectation[]>>>({});
   readonly patrimoineExceptionId = signal('');
   readonly bienExceptionId = signal('');
   readonly exceptionsBien = signal<Affectation[]>([]);
