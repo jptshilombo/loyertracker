@@ -60,7 +60,8 @@ export interface BailPayload {
 
 export interface Affectation {
   id: string;
-  bienId: string;
+  bienId: string | null;
+  patrimoineId: string | null;
   gestionnaireId: string;
   typeHonoraires: TypeHonoraires;
   montantHonoraires: number;
@@ -68,15 +69,18 @@ export interface Affectation {
   dateFin: string | null;
   statut: string;
   dateRevocation: string | null;
+  typeException: 'INCLUSION' | 'EXCLUSION' | null;
 }
 
 export interface AffectationPayload {
-  bienId: string;
+  bienId?: string;
+  patrimoineId?: string;
   gestionnaireId: string;
   typeHonoraires: TypeHonoraires;
   montantHonoraires: number;
   dateDebut: string;
   dateFin: string | null;
+  typeException?: 'INCLUSION' | 'EXCLUSION';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -125,5 +129,9 @@ export class S02ApiService {
 
   listerAffectations(bienId: string): Observable<Affectation[]> {
     return this.http.get<Affectation[]>(`${API_BASE_URL}/biens/${bienId}/affectations`);
+  }
+
+  listerAffectationsPatrimoine(patrimoineId: string): Observable<Affectation[]> {
+    return this.http.get<Affectation[]>(`${API_BASE_URL}/patrimoines/${patrimoineId}/affectations`);
   }
 }
