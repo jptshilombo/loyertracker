@@ -253,10 +253,47 @@ nouveau cross-cert `ISRG Root X2` dans leur trust store.
 | Expire le | **2026-09-23 17:19 UTC** |
 | Renouvellement automatique | `certbot renew` via cron système (`/etc/cron.d/certbot`) |
 
-> **Note exploitation :** le renouvellement automatique certbot (cron) s'exécute sur l'hôte et
-> écrase les fichiers dans `/etc/letsencrypt/live/loyertracker.staging.loyerpro.org/`. Il faudra,
-> lors du prochain renouvellement, re-copier les fichiers dans `tools_npm_letsencrypt:/archive/npm-18/`
-> et recharger nginx — ou configurer un hook certbot pour le faire automatiquement (cf. §9.2 à créer).
+> **Note exploitation :** le renouvellement automatique est désormais entièrement automatisé — voir §9.2.
+
+## 9.2 Automatisation du renouvellement TLS — DNS-01 + deploy-hook (2026-06-29)
+
+> Installé lors de la remédiation R-04 de l'audit CGPA v5.4.1.
+
+### Problème résolu
+
+Le cert RSA obtenu le 2026-06-25 (`certbot --standalone`) ne pouvait pas se renouveler automatiquement
+car le port 80 est occupé par nginx-proxy-manager (hôte mutualisé). Un renouvellement raté aurait
+laissé le cert expirer silencieusement le 2026-09-23.
+
+### Solution : DNS-01 (Route53) + deploy-hook
+
+| Composant | Détail |
+|---|---|
+| Authenticator | `dns-route53` (remplace `standalone`) — pas de port requis, zéro downtime |
+| Plugin | `python3-certbot-dns-route53` 2.9.0 (installé sur l'hôte) |
+| Credentials AWS | `/root/.aws/credentials` (permissions 600, root uniquement) — user IAM `jptshilombo` (R53 ChangeResourceRecordSets sur la zone `loyerpro.org`) |
+| Renewal config | `/etc/letsencrypt/renewal/loyertracker.staging.loyerpro.org.conf` → `authenticator = dns-route53` |
+| Deploy-hook | `/etc/letsencrypt/renewal-hooks/deploy/loyertracker-npm.sh` (permissions 700, root) |
+| Déclencheur | `certbot.timer` (systemd) — 2 fois/jour ; renouvelle si expiration < 30 jours |
+| Prochain renouvellement prévu | ~2026-08-23 (30 jours avant l'expiration du 2026-09-23) |
+
+### Deploy-hook — comportement
+
+À chaque renouvellement réussi :
+
+1. Détecte le numéro du prochain cert dans `tools_npm_letsencrypt:/archive/npm-18/` (actuellement cert3 → cert4 au prochain renouvellement).
+2. Copie les 4 fichiers (`cert`, `chain`, `fullchain`, `privkey`) dans l'archive npm.
+3. Met à jour les symlinks `live/npm-18/` → `archive/npm-18/cert{N}`.
+4. Exécute `docker exec nginx-proxy-manager nginx -s reload`.
+
+### Tests réalisés le 2026-06-29
+
+| Test | Résultat |
+|---|---|
+| Syntaxe script (`bash -n`) | ✅ OK |
+| `certbot renew --dry-run --cert-name loyertracker.staging.loyerpro.org` | ✅ `Congratulations, all simulated renewals succeeded` |
+| Route53 challenge DNS-01 résolu sans port 80 | ✅ |
+| nginx-proxy-manager intact pendant le dry-run | ✅ |
 
 ## 10. Validation de l'alerting (RR-1) — Gate Staging enrichi (CGPA v5.2) — **GO le 2026-06-19** ✅
 
