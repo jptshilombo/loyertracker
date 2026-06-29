@@ -60,9 +60,25 @@ T+24 prévu : **2026-06-30 14:31 UTC** (tolérance ±30 min).
 
 ---
 
-## Checkpoint T+12 — 2026-06-30 02:31 UTC
+## Checkpoint T+12 anticipé — 2026-06-29 14:27 UTC
 
-> À remplir lors du checkpoint T+12.
+**Statut : PASS**
+
+| Contrôle | Résultat |
+|---|---|
+| 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0 | ✅ nginx Up 15 min, api Up 15 min, keycloak/postgres Up 43 min ; restart=0 sur tous |
+| `LOYERTRACKER_TAG=sha-a42d860d` | ✅ conforme |
+| Flyway 15/15 | ✅ |
+| Actuator `{"status":"UP"}` | ✅ |
+| Prometheus 5/5 `up` | ✅ |
+| Alertmanager | ✅ `[]` — 0 alerte active |
+| Capacité hôte | ✅ disque 32 Gio libres (16 %), mémoire 2,0 Gio dispo, charge 0,06/0,11/0,13 |
+| p99 latence | ✅ ~82 ms (trafic minimal post-smoke, normal) |
+| 5xx rate (5 min) | ✅ 0 (`result:[]`) |
+| 5xx Nginx (20 min) | ✅ 0 |
+| Hikari pending | ✅ 0 |
+| Heartbeat backup | ✅ epoch `1782742878` — âge ~6,7 min (manuel validation finale) |
+| Logs API — erreurs critiques hors smoke | ✅ 0 nouvelle erreur critique depuis T0 |
 
 ---
 
