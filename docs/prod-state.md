@@ -21,9 +21,10 @@
 | Nettoyage | 2 bailleur2-smoke + 2 gest-smoke supprimés (DB + KC), bailleur-test désactivé KC ; données jptshilombo intactes |
 | Observabilité | 5/5 cibles Prometheus up ; alerte `BackupHeartbeatMissing` résolue (heartbeat manuellement poussé, cron 2h15 UTC assurera la suite) |
 | Réserves levées | **RP-130-01** levée (backup vérifié préflight) |
-| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-06-29 à 15:31 UTC |
+| Hypercare | T0/T+12/T+24 anticipés (2026-06-29) — tous PASS ; CDO GO **RELEASE CLÔTURÉE** |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-06-29 à 14:31 UTC ; **RELEASE CLÔTURÉE** |
 
-Rapports : `docs/cgpa/09-production/preflight-backup-v1.3.0-report.md`, `docs/cgpa/09-production/deploiement-technique-v1.3.0-report.md`, `docs/cgpa/09-production/validation-finale-v1.3.0-report.md`.
+Rapports : `docs/cgpa/09-production/preflight-backup-v1.3.0-report.md`, `docs/cgpa/09-production/deploiement-technique-v1.3.0-report.md`, `docs/cgpa/09-production/validation-finale-v1.3.0-report.md`, `docs/cgpa/09-production/cloture-release-v1.3.0.md`.
 
 ## 0C. Déploiement Production `1.2.1` — 2026-06-27
 

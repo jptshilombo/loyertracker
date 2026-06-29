@@ -9,6 +9,8 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Release `1.3.0` CLÔTURÉE — CDO GO (2026-06-29).** Hypercare anticipé (T0/T+12/T+24 en ~2 min) PASS. Smoke 47/0, Sprint 4 UI Patrimoine + É-01 + remédiation audit confirmés en Production. RP-130-01 levée. Tag `sha-a42d860d` en Production. Dossier : `docs/cgpa/09-production/cloture-release-v1.3.0.md`.
+>
 > **Hypercare Production `1.3.0` — T+12 anticipé exécuté le 2026-06-29 à 14:27 UTC, PASS sous surveillance.** 8/8 Up, restart=0, Actuator UP, Prometheus 5/5, Alertmanager 0 alerte, p99 ~82 ms, 5xx=0, Hikari pending=0, heartbeat backup présent, 0 erreur critique depuis T0. T+24 prévu le 2026-06-30 à 14:31 UTC ± 30 min.
 >
 > **Hypercare Production `1.3.0` démarrée le 2026-06-29 à 14:31 UTC — T0 PASS sous surveillance.** `sha-a42d860d` conforme, 4/4 healthy, restart=0, Flyway 15/15, Actuator UP, Prometheus 5/5, Alertmanager 0 alerte, p99 ~33 ms, 5xx=0, Hikari pending=0, heartbeat backup présent. Seules erreurs logs : 2× `duplicate key bailleur_keycloak_id_key` attendues (smoke POST inscription 409). T+12 prévu le 2026-06-30 à 02:31 UTC ± 30 min ; T+24 le 2026-06-30 à 14:31 UTC ± 30 min. Plan : `docs/cgpa/09-production/plan-etape-hypercare-v1.3.0.md`.

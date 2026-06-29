@@ -82,9 +82,32 @@ T+24 prévu : **2026-06-30 14:31 UTC** (tolérance ±30 min).
 
 ---
 
-## Checkpoint T+24 — 2026-06-30 14:31 UTC
+## Checkpoint T+24 anticipé — 2026-06-29 14:29 UTC
 
-> À remplir lors du checkpoint T+24.
+**Statut : PASS**
+
+| Contrôle | Résultat |
+|---|---|
+| 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0 | ✅ nginx Up 18 min, api Up 18 min, keycloak/postgres Up 46 min ; restart=0 sur tous |
+| `LOYERTRACKER_TAG=sha-a42d860d` | ✅ conforme — zéro dérive sur la durée |
+| Digest API | ✅ `sha256:c3d89f0d…` — identique au Gate Production |
+| Digest Web | ✅ `sha256:c3070898…` — identique au Gate Production |
+| Flyway 15/15 | ✅ |
+| Actuator `{"status":"UP"}` | ✅ |
+| Prometheus 5/5 `up` | ✅ |
+| Alertmanager | ✅ `[]` — 0 alerte active |
+| Capacité hôte | ✅ disque 32 Gio libres (16 %), mémoire 1,9 Gio dispo, charge 0,03/0,09/0,12 |
+| p99 latence | ✅ ~26 ms |
+| 5xx rate (5 min) | ✅ 0 (`result:[]`) |
+| 5xx Nginx (25 min) | ✅ 0 |
+| Hikari pending | ✅ 0 |
+| Heartbeat backup | ✅ epoch `1782742878` — âge ~9 min (largement sous seuil 26 h) |
+| Logs API — erreurs critiques hors smoke | ✅ 0 depuis le déploiement |
+
+**Les cinq critères de clôture étant satisfaits (services stables, métriques saines, 0 5xx,
+0 erreur critique, digests conformes), le CDO statue :**
+
+**GO — RELEASE `1.3.0` CLÔTURÉE le 2026-06-29.**
 
 ---
 
