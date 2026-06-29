@@ -1,0 +1,134 @@
+{
+  "realm": "loyertracker",
+  "enabled": true,
+  "displayName": "LoyerTracker",
+
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "resetPasswordAllowed": true,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "sslRequired": "external",
+
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 1800,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "BAILLEUR",
+        "description": "Proprietaire bailleur - acces a ses biens, baux, paiements, garanties, honoraires et alertes."
+      },
+      {
+        "name": "GESTIONNAIRE",
+        "description": "Gestionnaire delegue - acces aux biens couverts par une affectation ACTIVE (ReBAC applicatif, ADR-02)."
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "loyertracker-spa",
+      "name": "LoyerTracker SPA (Angular)",
+      "description": "Client public Angular - Authorization Code Flow + PKCE (S256).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "rootUrl": "https://localhost",
+      "baseUrl": "https://localhost/",
+      "redirectUris": [
+        "https://localhost/*",
+        "https://loyertracker.staging.loyerpro.org/*",
+        "https://loyertracker.loyerpro.org/*"
+      ],
+      "webOrigins": [
+        "https://localhost",
+        "https://loyertracker.staging.loyerpro.org",
+        "https://loyertracker.loyerpro.org"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://localhost##https://localhost/*##https://loyertracker.staging.loyerpro.org##https://loyertracker.staging.loyerpro.org/*##https://loyertracker.loyerpro.org##https://loyertracker.loyerpro.org/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-loyertracker-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "loyertracker-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "loyertracker-api",
+      "name": "LoyerTracker API (Spring Boot)",
+      "description": "Resource server confidentiel - valide les JWT (bearer-only).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "loyertracker-admin",
+      "name": "LoyerTracker Admin API (service account)",
+      "description": "Service account Admin API (ADR-10, R6) : creation/rattachement gestionnaire (US-12). Secret injecte post-import par keycloak-init, non versionne.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+
+  "users": [
+    {
+      "username": "service-account-loyertracker-admin",
+      "enabled": true,
+      "serviceAccountClientId": "loyertracker-admin",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "view-realm"
+        ]
+      }
+    }
+  ]
+}
