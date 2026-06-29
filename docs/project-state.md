@@ -613,7 +613,7 @@ Le **plan Production Readiness en 4 lots est livre et integre dans `main`** : lo
 |--------|-------------|------------|--------|
 | RSV-RM-01 | Accumulation excessive d'éléments en Staging | Revue périodique du backlog Staging et arbitrage PO/Release Manager | Ouvert |
 | RSV-RM-02 | Dérive entre Staging et Production | Traçabilité par tags immuables, `staging-state.md`, `prod-state.md`, changelog et release notes | Maîtrisé |
-| RSV-RM-03 | Rollback Production non testé sur release ultérieure | Drill à planifier lors de la prochaine release significative | Ouvert |
+| RSV-RM-03 | Rollback Production non testé sur release ultérieure | Drill `pg_restore` V15 exécuté sur staging le 2026-06-29 : exit 0, Flyway 15/15, 11 RLS, NOBYPASSRLS — `drill-rollback-v15-report.md` | **LEVÉE** |
 | RSV-RM-04 | Release contenant plusieurs Epics non validés | Gate Production par périmètre Epic/Release/Hotfix et validation Release Manager | Ouvert |
 
 ### UX/UI Governance v5.3
