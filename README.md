@@ -17,12 +17,12 @@ Projet gouverné par le **CGPA**. Le projet a été démarré avec le référent
 | Gate 6 | DevSecOps | ✅ Go (16/20) — **ratifié le 2026-06-06** ; R1 clôturée, R2→R5 ouvertes avant prod, R6 partielle |
 | Gate Staging | Staging Readiness | ✅ Go — staging réel et smoke validés |
 | Gate 09 | Production Readiness | ✅ Go sous réserve — réserves traitées au Gate 10 |
-| Gate 10 | Mise en production | ✅ Go — production `1.2.1` LIVE depuis le 2026-06-27 |
+| Gate 10 | Mise en production | ✅ Go — production `1.3.0` LIVE depuis le 2026-06-29 |
 | Gate `STG-ISOL-01` | Isolation Staging mutualisé (CGPA v5.4.1) | ✅ PASS — `ai-test-server` mutualisé, isolation Docker conforme |
 
 ## Phase actuelle
 
-CGPA v5.4.1 : **Phase 7 — Développement** pour les lots post-go-live. Production `1.2.1` LIVE depuis le 2026-06-27 (`sha-47172297`, release clôturée). Le Sprint 4 UI Patrimoine est intégré à `main` via la PR #82 mais non promu ; il suit le workflow Sprint -> Staging avec `STG-ISOL-01`, puis un Gate Production distinct.
+CGPA v5.4.1 : **Phase 7 — Développement** pour les lots post-go-live. Production `1.3.0` LIVE depuis le 2026-06-29 (`sha-a42d860d`, release clôturée — Sprint 4 UI Patrimoine, correctif É-01, remédiation audit). Prochain lot : à définir.
 
 ## Stack
 
