@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Version | `1.3.0` |
-| Date de release | À renseigner après `PRODUCTION_DEPLOYED` |
+| Date de release | 2026-06-29 |
 | Type | Release fonctionnelle (MINOR) — Sprint 4 UI Patrimoine |
 | Commit applicatif | `a42d860d5a10b80b85d5a94d79c3680ef06bacdc` |
 | Tag candidat | `sha-a42d860d` |
@@ -112,9 +112,9 @@ rendant la Section A non fonctionnelle en Staging.
 |---|---|
 | Gate Staging Sprint 4 | ✅ GO (2026-06-27, sha-a42d860d, E6 PASS) |
 | Gate Production `1.3.0` | ✅ GO sous réserve — `PRODUCTION_READY` |
-| Préflight + backup | À exécuter |
-| Déploiement technique (`api` + `nginx`) | À exécuter |
-| Validation finale (smoke 47/0) | À exécuter |
-| `PRODUCTION_DEPLOYED` | Non atteint |
-| Opérateur | À renseigner |
+| Préflight + backup | ✅ PASS — `docs/cgpa/09-production/preflight-backup-v1.3.0-report.md` |
+| Déploiement technique (`api` + `nginx`) | ✅ PASS — `docs/cgpa/09-production/deploiement-technique-v1.3.0-report.md` |
+| Validation finale (smoke 47/0) | ✅ 47/0 PASS — `docs/cgpa/09-production/validation-finale-v1.3.0-report.md` |
+| `PRODUCTION_DEPLOYED` | ✅ 2026-06-29 15:31 UTC |
+| Opérateur | jptshilombo (CDO) |
 | Hôte | `loyertracker-prod-server` (`https://loyertracker.loyerpro.org`) |
