@@ -39,7 +39,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0@sha256:f8ade94c1d0ad2f2fa7734a455fee5392764f402c43ca35e9af6bf63a2541dc9
-    command: ["start-dev", "--import-realm", "--http-relative-path=/auth"]
+    command: ["start", "--import-realm", "--http-relative-path=/auth"]
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
