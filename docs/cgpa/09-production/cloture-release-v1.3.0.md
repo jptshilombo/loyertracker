@@ -46,7 +46,7 @@
 | ID | Nature | Statut à la clôture |
 |----|--------|---------------------|
 | **RP-130-01** | Backup pré-déploiement | ✅ **LEVÉE** — Préflight (2026-06-29) |
-| **RP-120-02** | Rollback schéma V15 non trivial | Maintenue — rollback au-delà de `1.2.0` vers `1.1.x` toujours via pg_restore ; sans impact sur ce déploiement (aucune migration ajoutée) |
+| **RP-120-02** | Rollback schéma V15 non trivial | ✅ **LEVÉE** — Drill pg_restore V15 exécuté sur staging le 2026-06-29 : exit 0, Flyway 15/15, 11 RLS, NOBYPASSRLS — `drill-rollback-v15-report.md` |
 
 ## 4. État de Production au moment de la clôture
 
