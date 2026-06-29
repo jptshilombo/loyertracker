@@ -7,17 +7,20 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.3.0] — 2026-06-29
+
 ### Ajouts — Sprint 4 UI Patrimoine
 
 - Interface bailleur pour créer, afficher et révoquer les affectations au niveau patrimoine.
 - Interface d’exceptions fines `INCLUSION`/`EXCLUSION` par bien, conditionnée à une affectation patrimoine active et alignée sur RS-04.
 - Modèle frontend étendu et tests du dashboard ; PR #82 fusionnée dans `main` (`7738a08`) après CI, CodeQL, SonarQube, Gitleaks, Trivy et packaging verts.
 
+### Ajouts — Endpoint historique affectations patrimoine
+
+- `GET /api/patrimoines/{id}/affectations` : retourne l’historique complet des affectations d’un patrimoine, scopé par bailleur (403 sur patrimoine tiers ou inexistant). Correctif É-01 détecté en Staging lors de la validation E6 Sprint 4 ; PR #96.
+
 ### Gouvernance — Remédiation audit CGPA v5.4.1
 
-- Décision CDO **GO sous réserve** et Plan d’Exécution additif avant toute correction applicative.
-- Synchronisation de l’état projet, de la release Production `1.2.1` et du tag Staging courant.
-- Correction des procédures de rollback Production `1.2.1` afin de combiner le Compose de base et l’overlay Production.
 - Activation de Dependabot et des correctifs automatiques ; mise à jour Angular DevKit/CLI `20.3.30` et override ciblé `http-proxy-middleware` `3.0.7` : `npm audit` passe de 3 alertes High à **0 High/Critical** (5 Moderate, 5 Low résiduelles dans la chaîne de build).
 - Correction du clone superficiel du job Frontend (`fetch-depth: 0`) afin de restaurer le blame SonarQube et le calcul fiable du code nouveau.
 
