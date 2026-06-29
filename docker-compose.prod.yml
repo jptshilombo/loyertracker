@@ -24,6 +24,12 @@ services:
       # Le compose de base fige KC_HOSTNAME=localhost (dev). En prod : hostname public réel, sinon
       # l'issuer serait https://localhost/... et l'API rejetterait les tokens (iss ≠ ISSUER_URI).
       KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+    volumes:
+      # Realm production : sans bailleur-test@test.local (sécurité — DT-05 / R-03 audit CGPA v5.4.1).
+      # Remplace le montage du fichier de base (realm-loyertracker.json qui contient le compte de test).
+      # Impact : uniquement en cas de down -v + redémarrage à froid (Keycloak ignore --import-realm
+      # si le realm existe déjà en base).
+      - ./infra/keycloak/realm-loyertracker-production.json:/opt/keycloak/data/import/realm-loyertracker.json:ro
     restart: always
 
   api:
