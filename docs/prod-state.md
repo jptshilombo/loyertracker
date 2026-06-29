@@ -6,6 +6,25 @@
 
 
 
+## 0D. Déploiement Production `1.3.0` — 2026-06-29
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.3.0` |
+| Tag déployé | **`sha-a42d860d`** (GHCR, commit applicatif `a42d860d5a10b80b85d5a94d79c3680ef06bacdc`) |
+| Tag précédent / rollback | `sha-47172297` (`1.2.1`) — applicatif seul, sans pg_restore |
+| Backup pré-déploiement | `loyertracker-20260629-140719.dump` (314 Kio), SHA-256 `524ee4bb…`, `pg_restore --list` 730 entrées OK |
+| Déploiement | `api` + `nginx` recréés ; Postgres, Keycloak, monitoring inchangés |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **healthy**, zéro restart |
+| Flyway | V1→V15, **15 migrations success** — inchangé (`1.3.0` = UI + 1 endpoint backend, aucune migration) |
+| Smoke Production | **47 PASS / 0 FAIL** (2026-06-29 15:22 UTC) |
+| Nettoyage | 2 bailleur2-smoke + 2 gest-smoke supprimés (DB + KC), bailleur-test désactivé KC ; données jptshilombo intactes |
+| Observabilité | 5/5 cibles Prometheus up ; alerte `BackupHeartbeatMissing` résolue (heartbeat manuellement poussé, cron 2h15 UTC assurera la suite) |
+| Réserves levées | **RP-130-01** levée (backup vérifié préflight) |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-06-29 à 15:31 UTC |
+
+Rapports : `docs/cgpa/09-production/preflight-backup-v1.3.0-report.md`, `docs/cgpa/09-production/deploiement-technique-v1.3.0-report.md`, `docs/cgpa/09-production/validation-finale-v1.3.0-report.md`.
+
 ## 0C. Déploiement Production `1.2.1` — 2026-06-27
 
 | Contrôle | Résultat |

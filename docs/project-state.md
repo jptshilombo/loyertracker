@@ -9,6 +9,8 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **`PRODUCTION_DEPLOYED` — Release `1.3.0` validée le 2026-06-29 à 15:31 UTC.** Smoke 47/0 PASS. Nettoyage complet (2 bailleur2-smoke + 2 gest-smoke supprimés DB+KC, bailleur-test désactivé, données jptshilombo intactes). `.env` `sha-a42d860d` persisté. Prometheus 5/5 up, Alertmanager 0 alerte. Rapport : `docs/cgpa/09-production/validation-finale-v1.3.0-report.md`. Hypercare 24 h requis.
+>
 > **Déploiement technique `1.3.0` — 2026-06-29 15:11–15:12 UTC, PASS technique.** Artefact `sha-a42d860d` déployé sur `loyertracker-prod-server`. `api` + `nginx` recréés (`postgres`/`keycloak`/monitoring inchangés). Digests API `sha256:c3d89f0d…` / Web `sha256:c3070898…` conformes au Gate. 4/4 `(healthy)`, restart=0. Flyway 15/15 inchangé (aucune migration `1.3.0`). Actuator UP, Prometheus 5/5, Alertmanager 0 alerte. `.env` non modifié (`sha-47172297`) — persistance après smoke PASS. `PRODUCTION_DEPLOYED` non atteint — validation finale requise. Rapport : `docs/cgpa/09-production/deploiement-technique-v1.3.0-report.md`.
 >
 > **Préflight + backup Production `1.3.0` — 2026-06-29, PASS. RP-130-01 levée.** Dump `loyertracker-20260629-140719.dump` (314 Kio, SHA-256 `524ee4bb…`), globals `c041ccf2…`, permissions 600, `pg_restore --list` 730 entrées OK. 8/8 conteneurs Up, 4/4 healthy, restart=0. Flyway 15/15, `LOYERTRACKER_TAG=sha-47172297` conforme. Prometheus 5/5 up, Alertmanager 0 alerte. Capacité : 32 Gio libres, 2,1 Gio RAM dispo, charge 0,11. Rapport : `docs/cgpa/09-production/preflight-backup-v1.3.0-report.md`. Prochaine étape : déploiement technique `1.3.0` (`api` + `nginx`), sous décision distincte.
@@ -131,11 +133,11 @@ framework:
 
 * Nom du projet : LoyerTracker
 * Type de projet : application web de gestion locative bailleur-centree avec delegation fine par bien
-* Version actuelle : 1.2.1 (SemVer) — **EN PRODUCTION** depuis le 2026-06-27 (`PRODUCTION_DEPLOYED`, `sha-47172297`, `https://loyertracker.loyerpro.org`)
+* Version actuelle : 1.3.0 (SemVer) — **EN PRODUCTION** depuis le 2026-06-29 (`PRODUCTION_DEPLOYED`, `sha-a42d860d`, `https://loyertracker.loyerpro.org`)
 * Depot : `/home/ubuntu/loyertracker`
-* Branche active de référence : `main` alignée sur `origin/main` (`a42d860d` — merge PR #96 correctif É-01, 2026-06-27). Sprint 4 UI Patrimoine `STAGING_DEPLOYED` sur `sha-a42d860d`. Production courante : `sha-47172297` (Release `1.2.1`, Sprint 4 non encore promu en Production). L’historique complet : Sprint 3 + CORS (`sha-5bf187af`), Release `1.2.1` (`sha-47172297`), remédiation audit (`sha-e561d0e5`), correctif É-01 (`sha-a42d860d`).
-* Derniere mise a jour : 2026-06-27 (**Gate Staging Sprint 4 UI Patrimoine — GO, `STAGING_DEPLOYED`, tag `sha-a42d860d`. Défaut É-01 découvert lors de E6 et corrigé par PR #96 (`fix/e01-historique-affectations-patrimoine`) : ajout de `GET /api/patrimoines/{id}/affectations` — 101/101 tests PASS. Gate Staging prononcé GO après re-run E6 : E6.6 201, É-01 200, E6.7 EXCLUSION 201.**).
-* Agent ayant mis a jour le fichier : Claude Code — Gate Staging Sprint 4 UI Patrimoine (E1–E7, STG-ISOL-01 live, E6 re-run, PR #96 correctif É-01) le 2026-06-27 ; remédiation audit CGPA v5.4.1 (bandeau CLÔTURÉE) le 2026-06-27 ; précédemment reprise CGPA v5.4.1 du 2026-06-25 ; historiques antérieurs conservés dans les entrées chronologiques ci-dessus.
+* Branche active de référence : `main` alignée sur `origin/main` (`a42d860d` — merge PR #96 correctif É-01, 2026-06-27). Production courante : **`sha-a42d860d`** (Release `1.3.0`, `PRODUCTION_DEPLOYED` 2026-06-29). L’historique complet : Sprint 3 + CORS (`sha-5bf187af`), Release `1.2.1` (`sha-47172297`), remédiation audit (`sha-e561d0e5`), correctif É-01 + Sprint 4 (`sha-a42d860d`).
+* Derniere mise a jour : 2026-06-29 (**Release `1.3.0` `PRODUCTION_DEPLOYED` — Sprint 4 UI Patrimoine en Production. Smoke 47/0 PASS, nettoyage complet, `.env` persisté `sha-a42d860d`. Hypercare T0/T+12/T+24 requis.**).
+* Agent ayant mis a jour le fichier : Claude Code — Validation finale Release `1.3.0` (`PRODUCTION_DEPLOYED` 2026-06-29) ; précédemment Gate Staging Sprint 4 UI Patrimoine 2026-06-27 ; historiques antérieurs conservés dans les entrées chronologiques ci-dessus.
 
 ## 2. Resume executif
 
