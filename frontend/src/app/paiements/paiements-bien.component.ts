@@ -43,7 +43,7 @@ import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.ser
             <span>
               {{ p.montantRecu }} / {{ p.montantAttendu }} · reste {{ p.resteDu }}
             </span>
-            <span class="badge" [attr.data-statut]="p.statut">{{ p.statut }}</span>
+            <span class="badge" [attr.data-statut]="statutAffiche(p)">{{ statutAffiche(p) }}</span>
           </button>
         }
       </div>
@@ -162,6 +162,9 @@ import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.ser
       .badge[data-statut='RECU'] {
         color: #bbf7d0;
       }
+      .badge[data-statut='À VENIR'] {
+        color: #fde68a;
+      }
     `,
   ],
 })
@@ -175,6 +178,8 @@ export class PaiementsBienComponent {
   readonly selection = signal<Paiement | null>(null);
   readonly message = signal('Prêt');
   readonly chargement = signal(false);
+
+  private readonly today = new Date().toISOString().slice(0, 10);
 
   readonly pointageForm = new FormGroup({
     montantRecu: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
@@ -191,6 +196,13 @@ export class PaiementsBienComponent {
       this.selection.set(null);
       this.chargerPour(id);
     });
+  }
+
+  statutAffiche(p: Paiement): string {
+    if (p.statut === 'IMPAYE' && p.dateExigibilite > this.today) {
+      return 'À VENIR';
+    }
+    return p.statut;
   }
 
   charger(): void {
