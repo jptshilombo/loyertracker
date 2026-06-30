@@ -269,7 +269,14 @@ export class PaiementsBienComponent {
         this.enregistrerFichier(blob, `${type}-${p.periode}.pdf`);
         this.message.set('Document téléchargé');
       },
-      error: (err: unknown) => this.signalerErreur(err),
+      error: (err: unknown) => {
+        if (err instanceof HttpErrorResponse && err.status === 409) {
+          this.message.set('Adresse bailleur manquante — renseignez « Mon profil » avant de télécharger');
+        } else {
+          this.signalerErreur(err);
+        }
+        this.chargement.set(false);
+      },
       complete: () => this.chargement.set(false),
     });
   }
