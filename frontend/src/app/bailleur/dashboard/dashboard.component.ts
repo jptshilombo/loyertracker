@@ -44,7 +44,6 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
       </div>
       <div class="status">
         <a routerLink="/bailleur/profil">Mon profil</a>
-        <span>Inscription : {{ inscriptionStatus() }}</span>
       </div>
     </header>
 
@@ -538,7 +537,6 @@ export class BailleurDashboardComponent implements OnInit {
 
   readonly username = this.auth.getUsername();
   readonly roles = this.auth.roles;
-  readonly inscriptionStatus = signal('en cours');
   readonly message = signal('Prêt');
   readonly chargement = signal(false);
   readonly biens = signal<Bien[]>([]);
@@ -636,7 +634,6 @@ export class BailleurDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     if (!this.auth.hasRole('BAILLEUR')) {
-      this.inscriptionStatus.set('non applicable');
       this.chargerBiens();
       return;
     }
@@ -644,12 +641,7 @@ export class BailleurDashboardComponent implements OnInit {
     this.chargerReferentielsBien();
     this.inscription.inscrire().pipe(
       finalize(() => this.chargerBiens()),
-    ).subscribe({
-      next: (result) => {
-        this.inscriptionStatus.set(result.status === 'created' ? 'créée' : 'déjà existante');
-      },
-      error: (err: HttpErrorResponse) => this.inscriptionStatus.set(`erreur ${err.status}`),
-    });
+    ).subscribe();
   }
 
   private chargerReferentielsBien(): void {

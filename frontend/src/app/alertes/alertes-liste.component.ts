@@ -28,20 +28,17 @@ import { Alerte, S04ApiService } from '../core/s04/s04-api.service';
         }
       </div>
 
-      @if (alertes().length === 0) {
-        <p class="muted">Aucune alerte.</p>
+      @if (alertesTriees().length === 0) {
+        <p class="muted">Aucune alerte non lue.</p>
       }
       <div class="list">
         @for (a of alertesTriees(); track a.id) {
-          <div class="row" [class.lue]="a.statut === 'LUE'">
+          <div class="row">
             <span class="type" [attr.data-type]="a.type">{{ a.type }}</span>
             <span class="msg">{{ a.message }}</span>
-            <span class="badge" [attr.data-statut]="a.statut">{{ a.statut }}</span>
-            @if (a.statut === 'NON_LUE') {
-              <button type="button" (click)="marquerLue(a)" [disabled]="chargement()">
-                Marquer lue
-              </button>
-            }
+            <button type="button" (click)="marquerLue(a)" [disabled]="chargement()">
+              Marquer lue
+            </button>
           </div>
         }
       </div>
@@ -83,9 +80,6 @@ import { Alerte, S04ApiService } from '../core/s04/s04-api.service';
         background: #0f172a;
         color: #e2e8f0;
       }
-      .row.lue {
-        opacity: 0.6;
-      }
       .msg {
         flex: 1;
       }
@@ -109,13 +103,6 @@ import { Alerte, S04ApiService } from '../core/s04/s04-api.service';
       .type[data-type='PREAVIS'] {
         color: #fde68a;
       }
-      .badge {
-        font-size: 0.8rem;
-        color: #94a3b8;
-      }
-      .badge[data-statut='NON_LUE'] {
-        color: #fbbf24;
-      }
     `,
   ],
 })
@@ -128,14 +115,11 @@ export class AlertesListeComponent implements OnInit {
   readonly message = signal('Prêt');
   readonly chargement = signal(false);
 
-  // NON_LUE en tête, puis du plus récent au plus ancien (le backend trie déjà par date desc).
+  // Seules les alertes NON_LUE, du plus récent au plus ancien.
   readonly alertesTriees = computed(() =>
-    [...this.alertes()].sort((a, b) => {
-      if (a.statut !== b.statut) {
-        return a.statut === 'NON_LUE' ? -1 : 1;
-      }
-      return b.dateCreation.localeCompare(a.dateCreation);
-    }),
+    this.alertes()
+      .filter((a) => a.statut === 'NON_LUE')
+      .sort((a, b) => b.dateCreation.localeCompare(a.dateCreation)),
   );
 
   ngOnInit(): void {
@@ -147,7 +131,7 @@ export class AlertesListeComponent implements OnInit {
     this.api.listerAlertes().subscribe({
       next: (alertes) => {
         this.alertes.set(alertes);
-        this.message.set(`${alertes.length} alerte(s)`);
+        this.message.set(`${this.alertesTriees().length} alerte(s) non lue(s)`);
       },
       error: (err: unknown) => this.signalerErreur(err),
       complete: () => this.chargement.set(false),

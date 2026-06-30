@@ -146,6 +146,24 @@ describe('PaiementsBienComponent', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalled();
   });
 
+  it('affiche À VENIR pour un loyer IMPAYÉ dont la date d échéance est future', () => {
+    const cmp = creer();
+    const futur: Paiement = {
+      id: 'p-futur',
+      bienId: 'bien-1',
+      bailId: 'bail-1',
+      periode: '2027-01',
+      montantAttendu: 850,
+      montantRecu: 0,
+      resteDu: 850,
+      dateExigibilite: '2027-01-01',
+      statut: 'IMPAYE',
+    };
+    expect(cmp.statutAffiche(futur)).toBe('À VENIR');
+    expect(cmp.statutAffiche(paiement('IMPAYE'))).toBe('IMPAYE'); // date passée (2026-02-01)
+    expect(cmp.statutAffiche(paiement('EN_RETARD'))).toBe('EN_RETARD');
+  });
+
   it('télécharge l avis d échéance pour un loyer non soldé', () => {
     const cmp = creer();
     spyOn(URL, 'createObjectURL').and.returnValue('blob:fake');

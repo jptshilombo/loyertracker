@@ -21,7 +21,7 @@ describe('AlertesListeComponent', () => {
     http.verify();
   });
 
-  it('charge les alertes au montage et affiche les NON_LUE en tête', () => {
+  it('charge les alertes au montage et n\'affiche que les NON_LUE', () => {
     fixture.detectChanges();
 
     const req = http.expectOne('/api/alertes');
@@ -52,7 +52,7 @@ describe('AlertesListeComponent', () => {
     ]);
 
     const triees = fixture.componentInstance.alertesTriees();
-    expect(triees.length).toBe(2);
+    expect(triees.length).toBe(1);
     expect(triees[0].id).toBe('al-nonlue');
   });
 });
