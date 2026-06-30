@@ -12,6 +12,13 @@
 -- La fonction reste SECURITY DEFINER OWNER loyertracker_batch (ADR-01, V6).
 -- =====================================================================================
 
+-- 0. Domaine de statut : ajout de 'A_VENIR' à la contrainte CHECK de `paiement.statut`
+--    (V1 ne déclarait que RECU/PARTIEL/EN_RETARD/IMPAYE). Indispensable avant que la
+--    fonction ou l'UPDATE rétroactif n'écrivent des lignes 'A_VENIR'.
+ALTER TABLE paiement DROP CONSTRAINT paiement_statut_check;
+ALTER TABLE paiement ADD CONSTRAINT paiement_statut_check
+    CHECK (statut IN ('A_VENIR', 'RECU', 'PARTIEL', 'EN_RETARD', 'IMPAYE'));
+
 CREATE OR REPLACE FUNCTION generer_echeances_loyers()
     RETURNS integer
     LANGUAGE sql
