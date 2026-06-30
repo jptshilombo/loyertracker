@@ -119,6 +119,18 @@ Prometheus **200** (tag `application="loyertracker-api"`) et public **404** conf
 chaque redéploiement (cf. §8). Le correctif était déjà validé au niveau unitaire
 (`SecurityIntegrationTest` vert).
 
+5. **Écart NPM — basic-auth interceptait les JWT Bearer sur `/api/` (découvert le 2026-06-30).**
+   La basic-auth NPM (`auth_basic` globale sur `location /`) bloquait tous les appels API de
+   l'Angular avec `401 Authorization Required` (OpenResty) avant même que la requête atteigne
+   Spring Security. De plus, `proxy_set_header Authorization "";` dans NPM supprimait le header
+   Bearer avant transfert. Racine du problème : NPM traite tout `Authorization:` comme une
+   tentative de basic-auth ; le JWT Bearer n'est pas un credential Basic valide.
+   **Correctif :** ajout d'un bloc `location /api/ { auth_basic off; … }` dans `18.conf` (plus
+   spécifique que `location /`), sans `proxy_set_header Authorization ""` → JWT transmis intact
+   à Spring Security. Persisté dans `advanced_config` (SQLite NPM). Vérification live :
+   `GET /api/patrimoines` + JWT BAILLEUR via URL publique → **200** ✅ ; sans jeton → **401
+   Spring Security** ✅. Smoke 47/0 PASS.
+
 ## 6. Gate Staging Readiness (CGPA v4.0) — clôture R-4
 
 | Critère | Verdict |
@@ -162,11 +174,13 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-27 | `sha-47172297` | Release `1.2.1` — correctif dashboard `c1e9c73` (`finalize` RxJS) | **4/4** | **47/0** | — / — | `git pull` `5bf187a` → `47172297` (fast-forward). STG-ISOL-01 live : 8 conteneurs `loyertracker-staging-*` avant et après — aucun autre projet affecté. Flyway 15/15 inchangé (aucune nouvelle migration). CORS `APP_CORS_ALLOWED_ORIGIN` injecté. Smoke 47/0 (port interne `18443`). **Gate Staging `1.2.1` GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-v1.2.1-decision.md`. |
 | 2026-06-27 | `sha-e561d0e5` | Sprint 4 UI Patrimoine (PR #82) + remédiation audit CGPA v5.4.1 (PR #83) — merge commit `e561d0e` | **4/4** | **47/0** | — / — | Déployé (api + nginx) lors du Gate Staging Sprint 4 (E1–E5 PASS). STG-ISOL-01 live PASS (avant/après : 9 conteneurs dont `nginx-proxy-manager` intact). Flyway 15/15 inchangé. Smoke 47/0 PASS. **E6 = NO GO** : défaut É-01 détecté — `GET /api/patrimoines/{id}/affectations` absent du backend (404). Correctif engagé sur branche `fix/e01-historique-affectations-patrimoine` (PR #96). |
 | 2026-06-27 | `sha-a42d860d` | Correctif É-01 — PR #96 (`fix/e01-historique-affectations-patrimoine` → `main`) | **4/4** | — (smoke non rejoué, aucun changement de schéma) | — / — | Redéployé (api + nginx) avec `LOYERTRACKER_TAG=sha-a42d860d` depuis `~/loyertracker`. STG-ISOL-01 live PASS (avant/après : 9 conteneurs, `nginx-proxy-manager` intact, `postgres`/`keycloak` non redémarrés). E6 re-exécuté : **PASS** — E6.6 201 (affectation patrimoineId, `montantHonoraires`+`dateDebut`), **É-01 LEVÉ** : `GET /api/patrimoines/{id}/affectations` → 200 (1 affectation ACTIVE visible), E6.7 201 (EXCLUSION par bien). Nettoyage complet. **Gate Staging Sprint 4 UI Patrimoine GO — `STAGING_DEPLOYED`**. Prochaine action autorisée : Gate Production Sprint 4 distinct. |
+| 2026-06-30 | `sha-1d200c27` | Fix UX — PR #110 (navbar « Mon profil » BAILLEUR, message 409 quittance actionable) | **4/4** | **47/0** | — / — | STG-ISOL-01 PASS. Smoke 47/0 (port interne `18443`). **Écart NPM découvert et corrigé** (voir §5 écart 5) : basic-auth NPM bloquait les JWT Bearer sur `/api/` ; correctif `location /api/ { auth_basic off; }` appliqué à `18.conf` + `advanced_config` SQLite persisté. Vérification bout-en-bout publique : `GET /api/patrimoines` via `loyertracker.staging.loyerpro.org` + JWT BAILLEUR → 200 ✅ ; sans jeton → 401 (Spring Security) ✅. Tag actif en staging. |
 
 > Réalignements doc-only (`sha-26f16caa`) : aucun changement fonctionnel, traçabilité « tag déployé
-> = `main` HEAD ». Le **`sha-a42d860d`** (correctif É-01 Sprint 4 + Gate Staging Sprint 4 GO) est le
-> **tag actif en staging** depuis le 2026-06-27, avec exposition publique active sur
-> `https://loyertracker.staging.loyerpro.org`.
+> = `main` HEAD ». Le **`sha-1d200c27`** (fix UX PR #110 + correctif NPM basic-auth, déployé
+> le 2026-06-30) est le **tag actif en staging** depuis le 2026-06-30, avec exposition publique
+> active sur `https://loyertracker.staging.loyerpro.org`. Flux bout-en-bout JWT Bearer validé
+> (200 via URL publique avec JWT BAILLEUR, 401 sans jeton).
 >
 > **Incident npm 2026-06-25** : le conteneur `nginx-proxy-manager` n'était pas démarré ;
 > `docker compose up -d` dans `~/` a créé de nouveaux volumes vides (`ubuntu_npm_*`) au lieu de
