@@ -8,9 +8,9 @@
 
 | Champ | Valeur |
 |---|---|
-| Date initiale / dernière mise à jour | 2026-06-14 / 2026-06-27 |
+| Date initiale / dernière mise à jour | 2026-06-14 / 2026-06-30 |
 | Branche de référence | `main` |
-| Lot initial / dernier déploiement | Production Readiness 4b / Release `1.2.1` |
+| Lot initial / dernier déploiement | Production Readiness 4b / fix UX profil+quittance (PR #110) |
 | Hôte | Serveur partagé `ai-test-server` (IP privée `172.31.11.102`) |
 | Reverse proxy mutualisé | nginx-proxy-manager (occupe 80/443 de l'hôte) + autres stacks (loyerpro, outils labo) |
 | Approche d'intégration | Ports alternatifs, smoke local (option retenue) — **aucune modification de l'infra partagée** |
@@ -29,7 +29,7 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | **déployé : `sha-a42d860d`** (Sprint 4 UI Patrimoine, Gate Staging GO le 2026-06-27, E6 PASS — É-01 levé, `STG-ISOL-01` live PASS — cf. §8) |
+| `LOYERTRACKER_TAG` | **déployé : `sha-1d200c27`** (fix UX PR #110 — navbar profil + message 409 quittance, déployé le 2026-06-30, STG-ISOL-01 PASS, smoke 47/0) |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
 | Issuer Keycloak | `https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) — basculé le 2026-06-16 (exposition publique) |
