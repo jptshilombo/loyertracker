@@ -122,6 +122,18 @@ describe('PaiementsBienComponent', () => {
     expect(cmp.message()).toBe('erreur inconnue');
   });
 
+  it('affiche un message explicite (409) quand l adresse bailleur est manquante', () => {
+    const cmp = creer();
+    api.telechargerQuittance.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+    cmp.telecharger(paiement('RECU'), 'quittance');
+    expect(cmp.message()).toBe(
+      'Adresse bailleur manquante — renseignez « Mon profil » avant de télécharger',
+    );
+    expect(cmp.chargement()).toBeFalse();
+  });
+
   it('télécharge la quittance pour un loyer RECU', () => {
     const cmp = creer();
     spyOn(URL, 'createObjectURL').and.returnValue('blob:fake');

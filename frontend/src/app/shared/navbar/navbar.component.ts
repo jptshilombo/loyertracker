@@ -9,8 +9,11 @@ import { AuthService } from '../../core/auth/auth.service';
     template: `
     <nav class="navbar">
       <span class="brand">LoyerTracker</span>
-      <a routerLink="/bailleur" routerLinkActive="active">Bailleur</a>
+      <a routerLink="/bailleur" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Bailleur</a>
       <a routerLink="/gestionnaire" routerLinkActive="active">Gestionnaire</a>
+      @if (isBailleur) {
+        <a routerLink="/bailleur/profil" routerLinkActive="active">Mon profil</a>
+      }
       <span class="spacer"></span>
       <span class="user">{{ username }}</span>
       <button type="button" (click)="logout()">Déconnexion</button>
@@ -71,6 +74,7 @@ import { AuthService } from '../../core/auth/auth.service';
 export class NavbarComponent {
   private readonly auth = inject(AuthService);
   readonly username = this.auth.getUsername();
+  readonly isBailleur = this.auth.hasRole('BAILLEUR');
 
   logout(): void {
     void this.auth.logout();
