@@ -6,6 +6,25 @@
 
 
 
+## 0E. Déploiement Production `1.4.0` — 2026-06-30
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.4.0` |
+| Tag déployé | **`sha-98afa99a`** (GHCR, merge commit PR #115) |
+| Tag précédent / rollback | `sha-a42d860d` (`1.3.0`) — applicatif seul + pg_restore V15 si nécessaire |
+| Backup pré-déploiement | `loyertracker-20260630-160619.dump` (312 Kio), SHA-256 `60b1fd74…`, globals SHA-256 `ee660fc5…`, `pg_restore --list` 730 entrées OK |
+| Déploiement | `api` + `nginx` recréés ; `postgres`, `keycloak`, monitoring inchangés |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **(healthy)**, zéro restart |
+| Flyway | V1→**V18**, **3 nouvelles migrations** : V16 (bien.statut LOUE + patrimoine.adresse), V17 (bail.devise EUR/USD/CDF), V18 (StatutPaiement A_VENIR + contrainte CHECK + generer_echeances_loyers()) |
+| Smoke Production | **47 PASS / 0 FAIL** (2026-06-30 ~15:15 UTC). Note : `bailleur-test@test.local` était désactivé KC — réactivé avant le smoke, redésactivé après (pattern identique à `1.2.1`). |
+| Observabilité | 5/5 cibles Prometheus up ; Alertmanager 0 alerte active |
+| Réserves levées | **RP-140-01** levée (backup vérifié préflight 2026-06-30 16:06 UTC) |
+| `.env` persisté | `LOYERTRACKER_TAG=sha-98afa99a`, SHA-256 `.env` = `1e3f9a7d…` |
+| Décision CGPA | `PRODUCTION_DEPLOYED` atteint — validation finale en cours (hypercare T0/T+12/T+24 requis) |
+
+Rapports : `docs/cgpa/09-production/preflight-backup-v1.4.0-report.md` (backup 2026-06-30), Gate Production Sprint 5 (`docs/project-state.md`).
+
 ## 0D. Déploiement Production `1.3.0` — 2026-06-29
 
 | Contrôle | Résultat |
