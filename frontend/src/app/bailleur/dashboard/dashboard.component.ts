@@ -1000,7 +1000,7 @@ export class BailleurDashboardComponent implements OnInit {
     this.patrimoineModifId.set(patrimoineId);
     const p = this.patrimoines().find(pat => pat.id === patrimoineId);
     if (p) {
-      this.patrimoineForm.setValue({ nom: p.nom, adresse: p.adresse });
+      this.patrimoineForm.setValue({ nom: p.nom, adresse: p.adresse ?? null });
     }
   }
 
