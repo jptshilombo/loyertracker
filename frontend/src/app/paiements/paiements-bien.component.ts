@@ -199,7 +199,7 @@ export class PaiementsBienComponent {
   }
 
   statutAffiche(p: Paiement): string {
-    if (p.statut === 'IMPAYE' && p.dateExigibilite > this.today) {
+    if (p.statut === 'A_VENIR' || (p.statut === 'IMPAYE' && p.dateExigibilite > this.today)) {
       return 'À VENIR';
     }
     return p.statut;
@@ -211,7 +211,8 @@ export class PaiementsBienComponent {
 
   selectionner(p: Paiement): void {
     this.selection.set(p);
-    this.pointageForm.setValue({ montantRecu: p.montantRecu, statut: p.statut });
+    const statutForm: StatutPaiement = p.statut === 'A_VENIR' ? 'IMPAYE' : p.statut;
+    this.pointageForm.setValue({ montantRecu: p.montantRecu, statut: statutForm });
   }
 
   pointer(): void {

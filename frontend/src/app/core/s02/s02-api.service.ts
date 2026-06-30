@@ -25,7 +25,13 @@ export interface BienPayload {
 export interface Patrimoine {
   id: string;
   nom: string;
+  adresse: string | null;
   statut: string;
+}
+
+export interface PatrimoinePayload {
+  nom: string;
+  adresse: string | null;
 }
 
 export interface TypeBien {
@@ -46,6 +52,7 @@ export interface Bail {
   dateDebut: string;
   dateFin: string | null;
   statut: string;
+  devise: string;
 }
 
 export interface BailPayload {
@@ -56,6 +63,7 @@ export interface BailPayload {
   depotGarantie: number;
   dateDebut: string;
   dateFin: string | null;
+  devise: string;
 }
 
 export interface Affectation {
@@ -133,5 +141,9 @@ export class S02ApiService {
 
   listerAffectationsPatrimoine(patrimoineId: string): Observable<Affectation[]> {
     return this.http.get<Affectation[]>(`${API_BASE_URL}/patrimoines/${patrimoineId}/affectations`);
+  }
+
+  modifierPatrimoine(id: string, payload: PatrimoinePayload): Observable<Patrimoine> {
+    return this.http.put<Patrimoine>(`${API_BASE_URL}/patrimoines/${id}`, payload);
   }
 }

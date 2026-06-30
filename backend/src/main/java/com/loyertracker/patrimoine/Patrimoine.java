@@ -25,6 +25,9 @@ public class Patrimoine {
     @Column(nullable = false)
     private String nom;
 
+    @Column
+    private String adresse;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutPatrimoine statut;
@@ -43,8 +46,9 @@ public class Patrimoine {
         this.statut = StatutPatrimoine.ACTIF;
     }
 
-    public void renommer(String nom) {
+    public void modifier(String nom, String adresse) {
         this.nom = nom;
+        this.adresse = adresse;
     }
 
     public void archiver() {
@@ -61,6 +65,10 @@ public class Patrimoine {
 
     public String getNom() {
         return nom;
+    }
+
+    public String getAdresse() {
+        return adresse;
     }
 
     public StatutPatrimoine getStatut() {

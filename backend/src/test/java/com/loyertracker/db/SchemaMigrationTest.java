@@ -54,7 +54,10 @@ class SchemaMigrationTest {
         // + V13 (affectations au périmètre patrimoine — Sprint 2 Patrimoine).
         // + V14 (honoraires sur affectations patrimoine — Sprint 2 Patrimoine).
         // + V15 (exceptions fines par bien, résolution à priorité — Sprint 3 Patrimoine, US-85).
-        assertThat(result.migrationsExecuted).isEqualTo(15);
+        // + V16 (bien.statut LOUE rétroactif + patrimoine.adresse — Sprint 5 B1/B2).
+        // + V17 (bail.devise EUR/USD/CDF — Sprint 5 B3).
+        // + V18 (StatutPaiement A_VENIR + génération échéances futures — Sprint 5 B4, US-60).
+        assertThat(result.migrationsExecuted).isEqualTo(18);
         assertThat(result.success).isTrue();
     }
 

@@ -81,13 +81,14 @@ describe('S02ApiService', () => {
       depotGarantie: 850,
       dateDebut: '2026-06-01',
       dateFin: null,
+      devise: 'EUR',
     };
 
     service.creerBail('bien-1', payload).subscribe();
     let req = http.expectOne('/api/biens/bien-1/baux');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
-    req.flush({ id: 'bail-1', bienId: 'bien-1', ...payload, statut: 'ACTIF' });
+    req.flush({ id: 'bail-1', bienId: 'bien-1', ...payload, loyerCc: 850, statut: 'ACTIF' });
 
     service.listerBaux('bien-1').subscribe();
     req = http.expectOne('/api/biens/bien-1/baux');

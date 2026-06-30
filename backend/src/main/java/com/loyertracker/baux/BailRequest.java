@@ -21,5 +21,6 @@ public record BailRequest(
         @NotNull @DecimalMin("0.00") BigDecimal provisionCharges,
         @NotNull @DecimalMin("0.00") BigDecimal depotGarantie,
         @NotNull LocalDate dateDebut,
-        LocalDate dateFin) {
+        LocalDate dateFin,
+        Devise devise) {
 }

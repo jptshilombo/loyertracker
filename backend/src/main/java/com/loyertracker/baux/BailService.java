@@ -44,9 +44,10 @@ public class BailService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Un bail actif existe déjà sur ce bien.");
         }
+        Devise devise = requete.devise() != null ? requete.devise() : Devise.EUR;
         Bail bail = new Bail(UUID.randomUUID(), bailleurId, bienId, requete.locataireNom(),
                 requete.locataireEmail(), requete.loyerHc(), requete.provisionCharges(),
-                requete.depotGarantie(), requete.dateDebut(), requete.dateFin());
+                requete.depotGarantie(), requete.dateDebut(), requete.dateFin(), devise);
         try {
             Bail enregistre = baux.saveAndFlush(bail);
             bien.louer();

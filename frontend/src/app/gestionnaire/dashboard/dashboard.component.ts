@@ -80,6 +80,14 @@ import { PaiementsBienComponent } from '../../paiements/paiements-bien.component
               Dépôt
               <input type="number" formControlName="depotGarantie" min="0" step="0.01" />
             </label>
+            <label>
+              Devise
+              <select formControlName="devise">
+                <option value="EUR">EUR — Euro</option>
+                <option value="USD">USD — Dollar américain</option>
+                <option value="CDF">CDF — Franc congolais</option>
+              </select>
+            </label>
           </div>
           <div class="fields">
             <label>
@@ -238,6 +246,7 @@ export class GestionnaireDashboardComponent implements OnInit {
     depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
+    devise: new FormControl<string>('EUR', { nonNullable: true, validators: [Validators.required] }),
   });
 
   ngOnInit(): void {
@@ -287,6 +296,7 @@ export class GestionnaireDashboardComponent implements OnInit {
           depotGarantie: 0,
           dateDebut: '',
           dateFin: '',
+          devise: 'EUR',
         });
         this.chargerBaux(bienId);
         this.chargerBiens();
