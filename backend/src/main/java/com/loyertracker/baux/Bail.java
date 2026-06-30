@@ -54,13 +54,17 @@ public class Bail {
     @Column(nullable = false)
     private StatutBail statut;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Devise devise;
+
     protected Bail() {
         // requis par JPA
     }
 
     public Bail(UUID id, UUID bailleurId, UUID bienId, String locataireNom, String locataireEmail,
             BigDecimal loyerHc, BigDecimal provisionCharges, BigDecimal depotGarantie,
-            LocalDate dateDebut, LocalDate dateFin) {
+            LocalDate dateDebut, LocalDate dateFin, Devise devise) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.bienId = bienId;
@@ -74,6 +78,7 @@ public class Bail {
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.statut = StatutBail.ACTIF;
+        this.devise = devise;
     }
 
     public UUID getId() { return id; }
@@ -88,4 +93,5 @@ public class Bail {
     public LocalDate getDateDebut() { return dateDebut; }
     public LocalDate getDateFin() { return dateFin; }
     public StatutBail getStatut() { return statut; }
+    public Devise getDevise() { return devise; }
 }

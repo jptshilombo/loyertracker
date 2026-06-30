@@ -38,6 +38,9 @@ public class PatrimoineService {
     public PatrimoineDto creer(Jwt jwt, PatrimoineRequest requete) {
         UUID bailleurId = tenant.activerDepuisKeycloak(jwt.getSubject());
         Patrimoine patrimoine = new Patrimoine(UUID.randomUUID(), bailleurId, requete.nom());
+        if (requete.adresse() != null) {
+            patrimoine.modifier(requete.nom(), requete.adresse());
+        }
         return PatrimoineDto.from(patrimoines.saveAndFlush(patrimoine));
     }
 
@@ -47,7 +50,7 @@ public class PatrimoineService {
         Patrimoine patrimoine = patrimoines.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Patrimoine introuvable."));
-        patrimoine.renommer(requete.nom());
+        patrimoine.modifier(requete.nom(), requete.adresse());
         return PatrimoineDto.from(patrimoine);
     }
 

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../api/api.config';
 
-export type StatutPaiement = 'IMPAYE' | 'PARTIEL' | 'RECU' | 'EN_RETARD';
+export type StatutPaiement = 'A_VENIR' | 'IMPAYE' | 'PARTIEL' | 'RECU' | 'EN_RETARD';
 export type StatutGarantie = 'DETENU' | 'RESTITUE_PARTIEL' | 'RESTITUE_TOTAL';
 export type TypeRestitution = 'PARTIELLE' | 'TOTALE';
 

@@ -164,6 +164,39 @@ describe('PaiementsBienComponent', () => {
     expect(cmp.statutAffiche(paiement('EN_RETARD'))).toBe('EN_RETARD');
   });
 
+  it('affiche À VENIR pour un paiement avec statut A_VENIR (backend B4)', () => {
+    const cmp = creer();
+    const aVenir: Paiement = {
+      id: 'p-avenir',
+      bienId: 'bien-1',
+      bailId: 'bail-1',
+      periode: '2026-07',
+      montantAttendu: 850,
+      montantRecu: 0,
+      resteDu: 850,
+      dateExigibilite: '2026-08-01',
+      statut: 'A_VENIR',
+    };
+    expect(cmp.statutAffiche(aVenir)).toBe('À VENIR');
+  });
+
+  it('initialise le form de pointage à IMPAYE quand le statut est A_VENIR', () => {
+    const cmp = creer();
+    const aVenir: Paiement = {
+      id: 'p-avenir',
+      bienId: 'bien-1',
+      bailId: 'bail-1',
+      periode: '2026-07',
+      montantAttendu: 850,
+      montantRecu: 0,
+      resteDu: 850,
+      dateExigibilite: '2026-08-01',
+      statut: 'A_VENIR',
+    };
+    cmp.selectionner(aVenir);
+    expect(cmp.pointageForm.getRawValue().statut).toBe('IMPAYE');
+  });
+
   it('télécharge l avis d échéance pour un loyer non soldé', () => {
     const cmp = creer();
     spyOn(URL, 'createObjectURL').and.returnValue('blob:fake');

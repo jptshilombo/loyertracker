@@ -13,6 +13,7 @@ import {
   Bien,
   BienPayload,
   Patrimoine,
+  PatrimoinePayload,
   S02ApiService,
   StatutBien,
   TypeBien,
@@ -120,6 +121,44 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
       </div>
     </section>
 
+    <section class="grid two detail">
+      <form [formGroup]="patrimoineForm" (ngSubmit)="modifierPatrimoine()" class="panel">
+        <h2>Modifier un patrimoine</h2>
+        <label>
+          Patrimoine
+          <select #patModifSel (change)="selectionnerPatrimoineModif(patModifSel.value)">
+            <option value="" disabled selected>Choisir un patrimoine</option>
+            @for (p of patrimoinesDisponibles(); track p.id) {
+              <option [value]="p.id">{{ p.nom }}{{ p.adresse ? ' — ' + p.adresse : '' }}</option>
+            }
+          </select>
+        </label>
+        @if (patrimoineModifId()) {
+          <label>
+            Nom
+            <input type="text" formControlName="nom" />
+          </label>
+          <label>
+            Adresse
+            <input type="text" formControlName="adresse" placeholder="ex. 12 rue des Lilas, Paris" />
+          </label>
+          <button type="submit" [disabled]="patrimoineForm.invalid || chargement()">Modifier</button>
+        }
+      </form>
+      <div class="panel">
+        <h2>Patrimoines</h2>
+        @for (p of patrimoinesDisponibles(); track p.id) {
+          <div class="item">
+            <strong>{{ p.nom }}</strong>
+            <span class="muted">{{ p.adresse || '— adresse non renseignée' }}</span>
+            <span class="badge">{{ p.statut }}</span>
+          </div>
+        } @empty {
+          <p class="muted">Aucun patrimoine.</p>
+        }
+      </div>
+    </section>
+
     @if (bienSelectionne(); as bien) {
       <section class="grid two detail">
         <form [formGroup]="bailForm" (ngSubmit)="creerBail()" class="panel">
@@ -147,6 +186,14 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
               Dépôt
               <input type="number" formControlName="depotGarantie" min="0" step="0.01" />
             </label>
+            <label>
+              Devise
+              <select formControlName="devise">
+                <option value="EUR">EUR — Euro</option>
+                <option value="USD">USD — Dollar américain</option>
+                <option value="CDF">CDF — Franc congolais</option>
+              </select>
+            </label>
           </div>
           <div class="fields">
             <label>
@@ -166,7 +213,7 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
           @for (bail of baux(); track bail.id) {
             <div class="item" [class.selected]="bail.id === bailSelectionne()?.id">
               <strong>{{ bail.locataireNom }}</strong>
-              <span>{{ bail.loyerCc }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
+              <span>{{ bail.loyerCc }} {{ bail.devise }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
               <span class="badge">{{ bail.statut }}</span>
               <button type="button" (click)="selectionnerBail(bail)">Garanties</button>
             </div>
@@ -590,6 +637,7 @@ export class BailleurDashboardComponent implements OnInit {
     depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
+    devise: new FormControl<string>('EUR', { nonNullable: true, validators: [Validators.required] }),
   });
 
   readonly affectationForm = new FormGroup({
@@ -613,6 +661,13 @@ export class BailleurDashboardComponent implements OnInit {
     montantHonoraires: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly patrimoineModifId = signal('');
+
+  readonly patrimoineForm = new FormGroup({
+    nom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    adresse: new FormControl<string | null>(null, { nonNullable: false }),
   });
 
   readonly exceptionForm = new FormGroup({
@@ -772,6 +827,7 @@ export class BailleurDashboardComponent implements OnInit {
             depotGarantie: 0,
             dateDebut: '',
             dateFin: '',
+            devise: 'EUR',
           });
           this.chargerDetails(bienId);
           this.chargerBiens();
@@ -933,6 +989,35 @@ export class BailleurDashboardComponent implements OnInit {
           if (bienId) {
             this.chargerExceptionsBien(bienId);
           }
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
+  }
+
+  selectionnerPatrimoineModif(patrimoineId: string): void {
+    this.patrimoineModifId.set(patrimoineId);
+    const p = this.patrimoines().find(pat => pat.id === patrimoineId);
+    if (p) {
+      this.patrimoineForm.setValue({ nom: p.nom, adresse: p.adresse });
+    }
+  }
+
+  modifierPatrimoine(): void {
+    const id = this.patrimoineModifId();
+    if (!id || this.patrimoineForm.invalid) {
+      return;
+    }
+    const payload: PatrimoinePayload = {
+      nom: this.patrimoineForm.getRawValue().nom,
+      adresse: this.patrimoineForm.value.adresse ?? null,
+    };
+    this.executer('Modification du patrimoine', () =>
+      this.api.modifierPatrimoine(id, payload).subscribe({
+        next: (p) => {
+          this.message.set(`Patrimoine « ${p.nom} » modifié`);
+          this.chargerReferentielsBien();
         },
         error: (err: unknown) => this.signalerErreur(err),
         complete: () => this.chargement.set(false),
