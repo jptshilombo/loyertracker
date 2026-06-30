@@ -7,8 +7,8 @@ import { Alerte, S04ApiService } from '../core/s04/s04-api.service';
  * Consultation et marquage des alertes de pilotage (US-50/51/52). Réutilisable par les deux espaces :
  * le backend cloisonne déjà la liste (bailleur = tout le tenant ; gestionnaire = biens affectés
  * actifs). La génération batch n'est exposée qu'au bailleur via {@code peutGenerer} (cohérent avec
- * {@code @PreAuthorize hasRole('BAILLEUR')} sur `POST /api/batch/alertes`). Les alertes NON_LUE sont
- * affichées en tête (défaut C du Plan d'Exécution).
+ * {@code @PreAuthorize hasRole('BAILLEUR')} sur `POST /api/batch/alertes`). Seules les alertes
+ * NON_LUE sont affichées ; les alertes LUE sont filtrées côté frontend (US-52).
  */
 @Component({
   selector: 'app-alertes-liste',

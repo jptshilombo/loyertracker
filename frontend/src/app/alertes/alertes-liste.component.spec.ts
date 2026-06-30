@@ -51,8 +51,9 @@ describe('AlertesListeComponent', () => {
       },
     ]);
 
-    const triees = fixture.componentInstance.alertesTriees();
-    expect(triees.length).toBe(1);
-    expect(triees[0].id).toBe('al-nonlue');
+    const cmp = fixture.componentInstance;
+    expect(cmp.alertesTriees().length).toBe(1);
+    expect(cmp.alertesTriees()[0].id).toBe('al-nonlue');
+    expect(cmp.message()).toBe('1 alerte(s) non lue(s)');
   });
 });
