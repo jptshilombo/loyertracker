@@ -10,7 +10,7 @@
 |---|---|
 | Date initiale / dernière mise à jour | 2026-06-14 / 2026-06-30 |
 | Branche de référence | `main` |
-| Lot initial / dernier déploiement | Production Readiness 4b / fix UX profil+quittance (PR #110) |
+| Lot initial / dernier déploiement | Production Readiness 4b / Sprint 5 Lot B (PR #115) |
 | Hôte | Serveur partagé `ai-test-server` (IP privée `172.31.11.102`) |
 | Reverse proxy mutualisé | nginx-proxy-manager (occupe 80/443 de l'hôte) + autres stacks (loyerpro, outils labo) |
 | Approche d'intégration | Ports alternatifs, smoke local (option retenue) — **aucune modification de l'infra partagée** |
@@ -29,7 +29,7 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | **déployé : `sha-1d200c27`** (fix UX PR #110 — navbar profil + message 409 quittance, déployé le 2026-06-30, STG-ISOL-01 PASS, smoke 47/0) |
+| `LOYERTRACKER_TAG` | **déployé : `sha-98afa99a`** (Sprint 5 Lot B PR #115 — B1 bien.statut, B2 patrimoine.adresse, B3 bail.devise, B4 A_VENIR, V16/V17/V18, déployé le 2026-06-30, STG-ISOL-01 PASS, smoke 47/0) |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
 | Issuer Keycloak | `https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) — basculé le 2026-06-16 (exposition publique) |
@@ -174,13 +174,12 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-27 | `sha-47172297` | Release `1.2.1` — correctif dashboard `c1e9c73` (`finalize` RxJS) | **4/4** | **47/0** | — / — | `git pull` `5bf187a` → `47172297` (fast-forward). STG-ISOL-01 live : 8 conteneurs `loyertracker-staging-*` avant et après — aucun autre projet affecté. Flyway 15/15 inchangé (aucune nouvelle migration). CORS `APP_CORS_ALLOWED_ORIGIN` injecté. Smoke 47/0 (port interne `18443`). **Gate Staging `1.2.1` GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-v1.2.1-decision.md`. |
 | 2026-06-27 | `sha-e561d0e5` | Sprint 4 UI Patrimoine (PR #82) + remédiation audit CGPA v5.4.1 (PR #83) — merge commit `e561d0e` | **4/4** | **47/0** | — / — | Déployé (api + nginx) lors du Gate Staging Sprint 4 (E1–E5 PASS). STG-ISOL-01 live PASS (avant/après : 9 conteneurs dont `nginx-proxy-manager` intact). Flyway 15/15 inchangé. Smoke 47/0 PASS. **E6 = NO GO** : défaut É-01 détecté — `GET /api/patrimoines/{id}/affectations` absent du backend (404). Correctif engagé sur branche `fix/e01-historique-affectations-patrimoine` (PR #96). |
 | 2026-06-27 | `sha-a42d860d` | Correctif É-01 — PR #96 (`fix/e01-historique-affectations-patrimoine` → `main`) | **4/4** | — (smoke non rejoué, aucun changement de schéma) | — / — | Redéployé (api + nginx) avec `LOYERTRACKER_TAG=sha-a42d860d` depuis `~/loyertracker`. STG-ISOL-01 live PASS (avant/après : 9 conteneurs, `nginx-proxy-manager` intact, `postgres`/`keycloak` non redémarrés). E6 re-exécuté : **PASS** — E6.6 201 (affectation patrimoineId, `montantHonoraires`+`dateDebut`), **É-01 LEVÉ** : `GET /api/patrimoines/{id}/affectations` → 200 (1 affectation ACTIVE visible), E6.7 201 (EXCLUSION par bien). Nettoyage complet. **Gate Staging Sprint 4 UI Patrimoine GO — `STAGING_DEPLOYED`**. Prochaine action autorisée : Gate Production Sprint 4 distinct. |
-| 2026-06-30 | `sha-1d200c27` | Fix UX — PR #110 (navbar « Mon profil » BAILLEUR, message 409 quittance actionable) | **4/4** | **47/0** | — / — | STG-ISOL-01 PASS. Smoke 47/0 (port interne `18443`). **Écart NPM découvert et corrigé** (voir §5 écart 5) : basic-auth NPM bloquait les JWT Bearer sur `/api/` ; correctif `location /api/ { auth_basic off; }` appliqué à `18.conf` + `advanced_config` SQLite persisté. Vérification bout-en-bout publique : `GET /api/patrimoines` via `loyertracker.staging.loyerpro.org` + JWT BAILLEUR → 200 ✅ ; sans jeton → 401 (Spring Security) ✅. Tag actif en staging. |
+| 2026-06-30 | `sha-1d200c27` | Fix UX — PR #110 (navbar « Mon profil » BAILLEUR, message 409 quittance actionable) | **4/4** | **47/0** | — / — | STG-ISOL-01 PASS. Smoke 47/0 (port interne `18443`). **Écart NPM découvert et corrigé** (voir §5 écart 5) : basic-auth NPM bloquait les JWT Bearer sur `/api/` ; correctif `location /api/ { auth_basic off; }` appliqué à `18.conf` + `advanced_config` SQLite persisté. Vérification bout-en-bout publique : `GET /api/patrimoines` via `loyertracker.staging.loyerpro.org` + JWT BAILLEUR → 200 ✅ ; sans jeton → 401 (Spring Security) ✅. |
+| 2026-06-30 | `sha-98afa99a` | Sprint 5 Lot B — PR #115 (B1 bien.statut sync, B2 patrimoine.adresse, B3 bail.devise EUR/USD/CDF, B4 StatutPaiement A_VENIR + generer_echeances_loyers() rewritten) | **4/4** | **47/0** | — / — | STG-ISOL-01 live PASS avant/après (9 conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, 2026-06-30T14:44/14:47 UTC). `api` + `nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **3 nouvelles migrations appliquées (V16/V17/V18), total 18/18**. Smoke 47/0 PASS (port interne `18443`). **Gate Staging Sprint 5 Lot B GO — `STAGING_DEPLOYED`**. Prochaine action autorisée : Gate Production Sprint 5 (distinct, aucune promotion autorisée par ce Gate Staging). |
 
-> Réalignements doc-only (`sha-26f16caa`) : aucun changement fonctionnel, traçabilité « tag déployé
-> = `main` HEAD ». Le **`sha-1d200c27`** (fix UX PR #110 + correctif NPM basic-auth, déployé
-> le 2026-06-30) est le **tag actif en staging** depuis le 2026-06-30, avec exposition publique
-> active sur `https://loyertracker.staging.loyerpro.org`. Flux bout-en-bout JWT Bearer validé
-> (200 via URL publique avec JWT BAILLEUR, 401 sans jeton).
+> Le **`sha-98afa99a`** (Sprint 5 Lot B — PR #115, déployé le 2026-06-30) est le **tag actif en staging**,
+> avec exposition publique active sur `https://loyertracker.staging.loyerpro.org`. Flyway 18/18.
+> Smoke 47/0. STG-ISOL-01 PASS.
 >
 > **Incident npm 2026-06-25** : le conteneur `nginx-proxy-manager` n'était pas démarré ;
 > `docker compose up -d` dans `~/` a créé de nouveaux volumes vides (`ubuntu_npm_*`) au lieu de
