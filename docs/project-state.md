@@ -9,6 +9,8 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Staging Sprint 5 Lot B — GO, `STAGING_DEPLOYED` (2026-06-30).** Tag immuable **`sha-98afa99a`** déployé sur `ai-test-server`. STG-ISOL-01 live PASS avant/après (9 conteneurs, `nginx-proxy-manager` intact). Flyway **18/18** : V16 (bien.statut LOUE rétroactif + patrimoine.adresse), V17 (bail.devise EUR/USD/CDF), V18 (StatutPaiement A_VENIR + contrainte CHECK + generer_echeances_loyers()). Smoke 47/0 PASS (port interne 18443). Prochaine action autorisée : Gate Production Sprint 5 (distinct). PR #115 (Sprint 5 Lot B) + PR #116 (smoke fix V18) dans `main`.
+>
 > **Release `1.3.0` CLÔTURÉE — CDO GO (2026-06-29).** Hypercare anticipé (T0/T+12/T+24 en ~2 min) PASS. Smoke 47/0, Sprint 4 UI Patrimoine + É-01 + remédiation audit confirmés en Production. RP-130-01 levée. Tag `sha-a42d860d` en Production. Dossier : `docs/cgpa/09-production/cloture-release-v1.3.0.md`.
 >
 > **Hypercare Production `1.3.0` — T+12 anticipé exécuté le 2026-06-29 à 14:27 UTC, PASS sous surveillance.** 8/8 Up, restart=0, Actuator UP, Prometheus 5/5, Alertmanager 0 alerte, p99 ~82 ms, 5xx=0, Hikari pending=0, heartbeat backup présent, 0 erreur critique depuis T0. T+24 prévu le 2026-06-30 à 14:31 UTC ± 30 min.
