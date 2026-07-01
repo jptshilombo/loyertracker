@@ -79,7 +79,7 @@ class PatrimoineIntegrationTest {
         String patrimoineId = JsonPath.read(mockMvc.perform(post("/api/patrimoines")
                         .with(bailleurJwt(bailleur))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nom\":\"Patrimoine A\"}"))
+                        .content("{\"nom\":\"Patrimoine A\",\"adresse\":\"1 rue du Patrimoine A\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nom").value("Patrimoine A"))
                 .andExpect(jsonPath("$.statut").value("ACTIF"))
@@ -95,7 +95,7 @@ class PatrimoineIntegrationTest {
         mockMvc.perform(put("/api/patrimoines/{id}", patrimoineId)
                         .with(bailleurJwt(bailleur))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nom\":\"Patrimoine A renommé\"}"))
+                        .content("{\"nom\":\"Patrimoine A renommé\",\"adresse\":\"1 rue du Patrimoine A\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nom").value("Patrimoine A renommé"));
 
@@ -114,6 +114,39 @@ class PatrimoineIntegrationTest {
     }
 
     @Test
+    void patrimoineAdresseObligatoireEtChampsEnrichisPersistes() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+
+        // adresse absente → rejeté (400), US-90/ADR-12 : adresse désormais obligatoire.
+        mockMvc.perform(post("/api/patrimoines")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Sans adresse\"}"))
+                .andExpect(status().isBadRequest());
+
+        // Tous les champs enrichis (US-90) sont acceptés et restitués tels quels.
+        mockMvc.perform(post("/api/patrimoines")
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nom":"Patrimoine enrichi","adresse":"5172, Avenue Kasamvu",
+                                 "ville":"Kinshasa","commune":"Bandalungwa","quartier":"Kasa-Vubu",
+                                 "provinceEtat":"Kinshasa","pays":"République Démocratique du Congo",
+                                 "description":"Immeuble principal","referenceInterne":"PAT-001"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.adresse").value("5172, Avenue Kasamvu"))
+                .andExpect(jsonPath("$.ville").value("Kinshasa"))
+                .andExpect(jsonPath("$.commune").value("Bandalungwa"))
+                .andExpect(jsonPath("$.quartier").value("Kasa-Vubu"))
+                .andExpect(jsonPath("$.provinceEtat").value("Kinshasa"))
+                .andExpect(jsonPath("$.pays").value("République Démocratique du Congo"))
+                .andExpect(jsonPath("$.description").value("Immeuble principal"))
+                .andExpect(jsonPath("$.referenceInterne").value("PAT-001"));
+    }
+
+    @Test
     void patrimoineEcrituresRefuseesCrossBailleur() throws Exception {
         String bailleurA = "kc-" + UUID.randomUUID();
         String bailleurB = "kc-" + UUID.randomUUID();
@@ -124,7 +157,7 @@ class PatrimoineIntegrationTest {
         mockMvc.perform(put("/api/patrimoines/{id}", patrimoineId)
                         .with(bailleurJwt(bailleurB))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nom\":\"hack\"}"))
+                        .content("{\"nom\":\"hack\",\"adresse\":\"1 rue Hack\"}"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(delete("/api/patrimoines/{id}", patrimoineId).with(bailleurJwt(bailleurB)))
@@ -134,7 +167,7 @@ class PatrimoineIntegrationTest {
         mockMvc.perform(put("/api/patrimoines/{id}", patrimoineId)
                         .with(bailleurJwt(bailleurA))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nom\":\"Patrimoine renommé par A\"}"))
+                        .content("{\"nom\":\"Patrimoine renommé par A\",\"adresse\":\"1 rue Patrimoine A\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -312,7 +345,7 @@ class PatrimoineIntegrationTest {
         return JsonPath.read(mockMvc.perform(post("/api/patrimoines")
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nom\":\"" + nom + "\"}"))
+                        .content("{\"nom\":\"" + nom + "\",\"adresse\":\"1 rue du " + nom + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }

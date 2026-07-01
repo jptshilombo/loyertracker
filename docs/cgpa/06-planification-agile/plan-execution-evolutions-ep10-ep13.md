@@ -32,8 +32,9 @@ Chaque sprint se termine par : suite de tests verte (`mvn verify` / `ng test`), 
 
 | Élément | Détail |
 |---|---|
-| Stories couvertes | US-90 (champs additionnels Patrimoine), US-91 (décision : écran CRUD dédié ou extension du formulaire inline existant — **à trancher au kickoff**) |
-| Pré-requis bloquant | Requête de comptage en Production : nombre de patrimoines avec `adresse IS NULL` — condition la stratégie de backfill avant de rendre la colonne `NOT NULL` |
+| Statut | **✅ Implémenté et validé localement le 2026-07-01 — GO technique.** Kickoff : US-91 tranchée (extension inline). Rapport : `sprint-7-patrimoine-enrichi-rapport-validation.md`. Reste : PR dédiée + CI GitHub avant fusion `main`, puis application de l'adresse réelle du patrimoine Production au Gate Production Sprint 7. |
+| Stories couvertes | US-90 (champs additionnels Patrimoine), US-91 (décision : écran CRUD dédié ou extension du formulaire inline existant — **tranchée au kickoff : extension inline**) |
+| Pré-requis bloquant | ~~Requête de comptage en Production~~ **✅ Exécuté** : 1 patrimoine total, 1 avec `adresse IS NULL` (« Patrimoine principal », bailleur jptshilombo) — adresse réelle communiquée par le PO, à appliquer via API au Gate Production (non codée en dur dans la migration) |
 | Livrables | Migration **V19** (`ville, commune, quartier, province_etat, pays, description, reference_interne` + backfill/`NOT NULL` sur `adresse`) ; extension `Patrimoine`/`PatrimoineDto`/`PatrimoineRequest`/`PatrimoineService` ; extension formulaire frontend (ou nouvel écran CRUD selon décision US-91) ; extension export RGPD (`RgpdService`) pour inclure les nouveaux champs ; tests unitaires + intégration étendus |
 | Dépendances | Aucune — indépendant d'EP-11/EP-12 |
 | Risques | Migration bloquante si des patrimoines Production ont `adresse IS NULL` (à quantifier avant codage) ; confusion avec le travail déjà livré EP-09 (voir analyse §1.1 — à ne pas refaire) |
