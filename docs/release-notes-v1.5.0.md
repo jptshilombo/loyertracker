@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Version | `1.5.0` |
-| Date de release | À renseigner après `PRODUCTION_DEPLOYED` |
+| Date de release | 2026-07-01 |
 | Type | Release MINOR — RGPD & durcissement sécurité (Sprint 6) |
 | Tag Production candidat | `sha-08b366fa` |
 | Release précédente | `1.4.0` — `sha-98afa99a` (2026-06-30) |
@@ -59,11 +59,11 @@ des directives déjà en place (HSTS, `X-Content-Type-Options`, `X-Frame-Options
 | Étape | Statut |
 |---|---|
 | Gate Staging Sprint 6 | ✅ GO — STG-ISOL-01 PASS, Flyway 18/18 inchangé, smoke 59/0 (2026-07-01) |
-| Gate Production Sprint 6 | En cours |
-| Préflight + backup | À faire |
-| Déploiement technique | À faire |
-| Smoke Production | À faire |
-| `PRODUCTION_DEPLOYED` | À faire |
+| Gate Production Sprint 6 | ✅ GO sous réserve — `PRODUCTION_READY` (2026-07-01) |
+| Préflight + backup | ✅ PASS — `loyertracker-20260701-102523.dump` 316 Kio (2026-07-01) |
+| Déploiement technique | ✅ PASS — `api` + `nginx` recréés (2026-07-01 09:38–09:40 UTC) |
+| Smoke Production | ✅ **59 PASS / 0 FAIL** (2026-07-01 ~10:47 UTC) |
+| `PRODUCTION_DEPLOYED` | ✅ 2026-07-01 11:02 UTC |
 | Hypercare T0/T+12/T+24 | À faire |
 | Clôture CDO | À faire |
 | Hôte | `loyertracker-prod-server` (`https://loyertracker.loyerpro.org`) |
