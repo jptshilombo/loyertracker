@@ -25,13 +25,27 @@ export interface BienPayload {
 export interface Patrimoine {
   id: string;
   nom: string;
-  adresse: string | null;
+  adresse: string;
+  ville: string | null;
+  commune: string | null;
+  quartier: string | null;
+  provinceEtat: string | null;
+  pays: string | null;
+  description: string | null;
+  referenceInterne: string | null;
   statut: string;
 }
 
 export interface PatrimoinePayload {
   nom: string;
-  adresse: string | null;
+  adresse: string;
+  ville: string | null;
+  commune: string | null;
+  quartier: string | null;
+  provinceEtat: string | null;
+  pays: string | null;
+  description: string | null;
+  referenceInterne: string | null;
 }
 
 export interface TypeBien {

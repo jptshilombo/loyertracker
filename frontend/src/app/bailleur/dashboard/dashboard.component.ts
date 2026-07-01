@@ -142,6 +142,34 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
             Adresse
             <input type="text" formControlName="adresse" placeholder="ex. 12 rue des Lilas, Paris" />
           </label>
+          <label>
+            Ville
+            <input type="text" formControlName="ville" />
+          </label>
+          <label>
+            Commune
+            <input type="text" formControlName="commune" />
+          </label>
+          <label>
+            Quartier
+            <input type="text" formControlName="quartier" />
+          </label>
+          <label>
+            Province / État
+            <input type="text" formControlName="provinceEtat" />
+          </label>
+          <label>
+            Pays
+            <input type="text" formControlName="pays" />
+          </label>
+          <label>
+            Référence interne
+            <input type="text" formControlName="referenceInterne" />
+          </label>
+          <label>
+            Description
+            <textarea formControlName="description"></textarea>
+          </label>
           <button type="submit" [disabled]="patrimoineForm.invalid || chargement()">Modifier</button>
         }
       </form>
@@ -150,7 +178,10 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
         @for (p of patrimoinesDisponibles(); track p.id) {
           <div class="item">
             <strong>{{ p.nom }}</strong>
-            <span class="muted">{{ p.adresse || '— adresse non renseignée' }}</span>
+            <span class="muted">{{ p.adresse }}{{ p.ville ? ', ' + p.ville : '' }}{{ p.pays ? ', ' + p.pays : '' }}</span>
+            @if (p.referenceInterne) {
+              <span class="muted">Réf. {{ p.referenceInterne }}</span>
+            }
             <span class="badge">{{ p.statut }}</span>
           </div>
         } @empty {
@@ -667,7 +698,14 @@ export class BailleurDashboardComponent implements OnInit {
 
   readonly patrimoineForm = new FormGroup({
     nom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    adresse: new FormControl<string | null>(null, { nonNullable: false }),
+    adresse: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    ville: new FormControl<string | null>(null, { nonNullable: false }),
+    commune: new FormControl<string | null>(null, { nonNullable: false }),
+    quartier: new FormControl<string | null>(null, { nonNullable: false }),
+    provinceEtat: new FormControl<string | null>(null, { nonNullable: false }),
+    pays: new FormControl<string | null>(null, { nonNullable: false }),
+    description: new FormControl<string | null>(null, { nonNullable: false }),
+    referenceInterne: new FormControl<string | null>(null, { nonNullable: false }),
   });
 
   readonly exceptionForm = new FormGroup({
@@ -1000,7 +1038,17 @@ export class BailleurDashboardComponent implements OnInit {
     this.patrimoineModifId.set(patrimoineId);
     const p = this.patrimoines().find(pat => pat.id === patrimoineId);
     if (p) {
-      this.patrimoineForm.setValue({ nom: p.nom, adresse: p.adresse ?? null });
+      this.patrimoineForm.setValue({
+        nom: p.nom,
+        adresse: p.adresse,
+        ville: p.ville ?? null,
+        commune: p.commune ?? null,
+        quartier: p.quartier ?? null,
+        provinceEtat: p.provinceEtat ?? null,
+        pays: p.pays ?? null,
+        description: p.description ?? null,
+        referenceInterne: p.referenceInterne ?? null,
+      });
     }
   }
 
@@ -1009,9 +1057,17 @@ export class BailleurDashboardComponent implements OnInit {
     if (!id || this.patrimoineForm.invalid) {
       return;
     }
+    const valeurs = this.patrimoineForm.getRawValue();
     const payload: PatrimoinePayload = {
-      nom: this.patrimoineForm.getRawValue().nom,
-      adresse: this.patrimoineForm.value.adresse ?? null,
+      nom: valeurs.nom,
+      adresse: valeurs.adresse,
+      ville: valeurs.ville,
+      commune: valeurs.commune,
+      quartier: valeurs.quartier,
+      provinceEtat: valeurs.provinceEtat,
+      pays: valeurs.pays,
+      description: valeurs.description,
+      referenceInterne: valeurs.referenceInterne,
     };
     this.executer('Modification du patrimoine', () =>
       this.api.modifierPatrimoine(id, payload).subscribe({

@@ -22,6 +22,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
   `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`
   (PR #123).
 
+### Ajouts — Patrimoine enrichi (Sprint 7, EP-10, US-90, V19)
+
+- Sept nouveaux champs optionnels sur `Patrimoine` : `ville`, `commune`, `quartier`,
+  `province_etat`, `pays`, `description`, `reference_interne`.
+- **`patrimoine.adresse` devient obligatoire** (`NOT NULL`) — était nullable depuis V16 ;
+  backfill placeholder (`"Adresse à renseigner"`) pour tout patrimoine existant sans adresse,
+  migration V19.
+- Extension du formulaire « Modifier un patrimoine » du dashboard bailleur avec les nouveaux
+  champs.
+- ADR-12 (D-PAT-002).
+
 ## [1.4.0] — 2026-06-30
 
 ### Ajouts — Statut d'échéance `A_VENIR` (Sprint 5 Lot B4, US-60, V18)

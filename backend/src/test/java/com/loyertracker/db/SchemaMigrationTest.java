@@ -57,7 +57,8 @@ class SchemaMigrationTest {
         // + V16 (bien.statut LOUE rétroactif + patrimoine.adresse — Sprint 5 B1/B2).
         // + V17 (bail.devise EUR/USD/CDF — Sprint 5 B3).
         // + V18 (StatutPaiement A_VENIR + génération échéances futures — Sprint 5 B4, US-60).
-        assertThat(result.migrationsExecuted).isEqualTo(18);
+        // + V19 (patrimoine enrichi : champs additionnels + adresse obligatoire — Sprint 7, US-90).
+        assertThat(result.migrationsExecuted).isEqualTo(19);
         assertThat(result.success).isTrue();
     }
 
@@ -305,7 +306,7 @@ class SchemaMigrationTest {
         }
         UUID patrimoineId;
         try (PreparedStatement ps = c.prepareStatement(
-                "INSERT INTO patrimoine (bailleur_id, nom) VALUES (?, 'Patrimoine test') RETURNING id")) {
+                "INSERT INTO patrimoine (bailleur_id, nom, adresse) VALUES (?, 'Patrimoine test', '1 rue Test') RETURNING id")) {
             ps.setObject(1, bailleurId);
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();

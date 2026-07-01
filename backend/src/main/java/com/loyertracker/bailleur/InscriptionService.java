@@ -64,8 +64,10 @@ public class InscriptionService {
         }
         // Patrimoine par défaut (Hotfix 2026-06-24) : sans cela, un nouveau bailleur n'a aucun
         // patrimoine et ne peut créer aucun bien (Bien.patrimoineId est NOT NULL depuis V12).
-        // Même contexte RLS que l'INSERT bailleur ci-dessus (même transaction).
-        em.persist(new Patrimoine(UUID.randomUUID(), id, "Patrimoine principal"));
+        // Même contexte RLS que l'INSERT bailleur ci-dessus (même transaction). Adresse
+        // placeholder (ADR-12/US-90, adresse désormais obligatoire) — à corriger par le
+        // bailleur via PUT /api/patrimoines/{id}.
+        em.persist(new Patrimoine(UUID.randomUUID(), id, "Patrimoine principal", "Adresse à renseigner"));
         return bailleur;
     }
 
