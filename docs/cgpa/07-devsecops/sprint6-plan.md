@@ -63,11 +63,11 @@ en mémoire uniquement pour l'effacement par UPDATE JPA).
 |---|---|---|
 | 1 | Branche `feat/sprint6-rgpd-us70-us72` créée depuis `main` | ✅ FAIT |
 | 2 | Plan Sprint 6 créé (`sprint6-plan.md`) | ✅ FAIT — ce fichier |
-| 3 | `Bail.anonymiserLocataire()` + `BailRepository` mise à jour | EN COURS |
-| 4 | `RgpdController` + `RgpdService` + `ExportBailleurDto` | EN COURS |
-| 5 | CSP Nginx durcissement (`nginx.conf`) | EN COURS |
-| 6 | Tests d'intégration `RgpdIntegrationTest` | EN COURS |
-| 7 | CI → Gate Staging → Gate Production | À FAIRE |
+| 3 | `Bail.anonymiserLocataire()` + `BailRepository` mise à jour | ✅ FAIT |
+| 4 | `RgpdController` + `RgpdService` + `ExportBailleurDto` | ✅ FAIT |
+| 5 | CSP Nginx durcissement (`nginx.conf`) | ✅ FAIT |
+| 6 | Tests d'intégration `RgpdIntegrationTest` | ✅ FAIT |
+| 7 | CI → Gate Staging → Gate Production | CI ✅ FAIT — Gate Staging ✅ FAIT (`sha-08b366fa`, `STAGING_DEPLOYED`) — Gate Production À FAIRE |
 
 ## 4. Critères de succès
 
