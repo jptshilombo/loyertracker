@@ -87,6 +87,9 @@ class SecurityIntegrationTest {
     PatrimoineService patrimoineService;
     @MockitoBean
     TypeBienService typeBienService;
+    // RGPD (US-70) : dépend de repositories JPA, neutralisé pour ce test de contrat sans BDD.
+    @MockitoBean
+    com.loyertracker.rgpd.RgpdService rgpdService;
 
     @Test
     void health_estPublic() throws Exception {
