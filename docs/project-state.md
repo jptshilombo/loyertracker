@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Déploiement technique `1.5.0` — 2026-07-01 09:38–09:40 UTC, PASS technique.** Artefact
+> `sha-08b366fa` déployé sur `loyertracker-prod-server`. `api` + `nginx` recréés. **Écart
+> constaté (sans impact) :** `postgres`/`keycloak` également recréés par Docker Compose alors
+> que seuls `api`/`nginx` étaient ciblés — aucun changement de configuration identifié
+> (`docker-compose*.yml`/`.env` inchangés) ; volume `postgres-data` préservé (créé 2026-06-20),
+> données vérifiées intactes (3 bailleurs, 4 biens, 4 baux). 4/4 `(healthy)`, restart=0. Flyway
+> 18/18 inchangé. Digests API/Web conformes au Gate Production. Actuator UP. CSP Nginx conforme
+> (US-72). Prometheus 5/5, Alertmanager 0 alerte. `.env` non modifié — `PRODUCTION_DEPLOYED` non
+> atteint. Rapport : `docs/cgpa/09-production/deploiement-technique-v1.5.0-report.md`. Prochaine
+> étape : validation finale `1.5.0` (smoke Production, `PRODUCTION_DEPLOYED`).
+>
 > **Préflight + backup Production `1.5.0` — 2026-07-01, PASS. RP-150-01 levée.** Dump
 > `loyertracker-20260701-102523.dump` (316 Kio, SHA-256 `bd003932…`), globals SHA-256
 > `22dff9ab…`, permissions 600, `pg_restore --list` 730 entrées OK. 8/8 conteneurs Up, 4/4
