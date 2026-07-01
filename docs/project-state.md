@@ -9,6 +9,14 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Préflight + backup Production `1.5.0` — 2026-07-01, PASS. RP-150-01 levée.** Dump
+> `loyertracker-20260701-102523.dump` (316 Kio, SHA-256 `bd003932…`), globals SHA-256
+> `22dff9ab…`, permissions 600, `pg_restore --list` 730 entrées OK. 8/8 conteneurs Up, 4/4
+> healthy, restart=0. Flyway 18/18, tag `sha-98afa99a` conforme. Prometheus 5/5 up, Alertmanager
+> 0 alerte. Capacité : 32 Gio libres, 1,9 Gio RAM dispo, charge 0,11. Rapport :
+> `docs/cgpa/09-production/preflight-backup-v1.5.0-report.md`. Prochaine étape : déploiement
+> technique `1.5.0` (`api` + `nginx`), sous décision distincte.
+>
 > **Gate Production `1.5.0` — 2026-07-01, GO sous réserve, `PRODUCTION_READY`.** Artefact
 > `sha-08b366fa` (commit `08b366fa9a6ffa6c1e973be5b23861135918315b`, PR #123 — Sprint 6 RGPD
 > US-70 + CSP US-72). STG-ISOL-01 PASS, smoke Staging 59/0 (dont 12 assertions RGPD live),
