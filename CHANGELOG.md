@@ -7,6 +7,36 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.4.0] — 2026-06-30
+
+### Ajouts — Statut d'échéance `A_VENIR` (Sprint 5 Lot B4, US-60, V18)
+
+- **`StatutPaiement.A_VENIR`** : nouveau statut pour les loyers dont la date d'exigibilité est
+  dans le futur. `generer_echeances_loyers()` produit désormais `A_VENIR` (au lieu de `IMPAYE`)
+  pour les échéances futures ; les `IMPAYE` existants dont la date est dans le futur ont été
+  basculés rétroactivement. La contrainte CHECK `paiement_statut_check` a été étendue en
+  conséquence (PR #115, migration V18).
+
+### Ajouts — Devise sur le bail (Sprint 5 Lot B3, V17)
+
+- **`bail.devise`** : le bail supporte désormais EUR, USD et CDF (franc congolais), valeur
+  par défaut EUR (PR #115, migration V17).
+
+### Ajouts — Adresse patrimoine et synchronisation statut biens (Sprint 5 Lots B1/B2, V16)
+
+- **`patrimoine.adresse`** : nouveau champ adresse libre sur le patrimoine.
+- **`bien.statut` rétroactif** : les biens ayant un bail `ACTIF` sont synchronisés vers `LOUE`
+  lors de la migration (PR #115, migration V16).
+
+### Corrections UX — Alertes, inscription, navbar, quittance (PR #110, PR #113)
+
+- **Navbar** : lien profil bailleur présent dans la barre de navigation principale (PR #110).
+- **Quittance 409** : message d'erreur actionnable lorsque l'adresse bailleur est manquante (PR #110).
+- **Alertes** : affichage des seules alertes `NON_LUE` ; suppression du badge de statut redondant
+  et du style `opacity` sur les lues (PR #113, Lot A).
+- **Échéances** : statut `A_VENIR` visible dans la liste des loyers (PR #113, Lot C).
+- **Inscription** : suppression du bruit UI lors d'une double inscription 409 (PR #113, Lot C).
+
 ## [1.3.0] — 2026-06-29
 
 ### Ajouts — Sprint 4 UI Patrimoine
@@ -244,7 +274,8 @@ go-live production différé à un lot ultérieur.
 - Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
-[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.3.0...HEAD
+[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/jptshilombo/loyertracker/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jptshilombo/loyertracker/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/jptshilombo/loyertracker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/jptshilombo/loyertracker/compare/v1.1.1...v1.2.0
