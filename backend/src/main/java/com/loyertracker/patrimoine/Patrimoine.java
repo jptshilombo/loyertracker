@@ -68,17 +68,16 @@ public class Patrimoine {
         this.statut = StatutPatrimoine.ACTIF;
     }
 
-    public void modifier(String nom, String adresse, String ville, String commune, String quartier,
-            String provinceEtat, String pays, String description, String referenceInterne) {
-        this.nom = nom;
-        this.adresse = adresse;
-        this.ville = ville;
-        this.commune = commune;
-        this.quartier = quartier;
-        this.provinceEtat = provinceEtat;
-        this.pays = pays;
-        this.description = description;
-        this.referenceInterne = referenceInterne;
+    public void modifier(PatrimoineRequest requete) {
+        this.nom = requete.nom();
+        this.adresse = requete.adresse();
+        this.ville = requete.ville();
+        this.commune = requete.commune();
+        this.quartier = requete.quartier();
+        this.provinceEtat = requete.provinceEtat();
+        this.pays = requete.pays();
+        this.description = requete.description();
+        this.referenceInterne = requete.referenceInterne();
     }
 
     public void archiver() {
