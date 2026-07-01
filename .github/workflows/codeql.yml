@@ -3,9 +3,13 @@ name: CodeQL
 # SAST (réserve R1, Gate 6). Analyse statique de sécurité du backend Java et du frontend
 # TypeScript. Les alertes remontent dans l'onglet Security ; l'application bloquante des PR se
 # configure via la protection de branche (« Require code scanning results »).
+# push restreint à `main` (validation post-merge) : sur une branche de feature avec PR ouverte,
+# push+pull_request déclenchaient sinon deux runs du même commit, l'un annulé par
+# cancel-in-progress — un check requis "cancelled" bloque durablement le merge même avec
+# enforce_admins (constaté sur ci.yml, PR #132, 2026-07-01) ; même correction appliquée ici.
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
   schedule:
     - cron: "0 3 * * 1" # hebdomadaire (lundi 03:00 UTC) : capte les nouvelles règles CodeQL

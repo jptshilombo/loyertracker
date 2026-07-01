@@ -1,20 +1,23 @@
 name: CI
 
 # Pipeline d'intégration continue (US-04) : build + tests + scans de sécurité + packaging
-# Docker. Déclenché sur chaque push et chaque pull request.
+# Docker. Déclenché sur pull_request (toute branche) et sur push uniquement pour `main`
+# (validation post-merge). Une branche de feature avec PR ouverte ne déclenche ainsi qu'un
+# seul run par commit (`pull_request`) au lieu de deux (`push` + `pull_request`) : les deux
+# événements produisaient sinon deux analyses SonarQube quasi simultanées du même commit, la
+# seconde échouant sur la validation de concurrence interne de SonarQube (PR #131, 2026-07-01).
+# Un correctif par groupe de concurrence seul (annuler le doublon) avait été tenté mais laisse
+# une entrée "cancelled" sur les checks requis du commit, ce qui bloque durablement le merge
+# (branch protection avec enforce_admins actif — constaté PR #132, 2026-07-01) : la suppression
+# du déclenchement en double à la source est la correction retenue.
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
 
-# Annule les exécutions obsolètes d'une même branche/PR (économie de runners).
-# Groupé par SHA (pas par ref) : un push sur une branche avec PR ouverte déclenche à la fois
-# `push` (ref=refs/heads/...) et `pull_request` (ref=refs/pull/N/merge) pour le même commit ;
-# grouper par ref seul ne déduplique pas ces deux déclenchements, ce qui fait tourner deux
-# analyses SonarQube simultanées du même commit et l'une des deux échoue sur la validation de
-# concurrence interne de SonarQube (constaté PR #131, 2026-07-01).
+# Annule les exécutions obsolètes d'un nouveau push sur la même branche/PR (économie de runners).
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.sha }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
