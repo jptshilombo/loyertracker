@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Staging Sprint 6 — GO, `STAGING_DEPLOYED` (2026-07-01).** Tag **`sha-08b366fa`** (PR #123)
+> déployé sur `ai-test-server`. STG-ISOL-01 PASS constaté après déploiement (8 conteneurs
+> `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). Flyway 18/18 inchangé (aucune
+> migration Sprint 6). Smoke 47/0 PASS. CSP durcie vérifiée live (US-72). `GET
+> /api/bailleurs/export` vérifié live (200, JSON scopé). `DELETE .../locataire` couvert par
+> `RgpdIntegrationTest` en CI (confirmation live non faite — **réserve RSV-S6-01 maintenue**).
+> Décision : `docs/cgpa/07-devsecops/gate-staging-sprint6-rgpd-v1.4.1-decision.md`. Prochaine action
+> autorisée : Gate Production Sprint 6 (distinct, aucune promotion autorisée par ce Gate Staging).
+>
+> **Sprint 6 — PR #123 fusionnée sur `main` (2026-07-01), GO technique.** US-70 RGPD (export + effacement locataire, 5 pts) + US-72 CSP Nginx (1 pt). CI intégralement verte (Backend, Frontend, CodeQL Java/Kotlin + JS/TS, Sécurité Gitleaks/SCA/Trivy, Packaging Docker) — merge commit `08b366f`. Local `main` synchronisé par fast-forward. Le Sprint n'est pas encore promu : prochaines étapes = Gate Staging (avec `STG-ISOL-01` live sur `ai-test-server`) → Gate Production distinct, conformément à `docs/cgpa/07-devsecops/sprint6-plan.md` §3 (étape 7 : « CI → Gate Staging → Gate Production »). Aucun déploiement Staging ni Production autorisé par ce merge.
+>
 > **SPRINT 6 EN COURS (2026-07-01) — PR #123.** US-70 RGPD (export + effacement locataire, 5 pts) + US-72 CSP Nginx (1 pt). Suite tests 0 FAIL. Branche : `feat/sprint6-rgpd-us70-us72`. Plan : `docs/cgpa/07-devsecops/sprint6-plan.md`.
 >
 > **Release `1.4.0` CLÔTURÉE — CDO GO (2026-07-01).** Hypercare T+24 PASS. Smoke 47/0, Sprint 5 (Lots A/B/C + UX) + Flyway V16/V17/V18 confirmés en Production. RP-140-01 levée. RSV-T24-01 levée (serveur prod éteint volontairement — produit non encore public). RSV-P140-01 levée (`plan-execution-sprint5.md`). RSV-P140-02 levée (`release-notes-v1.4.0.md` + CHANGELOG). Tag `sha-98afa99a` en Production. Dossier : `docs/cgpa/09-production/cloture-release-v1.4.0.md`.
