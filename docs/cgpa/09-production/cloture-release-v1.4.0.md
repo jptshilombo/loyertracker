@@ -49,7 +49,7 @@
 | ID | Nature | Statut à la clôture |
 |----|--------|---------------------|
 | **RP-140-01** | Backup pré-déploiement | ✅ **LEVÉE** — Préflight 2026-06-30 (`loyertracker-20260630-160619.dump`, 312 Kio, 730 entrées) |
-| **RSV-T24-01** | Cron backup inactif depuis Jun 25 | ⚠️ **NON BLOQUANT** — Backup manuel exécuté le 2026-07-01 (`loyertracker-20260701-074122.dump`, 316K, 730 entrées). Daemon `cron` actif. À investiguer post-clôture. |
+| **RSV-T24-01** | Cron backup inactif depuis Jun 25 | ✅ **LEVÉE** — Serveur de production éteint volontairement entre les déploiements (produit non encore annoncé publiquement). Aucun trafic réel. Le cron ne peut pas s'exécuter quand l'hôte est arrêté. Backup manuel `loyertracker-20260701-074122.dump` (316K, 730 entrées) exécuté lors du T+24 avant arrêt. |
 | **RSV-P140-01** | Plan d'Exécution Sprint 5 non formalisé en document | ⚠️ **NON BLOQUANT** — Décisions et jalons tracés dans `docs/project-state.md`. À formaliser post-clôture. |
 | **RSV-P140-02** | `docs/release-notes-v1.4.0.md` + `CHANGELOG.md` absents | ⚠️ **NON BLOQUANT** — À créer post-clôture avant Sprint 6. |
 
