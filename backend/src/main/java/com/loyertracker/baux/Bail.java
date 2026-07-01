@@ -81,6 +81,12 @@ public class Bail {
         this.devise = devise;
     }
 
+    /** Pseudonymise les données personnelles du locataire (ADR-03 — effacement RGPD US-70). */
+    public void anonymiserLocataire() {
+        this.locataireNom = "[anonymisé]";
+        this.locataireEmail = null;
+    }
+
     public UUID getId() { return id; }
     public UUID getBailleurId() { return bailleurId; }
     public UUID getBienId() { return bienId; }
