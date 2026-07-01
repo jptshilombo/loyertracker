@@ -8,8 +8,13 @@ on:
   pull_request:
 
 # Annule les exécutions obsolètes d'une même branche/PR (économie de runners).
+# Groupé par SHA (pas par ref) : un push sur une branche avec PR ouverte déclenche à la fois
+# `push` (ref=refs/heads/...) et `pull_request` (ref=refs/pull/N/merge) pour le même commit ;
+# grouper par ref seul ne déduplique pas ces deux déclenchements, ce qui fait tourner deux
+# analyses SonarQube simultanées du même commit et l'une des deux échoue sur la validation de
+# concurrence interne de SonarQube (constaté PR #131, 2026-07-01).
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 
 permissions:
