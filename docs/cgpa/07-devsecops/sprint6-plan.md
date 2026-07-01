@@ -81,4 +81,4 @@ en mémoire uniquement pour l'effacement par UPDATE JPA).
 
 | ID | Description | Statut |
 |---|---|---|
-| RSV-S6-01 | Smoke à mettre à jour si nouveaux endpoints ajoutés au périmètre de test | Ouverte |
+| RSV-S6-01 | Smoke à mettre à jour si nouveaux endpoints ajoutés au périmètre de test | **LEVÉE** — section 9 ajoutée à `infra/smoke/smoke-stack.sh` (export bailleur, isolation cross-tenant de l'export, 403 gestionnaire, effacement 204, vérification anonymisation + audit `EFFACEMENT_LOCATAIRE`). Vérifié live sur `ai-test-server` (`sha-08b366fa`) : **59 PASS / 0 FAIL** (47 + 12 nouvelles assertions RGPD). |

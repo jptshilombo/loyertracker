@@ -216,7 +216,34 @@ expect_status 200 "GET /api/alertes (bailleur 2)" "${H_B2[@]}" "$BASE/api/alerte
 NB=$(echo "$BODY" | jq 'length')
 [[ "$NB" == "0" ]] && ok "bailleur 2 ne voit aucune alerte du tenant 1" || ko "fuite : $NB alerte(s) visibles"
 
-note "8. Garde-fous AuthN/ports"
+note "9. RGPD (US-70) : export bailleur, isolation, effacement locataire"
+expect_status 200 "GET /api/bailleurs/export (bailleur 1)" "${H_B1[@]}" "$BASE/api/bailleurs/export"
+echo "$BODY" | jq -e --arg bid "$BIEN1" '.biens[] | select(.bien.id==$bid)' >/dev/null \
+  && ok "export contient le bien smoke" || ko "bien smoke absent de l'export"
+BAIL1=$(echo "$BODY" | jq -r --arg bid "$BIEN1" '.biens[] | select(.bien.id==$bid) | .baux[0].bail.id')
+[[ -n "$BAIL1" && "$BAIL1" != "null" ]] && ok "bail id récupéré depuis l'export ($BAIL1)" \
+  || { ko "bail id introuvable dans l'export"; }
+
+expect_status 200 "GET /api/bailleurs/export (bailleur 2, scope isolé)" "${H_B2[@]}" "$BASE/api/bailleurs/export"
+echo "$BODY" | jq -e --arg bid "$BIEN1" '[.biens[].bien.id] | index($bid) == null' >/dev/null \
+  && ok "export bailleur 2 ne contient pas le bien tenant 1" || ko "fuite : export bailleur 2 contient le bien tenant 1"
+
+expect_status 403 "DELETE .../locataire par le GESTIONNAIRE -> 403" -X DELETE "${H_G[@]}" \
+  "$BASE/api/biens/$BIEN1/baux/$BAIL1/locataire"
+expect_status 204 "DELETE /api/biens/{bienId}/baux/{bailId}/locataire (effacement, bailleur)" \
+  -X DELETE "${H_B1[@]}" "$BASE/api/biens/$BIEN1/baux/$BAIL1/locataire"
+
+expect_status 200 "GET /api/bailleurs/export (vérification post-effacement)" "${H_B1[@]}" "$BASE/api/bailleurs/export"
+LOC_NOM=$(echo "$BODY" | jq -r --arg bid "$BIEN1" '.biens[] | select(.bien.id==$bid) | .baux[0].bail.locataireNom')
+LOC_EMAIL=$(echo "$BODY" | jq -r --arg bid "$BIEN1" '.biens[] | select(.bien.id==$bid) | .baux[0].bail.locataireEmail')
+[[ "$LOC_NOM" == "[anonymisé]" ]] && ok "locataireNom anonymisé" || ko "locataireNom = $LOC_NOM (attendu [anonymisé])"
+[[ "$LOC_EMAIL" == "null" ]] && ok "locataireEmail effacé (null)" || ko "locataireEmail = $LOC_EMAIL (attendu null)"
+
+expect_status 200 "GET /api/audit (bailleur, vérif EFFACEMENT_LOCATAIRE)" "${H_B1[@]}" "$BASE/api/audit"
+echo "$BODY" | jq -e '[.[].action] | index("EFFACEMENT_LOCATAIRE") != null' >/dev/null \
+  && ok "audit_log trace EFFACEMENT_LOCATAIRE" || ko "action EFFACEMENT_LOCATAIRE absente de l'audit"
+
+note "10. Garde-fous AuthN/ports"
 expect_status 401 "GET /api/biens sans token -> 401" "$BASE/api/biens"
 # Vérifie que le service api de CE projet compose n'expose aucun port sur l'hôte
 # (robuste sur un hôte partagé où d'autres conteneurs peuvent occuper 8080 — lot 4b).
