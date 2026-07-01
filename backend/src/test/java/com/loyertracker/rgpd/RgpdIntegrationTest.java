@@ -196,7 +196,7 @@ class RgpdIntegrationTest {
         String patrimoineId = JsonPath.read(
                 mockMvc.perform(post("/api/patrimoines").with(bailleurJwt(keycloakId))
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"nom\":\"Patrimoine RGPD\"}"))
+                                .content("{\"nom\":\"Patrimoine RGPD\",\"adresse\":\"1 rue RGPD\"}"))
                         .andExpect(status().isCreated())
                         .andReturn().getResponse().getContentAsString(), "$.id");
         return JsonPath.read(

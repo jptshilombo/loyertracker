@@ -38,7 +38,7 @@ describe('BailleurDashboardComponent', () => {
     http.expectOne('/api/biens').flush([]);
     http
       .expectOne('/api/patrimoines')
-      .flush([{ id: 'patrimoine-1', nom: 'Patrimoine principal', statut: 'ACTIF' }]);
+      .flush([{ id: 'patrimoine-1', nom: 'Patrimoine principal', adresse: '1 rue Test', statut: 'ACTIF' }]);
     http
       .expectOne('/api/types-biens')
       .flush([{ code: 'APPARTEMENT', libelle: 'Appartement', actif: true }]);
@@ -121,10 +121,10 @@ describe('BailleurDashboardComponent', () => {
     http.expectNone('/api/biens/bien-1/archivage');
   });
 
-  describe('Sprint 5 B2 — modification patrimoine (nom + adresse)', () => {
+  describe('Sprint 5 B2 / Sprint 7 — modification patrimoine (nom + adresse + champs enrichis)', () => {
     it('selectionnerPatrimoineModif peuple le formulaire depuis le signal patrimoines', () => {
       const cmp = fixture.componentInstance;
-      // patrimoines() est déjà chargé via beforeEach (patrimoine-1 sans adresse)
+      // patrimoines() est déjà chargé via beforeEach (patrimoine-1, adresse '1 rue Test')
       cmp.selectionnerPatrimoineModif('patrimoine-1');
       expect(cmp.patrimoineModifId()).toBe('patrimoine-1');
       expect(cmp.patrimoineForm.getRawValue().nom).toBe('Patrimoine principal');
@@ -133,13 +133,33 @@ describe('BailleurDashboardComponent', () => {
     it('modifierPatrimoine envoie PUT /api/patrimoines/{id} et recharge les référentiels', () => {
       const cmp = fixture.componentInstance;
       cmp.selectionnerPatrimoineModif('patrimoine-1');
-      cmp.patrimoineForm.setValue({ nom: 'Patrimoine Sud', adresse: '12 rue des Lilas, Paris' });
+      cmp.patrimoineForm.setValue({
+        nom: 'Patrimoine Sud',
+        adresse: '12 rue des Lilas, Paris',
+        ville: 'Paris',
+        commune: null,
+        quartier: null,
+        provinceEtat: null,
+        pays: 'France',
+        description: null,
+        referenceInterne: 'PAT-SUD',
+      });
 
       cmp.modifierPatrimoine();
 
       const req = http.expectOne('/api/patrimoines/patrimoine-1');
       expect(req.request.method).toBe('PUT');
-      expect(req.request.body).toEqual({ nom: 'Patrimoine Sud', adresse: '12 rue des Lilas, Paris' });
+      expect(req.request.body).toEqual({
+        nom: 'Patrimoine Sud',
+        adresse: '12 rue des Lilas, Paris',
+        ville: 'Paris',
+        commune: null,
+        quartier: null,
+        provinceEtat: null,
+        pays: 'France',
+        description: null,
+        referenceInterne: 'PAT-SUD',
+      });
       req.flush({ id: 'patrimoine-1', nom: 'Patrimoine Sud', adresse: '12 rue des Lilas, Paris', statut: 'ACTIF' });
 
       // chargerReferentielsBien recharge patrimoines + types-biens

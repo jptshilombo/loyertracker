@@ -243,7 +243,7 @@ class AuthorizationServiceIntegrationTest {
 
     private UUID insertPatrimoine(UUID bailleurId) {
         UUID patrimoineId = UUID.randomUUID();
-        jdbc.update("INSERT INTO patrimoine (id, bailleur_id, nom) VALUES (?,?, 'Patrimoine test')",
+        jdbc.update("INSERT INTO patrimoine (id, bailleur_id, nom, adresse) VALUES (?,?, 'Patrimoine test', '1 rue Test')",
                 patrimoineId, bailleurId);
         return patrimoineId;
     }

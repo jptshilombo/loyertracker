@@ -25,8 +25,29 @@ public class Patrimoine {
     @Column(nullable = false)
     private String nom;
 
-    @Column
+    @Column(nullable = false)
     private String adresse;
+
+    @Column
+    private String ville;
+
+    @Column
+    private String commune;
+
+    @Column
+    private String quartier;
+
+    @Column(name = "province_etat")
+    private String provinceEtat;
+
+    @Column
+    private String pays;
+
+    @Column
+    private String description;
+
+    @Column(name = "reference_interne")
+    private String referenceInterne;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,16 +60,25 @@ public class Patrimoine {
         // requis par JPA
     }
 
-    public Patrimoine(UUID id, UUID bailleurId, String nom) {
+    public Patrimoine(UUID id, UUID bailleurId, String nom, String adresse) {
         this.id = id;
         this.bailleurId = bailleurId;
         this.nom = nom;
+        this.adresse = adresse;
         this.statut = StatutPatrimoine.ACTIF;
     }
 
-    public void modifier(String nom, String adresse) {
+    public void modifier(String nom, String adresse, String ville, String commune, String quartier,
+            String provinceEtat, String pays, String description, String referenceInterne) {
         this.nom = nom;
         this.adresse = adresse;
+        this.ville = ville;
+        this.commune = commune;
+        this.quartier = quartier;
+        this.provinceEtat = provinceEtat;
+        this.pays = pays;
+        this.description = description;
+        this.referenceInterne = referenceInterne;
     }
 
     public void archiver() {
@@ -69,6 +99,34 @@ public class Patrimoine {
 
     public String getAdresse() {
         return adresse;
+    }
+
+    public String getVille() {
+        return ville;
+    }
+
+    public String getCommune() {
+        return commune;
+    }
+
+    public String getQuartier() {
+        return quartier;
+    }
+
+    public String getProvinceEtat() {
+        return provinceEtat;
+    }
+
+    public String getPays() {
+        return pays;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getReferenceInterne() {
+        return referenceInterne;
     }
 
     public StatutPatrimoine getStatut() {

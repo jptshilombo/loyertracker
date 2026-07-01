@@ -301,7 +301,7 @@ class S03PaiementsGarantiesIntegrationTest {
         return JsonPath.read(mockMvc.perform(post("/api/patrimoines")
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nom\":\"" + nom + "\"}"))
+                        .content("{\"nom\":\"" + nom + "\",\"adresse\":\"1 rue du " + nom + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }
