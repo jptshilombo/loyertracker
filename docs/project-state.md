@@ -9,6 +9,15 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Production `1.5.0` — 2026-07-01, GO sous réserve, `PRODUCTION_READY`.** Artefact
+> `sha-08b366fa` (commit `08b366fa9a6ffa6c1e973be5b23861135918315b`, PR #123 — Sprint 6 RGPD
+> US-70 + CSP US-72). STG-ISOL-01 PASS, smoke Staging 59/0 (dont 12 assertions RGPD live),
+> vérification comportementale export/effacement/CSP PASS. Aucune migration Flyway (V18
+> inchangé). Rollback : `sha-98afa99a` (`1.4.0`) sans `pg_restore`. Réserve **RP-150-01**
+> (backup pré-déploiement) bloquante avant déploiement technique. Document :
+> `docs/cgpa/09-production/gate-production-v1.5.0-decision.md`. Prochaine étape : Préflight +
+> backup Production `1.5.0`.
+>
 > **Gate Staging Sprint 6 — GO, `STAGING_DEPLOYED` (2026-07-01).** Tag **`sha-08b366fa`** (PR #123)
 > déployé sur `ai-test-server`. STG-ISOL-01 PASS constaté après déploiement (8 conteneurs
 > `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). Flyway 18/18 inchangé (aucune

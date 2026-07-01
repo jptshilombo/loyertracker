@@ -7,6 +7,21 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — RGPD export & effacement locataire (Sprint 6, US-70)
+
+- **`GET /api/bailleurs/export`** : export JSON complet scopé `bailleurId` (patrimoines, biens,
+  baux, paiements, affectations, garanties) — droit d'accès RGPD.
+- **`DELETE /api/biens/{bienId}/baux/{bailId}/locataire`** : anonymisation des données
+  personnelles du locataire (`locataireNom` → `"[anonymisé]"`, `locataireEmail` → `null`),
+  données financières conservées, opération tracée dans `audit_log`
+  (`EFFACEMENT_LOCATAIRE`) — droit à l'effacement RGPD (PR #123).
+
+### Durcissement — CSP Nginx (Sprint 6, US-72)
+
+- Extension de la `Content-Security-Policy` de la SPA : `script-src 'self'`, `font-src 'self'`,
+  `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`
+  (PR #123).
+
 ## [1.4.0] — 2026-06-30
 
 ### Ajouts — Statut d'échéance `A_VENIR` (Sprint 5 Lot B4, US-60, V18)
