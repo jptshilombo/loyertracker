@@ -21,7 +21,10 @@
 | Observabilité | 5/5 cibles Prometheus up ; Alertmanager 0 alerte active |
 | Réserves levées | **RP-140-01** levée (backup vérifié préflight 2026-06-30 16:06 UTC) |
 | `.env` persisté | `LOYERTRACKER_TAG=sha-98afa99a`, SHA-256 `.env` = `1e3f9a7d…` |
-| Décision CGPA | `PRODUCTION_DEPLOYED` atteint — validation finale en cours (hypercare T0/T+12/T+24 requis) |
+| Hypercare | T0 PASS (2026-06-30 15:12 UTC), T+12 anticipé PASS (2026-06-30 15:25 UTC), T+24 PASS (2026-07-01 06:38 UTC) |
+| RSV-T24-01 | Cron backup inactif depuis Jun 25 — daemon actif, backup manuel 2026-07-01 effectué. Non bloquant. |
+| Backup T+24 | `loyertracker-20260701-074122.dump` (316K, SHA-256 `0692dbf2…`, 730 entrées). Heartbeat restauré. |
+| Décision CGPA | `PRODUCTION_DEPLOYED` atteint. T+24 PASS. **CDO GO requis pour clôture `1.4.0`.** |
 
 Rapports : `docs/cgpa/09-production/preflight-backup-v1.4.0-report.md` (backup 2026-06-30), Gate Production Sprint 5 (`docs/project-state.md`).
 
