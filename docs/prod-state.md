@@ -6,6 +6,28 @@
 
 
 
+## 0F. Déploiement Production `1.5.0` — 2026-07-01
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.5.0` |
+| Tag déployé | **`sha-08b366fa`** (GHCR, merge commit PR #123 — Sprint 6 RGPD US-70 + CSP US-72) |
+| Tag précédent / rollback | `sha-98afa99a` (`1.4.0`) — applicatif seul, sans `pg_restore` |
+| Backup pré-déploiement | `loyertracker-20260701-102523.dump` (316 Kio), SHA-256 `bd003932…`, globals SHA-256 `22dff9ab…`, `pg_restore --list` 730 entrées OK |
+| Déploiement | `api` + `nginx` recréés ; **écart constaté** : `postgres`/`keycloak` également recréés par Docker Compose (non ciblés), sans cause de configuration identifiée — volume `postgres-data` préservé (créé 2026-06-20), données vérifiées intactes, aucun impact (détail : `deploiement-technique-v1.5.0-report.md` §1.1) |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **(healthy)**, zéro restart |
+| Flyway | V1→**V18** — **aucune nouvelle migration** (inchangé depuis `1.4.0`) |
+| Smoke Production | **59 PASS / 0 FAIL** (2026-07-01 ~10:47 UTC, dont 12 assertions RGPD §9). `bailleur-test@test.local` réactivé temporairement, redésactivé après (pattern identique à `1.4.0`). Nettoyage transactionnel complet (2 bailleur2-smoke dont 1 orphelin, 2 gest-smoke dont 1 orphelin). |
+| Vérification comportementale US-70 | `GET /api/bailleurs/export` (200, scopé) et `DELETE .../locataire` (403 gestionnaire, 204 bailleur, anonymisation + `audit_log EFFACEMENT_LOCATAIRE`) confirmés en Production |
+| Observabilité | 5/5 cibles Prometheus up ; Alertmanager 0 alerte active |
+| Réserves levées | **RP-150-01** levée (backup vérifié préflight 2026-07-01) |
+| `.env` persisté | `LOYERTRACKER_TAG=sha-08b366fa`, SHA-256 `.env` = `87b102b1…` |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-07-01 11:02 UTC |
+
+Rapports : `docs/cgpa/09-production/preflight-backup-v1.5.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.5.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.5.0-report.md`.
+
 ## 0E. Déploiement Production `1.4.0` — 2026-06-30
 
 | Contrôle | Résultat |

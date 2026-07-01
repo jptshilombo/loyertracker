@@ -9,6 +9,16 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 6 `1.5.0` — 2026-07-01 11:02 UTC.** Tag
+> **`sha-08b366fa`** déployé sur `loyertracker-prod-server`. Smoke Production **59 PASS / 0 FAIL**
+> (dont 12 assertions RGPD live — export scopé, isolation cross-tenant, effacement locataire
+> 403/204, anonymisation confirmée, `audit_log EFFACEMENT_LOCATAIRE`). Flyway 18/18 inchangé.
+> Nettoyage transactionnel complet (2 bailleur2-smoke dont 1 orphelin d'une session antérieure,
+> 2 gest-smoke), `bailleur-test@test.local` redésactivé, `directAccessGrantsEnabled` révoqué.
+> `.env` persisté `sha-08b366fa` (SHA-256 `.env` = `87b102b1…`). Prometheus 5/5 up, Alertmanager
+> 0 alerte. Rapport : `docs/cgpa/09-production/validation-finale-v1.5.0-report.md`. **Hypercare
+> T0/T+12/T+24 requis avant clôture `1.5.0`.**
+>
 > **Déploiement technique `1.5.0` — 2026-07-01 09:38–09:40 UTC, PASS technique.** Artefact
 > `sha-08b366fa` déployé sur `loyertracker-prod-server`. `api` + `nginx` recréés. **Écart
 > constaté (sans impact) :** `postgres`/`keycloak` également recréés par Docker Compose alors
