@@ -24,7 +24,7 @@
 | Hypercare | T0 PASS (2026-06-30 15:12 UTC), T+12 anticipé PASS (2026-06-30 15:25 UTC), T+24 PASS (2026-07-01 06:38 UTC) |
 | RSV-T24-01 | Cron backup inactif depuis Jun 25 — daemon actif, backup manuel 2026-07-01 effectué. Non bloquant. |
 | Backup T+24 | `loyertracker-20260701-074122.dump` (316K, SHA-256 `0692dbf2…`, 730 entrées). Heartbeat restauré. |
-| Décision CGPA | `PRODUCTION_DEPLOYED` atteint. T+24 PASS. **CDO GO requis pour clôture `1.4.0`.** |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-06-30 ~15:12 UTC ; **RELEASE CLÔTURÉE le 2026-07-01** |
 
 Rapports : `docs/cgpa/09-production/preflight-backup-v1.4.0-report.md` (backup 2026-06-30), Gate Production Sprint 5 (`docs/project-state.md`).
 

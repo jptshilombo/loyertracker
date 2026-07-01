@@ -9,7 +9,7 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
-> **Release `1.4.0` CLÔTURÉE — CDO GO requis.** Hypercare T+24 PASS (2026-07-01 06:38–07:41 UTC). RSV-T24-01 non bloquante levée par backup manuel. Tous les critères de clôture satisfaits. Tag `sha-98afa99a` en Production. Dossier : `docs/prod-state.md` §0E. **En attente décision CDO.**
+> **Release `1.4.0` CLÔTURÉE — CDO GO (2026-07-01).** Hypercare T+24 PASS. Smoke 47/0, Sprint 5 (Lots A/B/C + UX) + Flyway V16/V17/V18 confirmés en Production. RP-140-01 levée. RSV-T24-01/P140-01/P140-02 non bloquantes. Tag `sha-98afa99a` en Production. Dossier : `docs/cgpa/09-production/cloture-release-v1.4.0.md`.
 >
 > **Hypercare Production `1.4.0` — T+24 exécuté le 2026-07-01 à 06:38 UTC, PASS sous surveillance.** 8/8 Running, restart=0 depuis 06:34 UTC, Tag inchangé, Flyway 18/18, Actuator UP, Prometheus 5/5, Alertmanager 0 alerte. p99=66.6 ms, 5xx=0, Hikari pending=0. 1 ERROR qualifiée (duplicate key smoke — attendue). Redémarrage 06:34 UTC causé par `unattended-upgrades.service` — qualifié maintenance système, aucun impact fonctionnel. Backup `loyertracker-20260701-074122.dump` (316K, 730 entrées) exécuté manuellement — heartbeat restauré. RSV-T24-01 : cron backup inactif depuis Jun 25, daemon actif — à investiguer (non bloquant T+24).
 >
