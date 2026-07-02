@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.loyertracker.audit.AuditService;
+import com.loyertracker.baux.Bail;
+import com.loyertracker.baux.BailRepository;
+import com.loyertracker.baux.Devise;
 import com.loyertracker.securite.TenantContext;
 
 import jakarta.persistence.EntityManager;
@@ -28,13 +31,15 @@ import jakarta.persistence.EntityManager;
 public class HonoraireService {
 
     private final HonoraireRepository honoraires;
+    private final BailRepository baux;
     private final TenantContext tenant;
     private final AuditService audit;
     private final EntityManager em;
 
-    public HonoraireService(HonoraireRepository honoraires, TenantContext tenant, AuditService audit,
-            EntityManager em) {
+    public HonoraireService(HonoraireRepository honoraires, BailRepository baux, TenantContext tenant,
+            AuditService audit, EntityManager em) {
         this.honoraires = honoraires;
+        this.baux = baux;
         this.tenant = tenant;
         this.audit = audit;
         this.em = em;
@@ -69,7 +74,15 @@ public class HonoraireService {
     @Transactional(readOnly = true)
     public List<HonoraireDto> lister(UUID bienId) {
         tenant.activerDepuisBien(bienId);
-        return honoraires.findByBien(bienId).stream().map(HonoraireDto::from).toList();
+        // Approximation documentée (US-93, ADR-13) : Honoraire n'a pas de bailId propre (seulement
+        // affectationId, potentiellement mutualisé sur tout un patrimoine). On affiche la devise du
+        // bail le plus récent du bien ; un bien ayant changé de devise entre deux baux affichera la
+        // devise courante sur des honoraires historiques — accepté (US-93 "Should", risque de
+        // périmètre uniquement, cf. backlog EP-11).
+        Devise devise = baux.findByBienIdOrderByDateDebutDesc(bienId).stream()
+                .findFirst().map(Bail::getDevise).orElse(null);
+        return honoraires.findByBien(bienId).stream()
+                .map(h -> HonoraireDto.from(h, devise)).toList();
     }
 
     /**
@@ -95,6 +108,10 @@ public class HonoraireService {
         Honoraire enregistre = honoraires.save(honoraire);
         audit.enregistrer(authentication, bailleurId, "VALIDER_HONORAIRE", "honoraire",
                 enregistre.getId());
-        return HonoraireDto.from(enregistre);
+        // Pas de bienId disponible à cet endpoint (résolu depuis honoraireId seul) et une
+        // Affectation peut couvrir tout un patrimoine multi-devises : repli EUR (US-93, ADR-13).
+        // Sans impact utilisateur : le frontend re-fetch systématiquement la liste complète après
+        // ce PATCH et ne consomme jamais le champ devise de cette réponse immédiate.
+        return HonoraireDto.from(enregistre, null);
     }
 }

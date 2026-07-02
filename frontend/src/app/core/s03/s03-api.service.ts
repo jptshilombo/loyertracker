@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../api/api.config';
+import { Devise } from '../s02/s02-api.service';
 
 export type StatutPaiement = 'A_VENIR' | 'IMPAYE' | 'PARTIEL' | 'RECU' | 'EN_RETARD';
 export type StatutGarantie = 'DETENU' | 'RESTITUE_PARTIEL' | 'RESTITUE_TOTAL';
@@ -18,6 +19,8 @@ export interface Paiement {
   resteDu: number;
   dateExigibilite: string;
   statut: StatutPaiement;
+  /** Devise du bail parent (US-93, ADR-13). */
+  devise: Devise;
 }
 
 export interface PointagePayload {

@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { S02ApiService } from './s02-api.service';
+import { BailPayload, S02ApiService } from './s02-api.service';
 
 describe('S02ApiService', () => {
   let service: S02ApiService;
@@ -73,7 +73,7 @@ describe('S02ApiService', () => {
   });
 
   it('cree et liste les baux', () => {
-    const payload = {
+    const payload: BailPayload = {
       locataireNom: 'Locataire',
       locataireEmail: 'locataire@test.local',
       loyerHc: 850,

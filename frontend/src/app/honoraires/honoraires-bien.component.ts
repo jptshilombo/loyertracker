@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, input, signal } from '@angular/core';
 
 import { Honoraire, S04ApiService, StatutHonoraire } from '../core/s04/s04-api.service';
+import { MoneyFormatPipe } from '../shared/money/money-format.pipe';
 
 /**
  * Consultation des honoraires de gestion d'un bien (US-40). Réutilisable par l'espace bailleur et
@@ -12,6 +13,7 @@ import { Honoraire, S04ApiService, StatutHonoraire } from '../core/s04/s04-api.s
  */
 @Component({
   selector: 'app-honoraires-bien',
+  imports: [MoneyFormatPipe],
   template: `
     <div class="panel">
       <header class="panel-head">
@@ -35,7 +37,7 @@ import { Honoraire, S04ApiService, StatutHonoraire } from '../core/s04/s04-api.s
         @for (h of honoraires(); track h.id) {
           <div class="row">
             <span><strong>{{ h.periode }}</strong></span>
-            <span>{{ h.montant }}</span>
+            <span>{{ h.montant | moneyFormat: h.devise }}</span>
             <span class="badge" [attr.data-statut]="h.statut">{{ h.statut }}</span>
             @if (peutValider() && h.statut !== 'PAYE') {
               <span class="actions">

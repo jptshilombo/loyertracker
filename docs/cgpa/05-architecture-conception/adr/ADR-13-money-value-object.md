@@ -3,8 +3,8 @@
 | Champ | Valeur |
 |-------|--------|
 | Code de décision | **D-DEV-001** |
-| Statut | **Proposée** — en attente de validation PO (Plan d'Exécution `plan-execution-evolutions-ep10-ep13.md`, Sprint 8) |
-| Date | 2026-07-01 |
+| Statut | **Acceptée** — validée par le PO le 2026-07-02 (kickoff Sprint 8), format d'affichage et périmètre US-93 tranchés ci-dessous |
+| Date | 2026-07-01 (validée 2026-07-02) |
 | Phase | 07 — Développement (lot post-`1.5.0`, continu) |
 | Documents liés | `analyse-impact-evolutions-ep10-ep13.md` §2, `addendum-backlog-ep10-ep12.md` (US-92/93) |
 
@@ -28,21 +28,26 @@ Principes retenus :
 2. **`Money` est un objet de construction, pas un mapping JPA `@Embeddable` répété** : sur `Bail`, il enveloppe `loyerHc`/`provisionCharges`/`loyerCc`/`depotGarantie` en les associant à `this.devise` au moment de l'accès (méthode utilitaire côté entité ou service). Sur `Paiement`/`Honoraire`, `Money` est construit à la volée via une factory (`Money.of(bail.getDevise(), montant)`), résolue par la relation existante vers le `bailId`.
 3. **`DonneesDocument`** (couche de génération de quittance/avis d'échéance) porte des `Money` au lieu de `BigDecimal` nus — le rendu (`DocumentHtmlBuilder`) formate chaque montant selon sa devise réelle, remplaçant l'actuel `euros()` unique par un formatage devise-aware (un format par valeur de `Devise`, à valider avec le PO pour CDF en particulier, qui n'a pas de convention de symbole aussi établie que EUR/USD).
 4. **Test existant réécrit consciemment** : `DocumentHtmlBuilderTest` verrouille aujourd'hui le comportement bugué (assertions littérales `"€"`) — sa réécriture est un changement de comportement assumé et documenté, pas une régression.
-5. **Portée frontend** : le typage `devise: string` des interfaces TypeScript (`s02-api.service.ts`) est durci en union `'EUR' | 'USD' | 'CDF'`. L'extension de l'affichage de la devise aux vues Paiements/Honoraires (aujourd'hui muettes sur ce point) est une story distincte (US-93), dont la portée reste à confirmer par le PO — elle n'est pas requise par la règle métier initiale, qui porte sur les documents.
+5. **Portée frontend** : le typage `devise: string` des interfaces TypeScript (`s02-api.service.ts`) est durci en union `'EUR' | 'USD' | 'CDF'`. L'extension de l'affichage de la devise aux vues Paiements/Honoraires (aujourd'hui muettes sur ce point) est **US-93, incluse au périmètre du Sprint 8** (décision PO du kickoff 2026-07-02).
+6. **Format d'affichage par devise (décision PO du kickoff 2026-07-02)** — format local par devise, pas de gabarit uniforme :
+   - **EUR** : `800,00 €` (montant virgule, symbole après, espace insécable)
+   - **USD** : `$1,000.00` (symbole avant, point décimal, virgule séparateur de milliers)
+   - **CDF** : `1 000,00 CDF` (code ISO après, virgule décimale, espace insécable séparateur de milliers)
 
 ## Conséquences
 
 - ✅ Corrige un bug réel visible par l'utilisateur final (quittances/avis d'échéance affichant la mauvaise devise pour tout bail non-EUR).
 - ✅ Aucune duplication de devise introduite — conforme strictement à la règle métier du PO.
 - ✅ N'affecte pas le schéma de `Bail` (la colonne `devise` existe déjà depuis V17) — aucune migration Flyway requise pour cette évolution.
-- ⚠️ Nécessite une décision de format d'affichage par devise avant codage (EUR : « 800,00 € », USD : à trancher entre « $800.00 » et « 800,00 USD », CDF : aucune convention établie dans le projet à ce jour).
+- ✅ Format d'affichage par devise tranché par le PO (kickoff 2026-07-02, voir Décision point 6) — plus de blocage avant codage.
+- ✅ US-93 (affichage devise Paiements/Honoraires) confirmée incluse au périmètre Sprint 8 par le PO (kickoff 2026-07-02).
 - ⚠️ Le ledger de garantie (ADR-14, EP-12) devra utiliser ce même VO `Money` pour ses mouvements — séquencement Sprint 8 avant Sprint 9/10 recommandé dans le Plan d'Exécution.
 
 ## Risques
 
 | Risque | Niveau | Mitigation |
 |--------|--------|------------|
-| Format d'affichage CDF non normé, risque d'incohérence entre bailleurs | Moyen | Décision PO explicite avant codage, documentée dans la clôture de Sprint 8 |
+| Format d'affichage CDF non normé, risque d'incohérence entre bailleurs | Levé | Décision PO explicite actée (kickoff 2026-07-02) : `1 000,00 CDF` |
 | Duplication accidentelle de devise sur `Paiement`/`Honoraire` par erreur d'implémentation | Moyen | Revue de code dédiée avant fusion : aucune colonne `devise` ne doit apparaître sur ces tables |
 | Régression du test existant perçue comme une rupture non intentionnelle | Faible | Documentée explicitement dans cette ADR et dans le rapport de clôture Sprint 8 comme changement de comportement volontaire |
 

@@ -100,7 +100,27 @@ class S03PaiementsGarantiesIntegrationTest {
                 .andExpect(jsonPath("$[0].dateExigibilite").value("2026-04-01"))
                 .andExpect(jsonPath("$[0].montantAttendu").value(850.00))
                 .andExpect(jsonPath("$[0].statut").value("EN_RETARD"))
+                .andExpect(jsonPath("$[0].devise").value("EUR"))
                 .andExpect(jsonPath("$[2].periode").value("2026-01"));
+    }
+
+    @Test
+    void paiementsPortentLaDeviseDuBailParent() throws Exception {
+        // US-93 (ADR-13) : la devise affichée sur un paiement est celle du bail parent, résolue
+        // sans duplication en base.
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "9 rue Devise");
+        creerBail(bailleur, bienId, "2026-01-01", "2026-01-31", "USD");
+        genererEcheances(bailleur);
+
+        mockMvc.perform(get("/api/biens/{bienId}/paiements", bienId).with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].devise").value("USD"));
+
+        mockMvc.perform(pointer(bienId, "2026-01", bailleur, "850.00", "RECU"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.devise").value("USD"));
     }
 
     @Test
@@ -308,12 +328,17 @@ class S03PaiementsGarantiesIntegrationTest {
 
     private String creerBail(String keycloakId, String bienId, String debut, String fin)
             throws Exception {
+        return creerBail(keycloakId, bienId, debut, fin, "EUR");
+    }
+
+    private String creerBail(String keycloakId, String bienId, String debut, String fin, String devise)
+            throws Exception {
         return JsonPath.read(mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
                                 + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"depotGarantie\":850.00,\"dateDebut\":\""
-                                + debut + "\",\"dateFin\":\"" + fin + "\"}"))
+                                + debut + "\",\"dateFin\":\"" + fin + "\",\"devise\":\"" + devise + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }

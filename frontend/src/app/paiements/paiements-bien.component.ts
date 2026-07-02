@@ -3,6 +3,7 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.service';
+import { MoneyFormatPipe } from '../shared/money/money-format.pipe';
 
 /**
  * Historique et pointage des loyers d'un bien (US-31). Réutilisable par l'espace bailleur et
@@ -11,7 +12,7 @@ import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.ser
  */
 @Component({
   selector: 'app-paiements-bien',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MoneyFormatPipe],
   template: `
     <div class="panel">
       <header class="panel-head">
@@ -41,7 +42,8 @@ import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.ser
           >
             <span><strong>{{ p.periode }}</strong> <small>exig. {{ p.dateExigibilite }}</small></span>
             <span>
-              {{ p.montantRecu }} / {{ p.montantAttendu }} · reste {{ p.resteDu }}
+              {{ p.montantRecu | moneyFormat: p.devise }} / {{ p.montantAttendu | moneyFormat: p.devise }}
+              · reste {{ p.resteDu | moneyFormat: p.devise }}
             </span>
             <span class="badge" [attr.data-statut]="statutAffiche(p)">{{ statutAffiche(p) }}</span>
           </button>
@@ -50,7 +52,7 @@ import { Paiement, S03ApiService, StatutPaiement } from '../core/s03/s03-api.ser
 
       @if (selection(); as p) {
         <form [formGroup]="pointageForm" (ngSubmit)="pointer()" class="pointage">
-          <h3>Pointer {{ p.periode }} (attendu {{ p.montantAttendu }})</h3>
+          <h3>Pointer {{ p.periode }} (attendu {{ p.montantAttendu | moneyFormat: p.devise }})</h3>
           <div class="fields">
             <label>
               Montant reçu
