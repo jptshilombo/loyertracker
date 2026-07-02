@@ -9,6 +9,31 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Maintenance CI/dépendances — 2026-07-02, terminée, aucun impact Gate/Sprint/Staging/Production.**
+> Neuf PR traitées, toutes fusionnées via merge commit sur `main` après CI GitHub intégralement
+> verte (Backend, Frontend, CodeQL Java/Kotlin + JS/TS, Sécurité Gitleaks/SCA/Trivy, Packaging
+> Docker) : **#132** (dédup déclenchement push+PR, `ci/fix-concurrency-group-push-pr`), **#134**
+> (alerte Dependabot `esbuild` low corrigée par `overrides.esbuild=0.28.1` dans
+> `frontend/package.json`, sans bump majeur des outils Angular), **#135** (correctif CI double :
+> étape SonarQube sautée sur les PR `dependabot[bot]` — GitHub ne transmet pas les secrets Actions
+> du dépôt à ces workflows, d'où un 401 systématique — et ajout d'un groupe `angular` dans
+> `.github/dependabot.yml` pour que `@angular/*`/`@angular-devkit/*` soient proposés en une seule
+> PR groupée), puis **#104** (`actions/checkout` 6.0.3→7.0.0), **#139** (`typescript-eslint`
+> 8.61.1→8.62.1, remplace #103), **#140** (`karma-jasmine-html-reporter` 2.1.0→2.2.0), **#138**
+> (`jasmine-core` 5.2.0→6.3.0, dépendait de #140 pour résoudre un conflit peer-dep), **#141**
+> (`keycloak-js` 24.0.5→26.2.4), **#136** (`spotless-maven-plugin` backend 2.43.0→3.8.0).
+> PR fermées sans merge : **#99/#100/#101/#102** (bumps Angular individuels 20.3.x→22.0.5,
+> cassaient `npm ci` par conflit de peer deps croisées — absorbées par le nouveau groupe
+> `angular`), et **#137** (PR groupée résultante, bump majeur Angular 20→22 complet — échoue sur
+> `npm ci` car `@angular-devkit/build-angular@22.0.5` exige `typescript@">=6.0 <6.1"` alors que le
+> projet est pinné `typescript@5.8.3` ; **migration Angular 22 non traitée ici, à planifier comme
+> chantier dédié** — TypeScript 6.x + revue des autres breaking changes en cascade). Alertes
+> Dependabot restantes après ce lot : **2 ouvertes**, volontairement non corrigées — `@babel/core`
+> (low) et `uuid` (moderate), toutes deux transitives via `@angular-devkit/build-angular`
+> (dev-tooling uniquement, `npm audit --omit=dev` = 0 vulnérabilité en production), bloquées par
+> la même dépendance à la migration Angular 22. Aucun changement fonctionnel, aucune migration
+> SQL, aucun déploiement Staging ni Production autorisé par ce lot.
+>
 > **Sprint 7 EP-10 Patrimoine enrichi (US-90) — 2026-07-01, implémenté et validé localement, GO technique.** Migration **V19** : 7 champs optionnels (`ville, commune, quartier, province_etat, pays, description, reference_interne`) + `patrimoine.adresse` désormais `NOT NULL` (backfill générique, était nullable depuis V16). Prérequis bloquant levé : comptage Production exécuté avant codage — 1 patrimoine total, 1 avec `adresse IS NULL` (« Patrimoine principal », bailleur jptshilombo) ; adresse réelle communiquée par le PO, à appliquer via `PUT /api/patrimoines/{id}` au Gate Production Sprint 7 (non codée en dur dans la migration, qui reste générique pour tous les environnements). US-91 tranchée au kickoff : extension du formulaire inline existant (pas d'écran CRUD dédié). Tests : **111/111 backend** (`mvn -o test`), **59/59 frontend** (`ng test`), build Angular sans erreur. Non-régression EP-09 confirmée (CRUD patrimoine, rattachement bien, isolation cross-bailleur). Rapport : `docs/cgpa/06-planification-agile/sprint-7-patrimoine-enrichi-rapport-validation.md`. Reste avant fusion `main` : PR dédiée + CI GitHub complète.
 >
 > **Cadrage EP-10/EP-11/EP-12 (Patrimoine enrichi, Devise/Money, Garantie ledger) — 2026-07-01, documentation produite, GO PO sprint par sprint.** Analyse d'impact (`analyse-impact-evolutions-ep10-ep13.md`), Plan d'Exécution 4 sprints gouvernés (`plan-execution-evolutions-ep10-ep13.md`, Sprint 7 Patrimoine → Sprint 8 Devise/Money → Sprint 9/10 Garantie ledger), ADR-12/13/14 (D-PAT-002/D-DEV-001/D-GAR-001) et addendum backlog EP-10→12 (US-90→98, `addendum-backlog-ep10-ep12.md`) produits. Constats clés : Patrimoine est déjà de premier niveau (EP-09 livrée) — seuls les champs manquent, avec un point d'attention sur `patrimoine.adresse` (aujourd'hui nullable, à rendre obligatoire) ; `Bail.devise` existe déjà et n'est dupliqué nulle part, mais `DocumentHtmlBuilder` code en dur « € » sur toutes les quittances/avis d'échéance (bug réel, cœur d'EP-11) ; Garantie est un instantané plat à transformer en ledger (`GarantieMovement`), avec un risque élevé identifié sur la migration rétroactive des garanties Production et la compatibilité du batch d'alertes `GARANTIE_NON_RESTITUEE`. Fin de bail (Évolution 7) : préparation architecture uniquement, aucune nouvelle table nécessaire (absorbée par le ledger Garantie). PO : GO complet donné, sprint par sprint (chaque sprint reste un point de contrôle GO/NO GO distinct avant tout code). Indépendant de la clôture `1.5.0` (Hypercare T0/T+12/T+24 toujours due séparément). Aucun code produit à ce stade — documentation uniquement.
