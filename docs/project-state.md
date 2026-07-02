@@ -9,6 +9,21 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Préflight + backup Production `1.6.0` — 2026-07-02, PASS. RP-160-01 et RP-160-02 levées.**
+> Dump `loyertracker-20260702-170536.dump` (312 Kio, SHA-256 `e95064d4…`), globals SHA-256
+> `267cae88…`, permissions 600, `pg_restore --list` 730 entrées OK. 8/8 conteneurs Up, 4/4
+> healthy, restart=0. Tag `sha-08b366fa` (`1.5.0`) conforme, digests API/Web conformes au Gate
+> Production `1.5.0`. Flyway 18/18 (V19 pas encore appliquée). **Recomptage `patrimoine.adresse
+> IS NULL` : 1/1, sans écart** par rapport au comptage du 2026-07-01 (même ligne
+> `d753e6d6-564e-4e6d-91c4-09a7c3265a91`) — RP-160-02 levée, migration V19 peut être appliquée
+> sans risque de backfill élargi. Prometheus 5/5 up. Alertmanager : 1 alerte
+> `BackupHeartbeatMissing` constatée puis résolue par ce Préflight (heartbeat repoussé par le
+> script de backup) — écart qualifié, sans rapport avec `1.6.0` (cron backup hôte non fiable hors
+> fenêtre de déploiement, cf. historique RSV-T24-01). Capacité : 32 Gio libres, 2,0 Gio RAM
+> disponible, charge 0,16. Rapport : `docs/cgpa/09-production/preflight-backup-v1.6.0-report.md`.
+> Prochaine étape : déploiement technique `1.6.0` (`api` + `nginx`, migration V19), sous décision
+> distincte.
+>
 > **Gate Production Sprint 7 + Sprint 8 — GO sous réserve, `PRODUCTION_READY` (2026-07-02).**
 > Release **`1.6.0`**, artefact `sha-2da27182` (commit `2da2718`, candidat figé — vérifié par diff
 > qu'aucun code applicatif/Nginx/Compose n'a changé depuis, PR #145/#146 postérieures étant
