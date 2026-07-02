@@ -9,6 +9,21 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 7+8 `1.6.0` — 2026-07-02 16:50 UTC.**
+> Tag **`sha-2da27182`** déployé sur `loyertracker-prod-server`. Smoke Production **59 PASS / 0
+> FAIL** (dont vérification comportementale US-90 : `POST /api/patrimoines` avec `adresse`
+> obligatoire confirmé 201 ; honoraire EUR recalculé correctement via le VO `Money`, US-92/93).
+> Flyway **19/19** confirmé live par le smoke. Nettoyage transactionnel complet (bailleur2-smoke
+> + gest-smoke supprimés DB+Keycloak, `bailleur-test@test.local` réactivé puis redésactivé,
+> `directAccessGrantsEnabled` révoqué, aucun orphelin détecté). Compteurs post-nettoyage
+> identiques à la baseline `1.5.0` (75 paiements, 81 alertes, 2 audit_log, 1 garantie inchangée).
+> `.env` persisté `sha-2da27182` (backup `.env.bak-pre-1.6.0`, permissions 600). Prometheus 5/5
+> up, Alertmanager 0 alerte. Rapport : `docs/cgpa/09-production/validation-finale-v1.6.0-report.md`.
+> **Réserves restant ouvertes** : RSV-S7-8-01 (vérification visuelle USD/CDF, non bloquante,
+> aucun bail réel dans ces devises en Production) ; RP-160-03 (`CHANGELOG.md` à scinder
+> `[1.5.0]`/`[1.6.0]`, action Release Manager avant clôture). **Hypercare T0/T+12/T+24 requis
+> avant clôture `1.6.0`.**
+>
 > **Déploiement technique `1.6.0` — 2026-07-02 16:22–16:25 UTC, PASS technique.** Artefact
 > `sha-2da27182` déployé sur `loyertracker-prod-server`. `api` + `nginx` recréés ciblés — cette
 > fois **aucun écart** : `postgres`/`keycloak` restés `Running` inchangés (contrairement à
