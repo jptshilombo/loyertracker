@@ -19,6 +19,14 @@ updates:
       timezone: Africa/Kinshasa
     open-pull-requests-limit: 5
     labels: [dependencies, frontend]
+    groups:
+      # @angular/* et @angular-devkit/* doivent monter en version lock-step (peer deps
+      # croisées) : un bump isolé d'un seul paquet casse `npm ci` (ERESOLVE), constaté
+      # sur les PR #100/#101/#102 (2026-07-02). Ce groupe force une PR unique par cycle.
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
 
   - package-ecosystem: github-actions
     directory: /

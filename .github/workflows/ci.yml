@@ -52,7 +52,12 @@ jobs:
 
       # Analyse statique SonarQube — lit le jacoco.xml déjà produit par mvn verify.
       # sonar.qualitygate.wait=true (pom.xml) : bloquant si le gate SonarQube échoue.
+      # Sautée sur les PR Dependabot : GitHub ne transmet pas les secrets Actions du dépôt
+      # aux workflows déclenchés par dependabot[bot] (secrets Dependabot distincts, non
+      # configurés ici) — le run échouerait systématiquement en 401. Le scan a lieu quand
+      # même au push sur main après merge.
       - name: Analyse SonarQube
+        if: github.actor != 'dependabot[bot]'
         run: mvn -B sonar:sonar -DskipTests
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -109,7 +114,9 @@ jobs:
       # sonar.qualitygate.wait=true : bloquant si le gate SonarQube échoue.
       # sonarqube-scan-action exige la variable SONAR_TOKEN (nom fixe) :
       # on mappe le secret SONAR_TOKEN_FRONTEND sur ce nom attendu par l'action.
+      # Sautée sur les PR Dependabot : voir commentaire équivalent du job backend.
       - name: Analyse SonarQube
+        if: github.actor != 'dependabot[bot]'
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
         with:
           projectBaseDir: frontend/
