@@ -9,6 +9,13 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Sprint 8 EP-11 (Money/Devise, US-92/93) — intégré à `main` via PR #143 (2026-07-02), GO technique.**
+> PR #143 fusionnée (merge par `jptshilombo`) après CI GitHub intégralement verte (CodeQL
+> Java/Kotlin + JS/TS, Backend, Frontend, Sécurité Gitleaks/SCA/Trivy, Packaging Docker — 7/7).
+> `main` synchronisé par fast-forward. Le Sprint n'est pas encore promu : prochaines étapes =
+> Gate Staging (avec `STG-ISOL-01` live sur `ai-test-server`) → Gate Production distinct, aucune
+> promotion autorisée par ce merge.
+>
 > **Sprint 8 EP-11 (Money/Devise, US-92/93) — 2026-07-02, implémenté et validé localement, GO technique.**
 > VO `Money(montant, devise)` (`com.loyertracker.baux.Money`) corrigeant le bug réel de
 > `DocumentHtmlBuilder.euros()` (« € » codé en dur quelle que soit la devise du bail) — formats
