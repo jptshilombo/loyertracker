@@ -119,7 +119,7 @@ out=$("${CURL[@]}" -o /dev/null -w '%{http_code}' -X POST "${H_B1[@]}" "$BASE/ap
 [[ "$out" == "201" || "$out" == "409" ]] && ok "POST /api/bailleurs/inscription ($out)" \
   || ko "POST /api/bailleurs/inscription (attendu 201|409, obtenu $out)"
 expect_status 201 "POST /api/patrimoines" -X POST "${H_B1[@]}" -H 'Content-Type: application/json' \
-  -d "{\"nom\":\"Patrimoine Smoke $RUN_ID\"}" "$BASE/api/patrimoines"
+  -d "{\"nom\":\"Patrimoine Smoke $RUN_ID\",\"adresse\":\"1 rue du Patrimoine Smoke\"}" "$BASE/api/patrimoines"
 PATRIMOINE1=$(echo "$BODY" | jq -r .id)
 expect_status 201 "POST /api/biens" -X POST "${H_B1[@]}" -H 'Content-Type: application/json' \
   -d "{\"adresse\":\"1 rue du Smoke Test\",\"type\":\"APPARTEMENT\",\"statut\":\"LIBRE\",\"patrimoineId\":\"$PATRIMOINE1\"}" "$BASE/api/biens"
