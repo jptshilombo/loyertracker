@@ -46,6 +46,7 @@
   "overrides": {
     "@angular-devkit/build-angular": {
       "http-proxy-middleware": "3.0.7"
-    }
+    },
+    "esbuild": "0.28.1"
   }
 }
