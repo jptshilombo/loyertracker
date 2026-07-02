@@ -6,6 +6,34 @@
 
 
 
+## 0G. Déploiement Production `1.6.0` — 2026-07-02
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.6.0` — Sprint 7 EP-10 US-90 (Patrimoine enrichi) + Sprint 8 EP-11 US-92/93 (Money/Devise) |
+| Tag déployé | **`sha-2da27182`** (GHCR, commit `2da2718` — PR #143 code Sprint 8 + #144 docs merge Sprint 8, Sprint 7 déjà fusionné avant via PR #131) |
+| Tag précédent / rollback | `sha-08b366fa` (`1.5.0`) — applicatif seul, **avec réserve** : risqué si une inscription a eu lieu post-déploiement (contrainte `NOT NULL` V19 vs ancien `InscriptionService`), cf. Gate Production `1.6.0` |
+| Backup pré-déploiement | `loyertracker-20260702-170536.dump` (312 Kio), SHA-256 `e95064d4…`, globals SHA-256 `267cae88…`, `pg_restore --list` 730 entrées OK |
+| Déploiement | `api` + `nginx` recréés ciblés — **aucun écart** (contrairement à `1.5.0`, `postgres`/`keycloak` restés inchangés) |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **(healthy)**, zéro restart |
+| Flyway | V18→**V19** — 7 colonnes optionnelles sur `patrimoine` + `adresse SET NOT NULL` (backfill générique), appliquée sans erreur |
+| Adresse réelle patrimoine | `d753e6d6-…` mise à jour par SQL direct (écart qualifié PO, faute de jeton bailleur réel) : `5172, Avenue Kasamvu`, Kasa-Vubu, Bandalungwa, Kinshasa, RDC |
+| Smoke Production | **59 PASS / 0 FAIL** (2026-07-02 ~16:45 UTC). Nettoyage transactionnel complet (bailleur2-smoke + gest-smoke supprimés DB+KC, bailleur-test réactivé puis redésactivé, aucun orphelin détecté) |
+| Vérification comportementale US-90 | `POST /api/patrimoines` avec `adresse` obligatoire confirmé (201) |
+| Vérification comportementale US-92/93 | Honoraire EUR recalculé correctement (VO `Money`) ; **USD/CDF non vérifié visuellement en Production** (aucun bail réel dans ces devises) — réserve RSV-S7-8-01 maintenue, non bloquante |
+| Observabilité | 5/5 cibles Prometheus up ; Alertmanager 0 alerte active |
+| Réserves levées | **RP-160-01** (backup), **RP-160-02** (recomptage `adresse IS NULL`), **RP-160-05** (adresse réelle appliquée) |
+| `.env` persisté | `LOYERTRACKER_TAG=sha-2da27182`, backup `.env.bak-pre-1.6.0` (permissions 600) |
+| Décision CGPA | CDO **GO** — `PRODUCTION_DEPLOYED` atteint le 2026-07-02 16:50 UTC |
+
+Rapports : `docs/cgpa/09-production/preflight-backup-v1.6.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.6.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.6.0-report.md`.
+
+Réserves ouvertes après ce déploiement : **RSV-S7-8-01** (vérification visuelle USD/CDF, non
+bloquante), **RP-160-03** (`CHANGELOG.md` à scinder `[1.5.0]`/`[1.6.0]`, action Release Manager
+avant clôture).
+
 ## 0F. Déploiement Production `1.5.0` — 2026-07-01
 
 | Contrôle | Résultat |
