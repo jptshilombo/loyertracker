@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Hypercare Production `1.6.0` — T0 exécuté le 2026-07-02 à 17:11 UTC, PASS sous surveillance.**
+> 8/8 Up, 4/4 `(healthy)`, restart=0. Tag `sha-2da27182` conforme, digests API/Web identiques au
+> Gate Production. Flyway 19/19. Actuator UP. Prometheus 5/5 up. Alertmanager 0 alerte. p99 ~47 ms,
+> 5xx=0, Hikari pending=0. Heartbeat backup présent (~65 min, poussé au Préflight). 2 erreurs
+> qualifiées (`duplicate key bailleur_keycloak_id_key`, smoke inscription 409 — attendues), aucune
+> erreur inattendue. Point de vigilance particulier pour ce cycle (cf. Gate Production `1.6.0`) :
+> surveiller toute erreur 500 à l'inscription d'un nouveau bailleur (signal du risque
+> contrainte `NOT NULL` V19 vs ancien code en cas de rollback). Plan :
+> `docs/cgpa/09-production/plan-etape-hypercare-v1.6.0.md`. T+12 prévu le 2026-07-03 à 04:50 UTC
+> ± 30 min ; T+24 le 2026-07-03 à 16:50 UTC ± 30 min.
+>
 > **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 7+8 `1.6.0` — 2026-07-02 16:50 UTC.**
 > Tag **`sha-2da27182`** déployé sur `loyertracker-prod-server`. Smoke Production **59 PASS / 0
 > FAIL** (dont vérification comportementale US-90 : `POST /api/patrimoines` avec `adresse`
