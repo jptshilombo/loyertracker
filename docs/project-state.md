@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Kickoff Sprint 8 — EP-11 : `Money` Value Object — 2026-07-02, prérequis bloquant levé, GO codage.**
+> Décisions PO actées au kickoff (ADR-13, `D-DEV-001`, statut **Acceptée**) : **(1)** format
+> d'affichage par devise — style local par devise, pas de gabarit uniforme : EUR `800,00 €`, USD
+> `$1,000.00`, CDF `1 000,00 CDF` ; **(2)** périmètre **US-93 confirmé inclus** (affichage devise
+> sur les vues Paiements/Honoraires frontend), en plus d'US-92 (VO `Money` + correctif
+> `DocumentHtmlBuilder`/`QuittanceService`, bug réel : suffixe `"€"` codé en dur quelle que soit
+> la devise du bail). Aucune migration Flyway requise (`bail.devise` existe depuis V17, aucune
+> duplication introduite sur `Paiement`/`Honoraire`/`Garantie`). Plan :
+> `docs/cgpa/06-planification-agile/plan-execution-evolutions-ep10-ep13.md` (Sprint 8). Codage à
+> suivre. Aucun Gate Staging/Production autorisé par ce kickoff.
+>
 > **Maintenance CI/dépendances — 2026-07-02, terminée, aucun impact Gate/Sprint/Staging/Production.**
 > Neuf PR traitées, toutes fusionnées via merge commit sur `main` après CI GitHub intégralement
 > verte (Backend, Frontend, CodeQL Java/Kotlin + JS/TS, Sécurité Gitleaks/SCA/Trivy, Packaging
