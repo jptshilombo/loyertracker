@@ -9,6 +9,27 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Production Sprint 7 + Sprint 8 — GO sous réserve, `PRODUCTION_READY` (2026-07-02).**
+> Release **`1.6.0`**, artefact `sha-2da27182` (commit `2da2718`, candidat figé — vérifié par diff
+> qu'aucun code applicatif/Nginx/Compose n'a changé depuis, PR #145/#146 postérieures étant
+> documentaires/outillage de test uniquement). Périmètre : Sprint 7 EP-10 US-90 (Patrimoine
+> enrichi, migration V19) + Sprint 8 EP-11 US-92/93 (VO `Money`, devise Paiements/Honoraires).
+> Preuves Staging complètes (STG-ISOL-01 PASS, Flyway 19/19, smoke 59/0). **Conditions bloquantes**
+> avant déploiement technique : RP-160-01 (backup Production vérifié), RP-160-02 (recomptage
+> `patrimoine.adresse IS NULL` avant migration — dernier comptage connu 1/1, à reconfirmer).
+> **Point d'attention architecture** : la contrainte `NOT NULL` posée par V19 sur
+> `patrimoine.adresse` rend un rollback applicatif seul (sans défaire le schéma) risqué si une
+> inscription a eu lieu post-déploiement — l'ancien `InscriptionService` créerait un patrimoine
+> sans adresse, provoquant un 500. Procédure de rollback à deux niveaux documentée (§Rollback du
+> Gate). Réserves non bloquantes : RP-160-03 (`CHANGELOG.md` — Sprint 6 jamais promu en `[1.5.0]`,
+> à corriger avant clôture `1.6.0`), RP-160-04 (RSV-S7-8-01, vérification visuelle USD/CDF
+> recommandée), RP-160-05 (adresse réelle du patrimoine `d753e6d6-…` à appliquer via
+> `PUT /api/patrimoines/{id}` immédiatement après déploiement). Document :
+> `docs/cgpa/09-production/gate-production-v1.6.0-decision.md`. Release notes :
+> `docs/release-notes-v1.6.0.md`. Prochaine étape autorisée : Préflight + backup Production
+> `1.6.0` (sous réserve RP-160-01/02 levées), **aucun déploiement autorisé par cette seule
+> analyse**.
+>
 > **Gate Staging Sprint 7 + Sprint 8 — GO, `STAGING_DEPLOYED` (2026-07-02).** Tag **`sha-2da27182`**
 > déployé sur `ai-test-server` : rattrapage combiné du Sprint 7 EP-10 US-90 (PR #131, jamais passé
 > son propre Gate Staging — écart qualifié et accepté par le PO) et du Sprint 8 EP-11 US-92/93
