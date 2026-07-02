@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../api/api.config';
+import { Devise } from '../s02/s02-api.service';
 
 export type StatutHonoraire = 'DU' | 'EN_ATTENTE' | 'PAYE';
 export type TypeAlerte = 'LOYER_EN_RETARD' | 'FIN_BAIL' | 'PREAVIS' | 'GARANTIE_NON_RESTITUEE';
@@ -14,6 +15,8 @@ export interface Honoraire {
   periode: string;
   montant: number;
   statut: StatutHonoraire;
+  /** Devise du bail le plus récent du bien (US-93, ADR-13) — approximation documentée. */
+  devise: Devise;
 }
 
 export interface Alerte {

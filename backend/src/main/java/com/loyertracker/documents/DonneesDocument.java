@@ -1,7 +1,8 @@
 package com.loyertracker.documents;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.loyertracker.baux.Money;
 
 /**
  * Données assemblées d'un document locatif (quittance ou avis d'échéance), prêtes à être mises en
@@ -13,10 +14,10 @@ import java.time.LocalDate;
  * @param locataireNom     nom du locataire
  * @param bienAdresse      adresse du logement loué
  * @param periodeLibelle   période couverte, lisible (« janvier 2026 »)
- * @param loyerHc          loyer hors charges
- * @param provisionCharges provision de charges
- * @param loyerCc          loyer charges comprises (= loyerHc + provisionCharges)
- * @param montant          montant pertinent : reçu (quittance) ou dû (avis d'échéance)
+ * @param loyerHc          loyer hors charges, devise du bail (ADR-13, US-92)
+ * @param provisionCharges provision de charges, devise du bail
+ * @param loyerCc          loyer charges comprises (= loyerHc + provisionCharges), devise du bail
+ * @param montant          montant pertinent : reçu (quittance) ou dû (avis d'échéance), devise du bail
  * @param dateEmission     date d'établissement du document
  * @param dateExigibilite  date d'exigibilité (avis d'échéance ; ignorée pour la quittance)
  */
@@ -27,10 +28,10 @@ public record DonneesDocument(
         String locataireNom,
         String bienAdresse,
         String periodeLibelle,
-        BigDecimal loyerHc,
-        BigDecimal provisionCharges,
-        BigDecimal loyerCc,
-        BigDecimal montant,
+        Money loyerHc,
+        Money provisionCharges,
+        Money loyerCc,
+        Money montant,
         LocalDate dateEmission,
         LocalDate dateExigibilite) {
 }

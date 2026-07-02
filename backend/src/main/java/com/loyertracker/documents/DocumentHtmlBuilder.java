@@ -1,6 +1,5 @@
 package com.loyertracker.documents;
 
-import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -28,7 +27,7 @@ public class DocumentHtmlBuilder {
                     .append("</strong>, demeurant ").append(esc(d.bailleurAdresse()))
                     .append(", propriétaire du logement situé <strong>").append(esc(d.bienAdresse()))
                     .append("</strong>, déclare avoir reçu de <strong>").append(esc(d.locataireNom()))
-                    .append("</strong> la somme de <strong>").append(euros(d.montant()))
+                    .append("</strong> la somme de <strong>").append(d.montant().formate())
                     .append("</strong> au titre du loyer et des charges pour la période de <strong>")
                     .append(esc(d.periodeLibelle()))
                     .append("</strong>, et lui en donne quittance, sous réserve de tous mes droits.</p>");
@@ -40,7 +39,7 @@ public class DocumentHtmlBuilder {
                     .append("</strong>.</p><p>Le loyer pour la période de <strong>")
                     .append(esc(d.periodeLibelle()))
                     .append("</strong> est exigible le <strong>").append(d.dateExigibilite().format(DATE_FR))
-                    .append("</strong>. Somme restant due : <strong>").append(euros(d.montant()))
+                    .append("</strong>. Somme restant due : <strong>").append(d.montant().formate())
                     .append("</strong>.</p>");
         }
 
@@ -63,16 +62,12 @@ public class DocumentHtmlBuilder {
                 + corps
                 + "<table>"
                 + "<tr><th>Poste</th><th class=\"montant\">Montant</th></tr>"
-                + "<tr><td>Loyer hors charges</td><td class=\"montant\">" + euros(d.loyerHc()) + "</td></tr>"
-                + "<tr><td>Provision pour charges</td><td class=\"montant\">" + euros(d.provisionCharges()) + "</td></tr>"
-                + "<tr class=\"total\"><td>Total charges comprises</td><td class=\"montant\">" + euros(d.loyerCc()) + "</td></tr>"
+                + "<tr><td>Loyer hors charges</td><td class=\"montant\">" + d.loyerHc().formate() + "</td></tr>"
+                + "<tr><td>Provision pour charges</td><td class=\"montant\">" + d.provisionCharges().formate() + "</td></tr>"
+                + "<tr class=\"total\"><td>Total charges comprises</td><td class=\"montant\">" + d.loyerCc().formate() + "</td></tr>"
                 + "</table>"
                 + "<div class=\"pied\">" + esc(d.bailleurNom()) + "</div>"
                 + "</body></html>";
-    }
-
-    private static String euros(BigDecimal montant) {
-        return String.format(Locale.FRENCH, "%.2f €", montant);
     }
 
     /** Échappement XML minimal des données injectées (saisies utilisateur). */

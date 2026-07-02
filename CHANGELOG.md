@@ -33,6 +33,28 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
   champs.
 - ADR-12 (D-PAT-002).
 
+### Correctifs — Devise réelle sur les documents locatifs (Sprint 8, EP-11, US-92)
+
+- **Value Object `Money(montant, devise)`** (`com.loyertracker.baux.Money`) : corrige un bug
+  réel où `DocumentHtmlBuilder.euros()` affichait systématiquement « € » sur les quittances et
+  avis d'échéance, quelle que soit la devise réelle du bail (EUR/USD/CDF).
+- Formats d'affichage par devise (décision PO, ADR-13) : EUR `800,00 €`, USD `$1,000.00`,
+  CDF `1 000,00 CDF`.
+- `DonneesDocument` porte désormais des `Money` au lieu de `BigDecimal` nus ;
+  `QuittanceService.assembler()` résout `bail.getDevise()` avant construction.
+- Aucune migration Flyway requise (`bail.devise` existe depuis V17).
+- ADR-13 (D-DEV-001).
+
+### Ajouts — Devise affichée sur Paiements et Honoraires (Sprint 8, EP-11, US-93)
+
+- Les vues Paiements et Honoraires (bailleur et gestionnaire) affichent désormais la devise à
+  côté des montants, cohérent avec le dashboard Bail.
+- Backend : `PaiementDto`/`HonoraireDto` exposent un champ `devise`, résolu via le bail parent
+  (paiement) ou le bail le plus récent du bien (honoraire — approximation documentée, `Honoraire`
+  n'ayant pas de lien direct vers un bail).
+- Frontend : `MoneyFormatPipe` partagé (`shared/money/`), miroir exact du formatage backend.
+- Aucune duplication de colonne devise introduite (règle métier ADR-13).
+
 ## [1.4.0] — 2026-06-30
 
 ### Ajouts — Statut d'échéance `A_VENIR` (Sprint 5 Lot B4, US-60, V18)

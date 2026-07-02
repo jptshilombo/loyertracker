@@ -16,6 +16,8 @@ import com.loyertracker.bailleur.Bailleur;
 import com.loyertracker.bailleur.BailleurRepository;
 import com.loyertracker.baux.Bail;
 import com.loyertracker.baux.BailRepository;
+import com.loyertracker.baux.Devise;
+import com.loyertracker.baux.Money;
 import com.loyertracker.biens.Bien;
 import com.loyertracker.biens.BienRepository;
 import com.loyertracker.paiements.Paiement;
@@ -97,14 +99,16 @@ public class QuittanceService {
                     "Renseignez votre adresse dans « Mon profil » avant d'émettre un document.");
         }
 
+        Devise devise = bail.getDevise();
         BigDecimal montant =
                 type == TypeDocument.QUITTANCE ? paiement.getMontantRecu() : paiement.getResteDu();
 
         return new DonneesDocument(type,
                 (bailleur.getPrenom() + " " + bailleur.getNom()).trim(), bailleur.getAdresse(),
                 bail.getLocataireNom(), bien.getAdresse(), libellePeriode(periode),
-                bail.getLoyerHc(), bail.getProvisionCharges(), bail.getLoyerCc(),
-                montant, LocalDate.now(), paiement.getDateExigibilite());
+                Money.of(bail.getLoyerHc(), devise), Money.of(bail.getProvisionCharges(), devise),
+                Money.of(bail.getLoyerCc(), devise), Money.of(montant, devise),
+                LocalDate.now(), paiement.getDateExigibilite());
     }
 
     private static String libellePeriode(String periode) {

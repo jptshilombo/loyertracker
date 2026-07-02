@@ -28,9 +28,18 @@ describe('HonorairesBienComponent', () => {
     const req = http.expectOne('/api/biens/bien-1/honoraires');
     expect(req.request.method).toBe('GET');
     req.flush([
-      { id: 'h-1', affectationId: 'a-1', periode: '2026-01', montant: 85, statut: 'DU' },
+      {
+        id: 'h-1',
+        affectationId: 'a-1',
+        periode: '2026-01',
+        montant: 85,
+        statut: 'DU',
+        devise: 'EUR',
+      },
     ]);
+    fixture.detectChanges();
 
     expect(fixture.componentInstance.honoraires().length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('85,00');
   });
 });

@@ -16,6 +16,7 @@ function paiement(statut: Paiement['statut']): Paiement {
     resteDu: statut === 'RECU' ? 0 : 850,
     dateExigibilite: '2026-02-01',
     statut,
+    devise: 'EUR',
   };
 }
 
@@ -158,6 +159,7 @@ describe('PaiementsBienComponent', () => {
       resteDu: 850,
       dateExigibilite: '2027-01-01',
       statut: 'IMPAYE',
+      devise: 'EUR',
     };
     expect(cmp.statutAffiche(futur)).toBe('À VENIR');
     expect(cmp.statutAffiche(paiement('IMPAYE'))).toBe('IMPAYE'); // date passée (2026-02-01)
@@ -176,6 +178,7 @@ describe('PaiementsBienComponent', () => {
       resteDu: 850,
       dateExigibilite: '2026-08-01',
       statut: 'A_VENIR',
+      devise: 'EUR',
     };
     expect(cmp.statutAffiche(aVenir)).toBe('À VENIR');
   });
@@ -192,6 +195,7 @@ describe('PaiementsBienComponent', () => {
       resteDu: 850,
       dateExigibilite: '2026-08-01',
       statut: 'A_VENIR',
+      devise: 'EUR',
     };
     cmp.selectionner(aVenir);
     expect(cmp.pointageForm.getRawValue().statut).toBe('IMPAYE');

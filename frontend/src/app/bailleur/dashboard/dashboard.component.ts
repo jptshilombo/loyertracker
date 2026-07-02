@@ -12,6 +12,7 @@ import {
   BailPayload,
   Bien,
   BienPayload,
+  Devise,
   Patrimoine,
   PatrimoinePayload,
   S02ApiService,
@@ -24,6 +25,7 @@ import { AuditJournalComponent } from '../../audit/audit-journal.component';
 import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
 import { HonorairesBienComponent } from '../../honoraires/honoraires-bien.component';
 import { PaiementsBienComponent } from '../../paiements/paiements-bien.component';
+import { MoneyFormatPipe } from '../../shared/money/money-format.pipe';
 import { BailleurInscriptionService } from '../inscription/bailleur-inscription.service';
 
 @Component({
@@ -36,6 +38,7 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
     HonorairesBienComponent,
     AlertesListeComponent,
     AuditJournalComponent,
+    MoneyFormatPipe,
   ],
   template: `
     <header class="page-head">
@@ -244,7 +247,7 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
           @for (bail of baux(); track bail.id) {
             <div class="item" [class.selected]="bail.id === bailSelectionne()?.id">
               <strong>{{ bail.locataireNom }}</strong>
-              <span>{{ bail.loyerCc }} {{ bail.devise }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
+              <span>{{ bail.loyerCc | moneyFormat: bail.devise }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
               <span class="badge">{{ bail.statut }}</span>
               <button type="button" (click)="selectionnerBail(bail)">Garanties</button>
             </div>
@@ -668,7 +671,7 @@ export class BailleurDashboardComponent implements OnInit {
     depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
-    devise: new FormControl<string>('EUR', { nonNullable: true, validators: [Validators.required] }),
+    devise: new FormControl<Devise>('EUR', { nonNullable: true, validators: [Validators.required] }),
   });
 
   readonly affectationForm = new FormGroup({

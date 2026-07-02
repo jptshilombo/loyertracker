@@ -9,6 +9,24 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Sprint 8 EP-11 (Money/Devise, US-92/93) — 2026-07-02, implémenté et validé localement, GO technique.**
+> VO `Money(montant, devise)` (`com.loyertracker.baux.Money`) corrigeant le bug réel de
+> `DocumentHtmlBuilder.euros()` (« € » codé en dur quelle que soit la devise du bail) — formats
+> tranchés au kickoff : EUR `800,00 €`, USD `$1,000.00`, CDF `1 000,00 CDF` (échappement Unicode
+> ` ` explicite, backend et frontend, pas de caractère invisible en source). `DonneesDocument`
+> porte désormais des `Money` ; `QuittanceService.assembler()` résout `bail.getDevise()`. US-93 :
+> `PaiementDto`/`HonoraireDto` exposent `devise` (résolue via le bail parent pour un paiement, via
+> le bail le plus récent du bien pour un honoraire — approximation documentée, `Honoraire` n'ayant
+> pas de lien direct vers un bail ; endpoint `HonoraireService.changerStatut()` en repli EUR sans
+> impact utilisateur, le frontend re-fetchant systématiquement après ce PATCH).
+> `MoneyFormatPipe` partagé côté frontend, câblé sur Paiements/Honoraires + cohérence sur les deux
+> dashboards (Bail affichait déjà la devise mais sans formatage). Aucune migration Flyway requise
+> (`bail.devise` existe depuis V17), aucune duplication de colonne devise introduite (ADR-13).
+> Tests : **122/122 backend** (`mvn verify`, dont `MoneyTest` et `DocumentHtmlBuilderTest`
+> paramétré sur les 3 devises), **63/63 frontend** (`ng test`), `ng build` et `ng lint` propres.
+> ADR-13 (D-DEV-001) statut **Acceptée**. Reste avant fusion `main` : PR dédiée + CI GitHub
+> complète.
+>
 > **Kickoff Sprint 8 — EP-11 : `Money` Value Object — 2026-07-02, prérequis bloquant levé, GO codage.**
 > Décisions PO actées au kickoff (ADR-13, `D-DEV-001`, statut **Acceptée**) : **(1)** format
 > d'affichage par devise — style local par devise, pas de gabarit uniforme : EUR `800,00 €`, USD

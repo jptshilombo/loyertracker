@@ -99,6 +99,22 @@ class RgpdIntegrationTest {
     }
 
     @Test
+    void export_avecPaiement_contientLaDeviseDuBailParent() throws Exception {
+        // US-93 (ADR-13) : l'export RGPD des paiements doit porter la devise résolue via le bail
+        // parent, cohérente avec l'affichage frontend (Paiements/Honoraires).
+        String kcId = "kc-" + UUID.randomUUID();
+        inscrireBailleur(kcId);
+        String bienId = creerBien(kcId, "42 rue Devise RGPD");
+        creerBail(kcId, bienId, "Nadia Kalonji", "kalonji@test.local", "USD");
+        mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(kcId)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/bailleurs/export").with(bailleurJwt(kcId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.biens[0].paiements[0].devise").value("USD"));
+    }
+
+    @Test
     void export_sansJwt_renvoie401() throws Exception {
         mockMvc.perform(get("/api/bailleurs/export"))
                 .andExpect(status().isUnauthorized());
@@ -211,6 +227,11 @@ class RgpdIntegrationTest {
 
     private String creerBail(String keycloakId, String bienId, String locataireNom,
             String locataireEmail) throws Exception {
+        return creerBail(keycloakId, bienId, locataireNom, locataireEmail, "EUR");
+    }
+
+    private String creerBail(String keycloakId, String bienId, String locataireNom,
+            String locataireEmail, String devise) throws Exception {
         return JsonPath.read(
                 mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                                 .with(bailleurJwt(keycloakId))
@@ -219,7 +240,7 @@ class RgpdIntegrationTest {
                                         + "\",\"locataireEmail\":\"" + locataireEmail
                                         + "\",\"loyerHc\":850.00,\"provisionCharges\":0.00,"
                                         + "\"depotGarantie\":850.00,\"dateDebut\":\"2026-01-01\","
-                                        + "\"dateFin\":\"2026-12-31\"}"))
+                                        + "\"dateFin\":\"2026-12-31\",\"devise\":\"" + devise + "\"}"))
                         .andExpect(status().isCreated())
                         .andReturn().getResponse().getContentAsString(), "$.id");
     }

@@ -2,7 +2,9 @@ package com.loyertracker.rgpd;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import com.loyertracker.audit.AuditService;
 import com.loyertracker.baux.Bail;
 import com.loyertracker.baux.BailDto;
 import com.loyertracker.baux.BailRepository;
+import com.loyertracker.baux.Devise;
 import com.loyertracker.biens.BienDto;
 import com.loyertracker.biens.BienRepository;
 import com.loyertracker.garanties.GarantieDto;
@@ -59,9 +62,9 @@ public class RgpdService {
                 .map(bien -> {
                     BienDto bienDto = BienDto.from(bien);
 
-                    List<BailExportDto> bailExports = baux
-                            .findByBienIdOrderByDateDebutDesc(bien.getId())
-                            .stream()
+                    List<Bail> bauxDuBien = baux.findByBienIdOrderByDateDebutDesc(bien.getId());
+
+                    List<BailExportDto> bailExports = bauxDuBien.stream()
                             .map(bail -> {
                                 List<GarantieDto> gs = garanties
                                         .findByBailIdOrderByDateDepotDesc(bail.getId())
@@ -69,9 +72,15 @@ public class RgpdService {
                                 return new BailExportDto(BailDto.from(bail), gs);
                             }).toList();
 
+                    // Résolution batch (pas de N+1) : réutilise la liste de baux déjà chargée
+                    // ci-dessus pour associer chaque paiement à la devise de son bail (US-93, ADR-13).
+                    Map<UUID, Devise> devisesParBail = bauxDuBien.stream()
+                            .collect(Collectors.toMap(Bail::getId, Bail::getDevise));
                     List<PaiementDto> paiementDtos = paiements
                             .findByBienIdOrderByPeriodeDesc(bien.getId())
-                            .stream().map(PaiementDto::from).toList();
+                            .stream()
+                            .map(p -> PaiementDto.from(p, devisesParBail.get(p.getBailId())))
+                            .toList();
 
                     List<AffectationDto> affectationDtos = affectations
                             .findByBienIdOrderByDateDebutDesc(bien.getId())

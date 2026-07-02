@@ -3,11 +3,12 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { Bail, BailPayload, Bien, S02ApiService } from '../../core/s02/s02-api.service';
+import { Bail, BailPayload, Bien, Devise, S02ApiService } from '../../core/s02/s02-api.service';
 import { AlertesListeComponent } from '../../alertes/alertes-liste.component';
 import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
 import { HonorairesBienComponent } from '../../honoraires/honoraires-bien.component';
 import { PaiementsBienComponent } from '../../paiements/paiements-bien.component';
+import { MoneyFormatPipe } from '../../shared/money/money-format.pipe';
 
 @Component({
   selector: 'app-gestionnaire-dashboard',
@@ -17,6 +18,7 @@ import { PaiementsBienComponent } from '../../paiements/paiements-bien.component
     GarantiesBailComponent,
     HonorairesBienComponent,
     AlertesListeComponent,
+    MoneyFormatPipe,
   ],
   template: `
     <header class="page-head">
@@ -115,7 +117,7 @@ import { PaiementsBienComponent } from '../../paiements/paiements-bien.component
         @for (bail of baux(); track bail.id) {
           <div class="item" [class.selected]="bail.id === bailSelectionne()?.id">
             <strong>{{ bail.locataireNom }}</strong>
-            <span>{{ bail.loyerCc }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
+            <span>{{ bail.loyerCc | moneyFormat: bail.devise }} · {{ bail.dateDebut }} → {{ bail.dateFin || 'en cours' }}</span>
             <span class="badge">{{ bail.statut }}</span>
             <button type="button" (click)="selectionnerBail(bail)">Garanties</button>
           </div>
@@ -246,7 +248,7 @@ export class GestionnaireDashboardComponent implements OnInit {
     depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
-    devise: new FormControl<string>('EUR', { nonNullable: true, validators: [Validators.required] }),
+    devise: new FormControl<Devise>('EUR', { nonNullable: true, validators: [Validators.required] }),
   });
 
   ngOnInit(): void {

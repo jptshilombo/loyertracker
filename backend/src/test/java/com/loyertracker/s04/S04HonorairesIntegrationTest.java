@@ -95,6 +95,7 @@ class S04HonorairesIntegrationTest {
                 .andExpect(jsonPath("$[1].periode").value("2026-01"))
                 .andExpect(jsonPath("$[1].montant").value(85.00))
                 .andExpect(jsonPath("$[1].statut").value("DU"))
+                .andExpect(jsonPath("$[1].devise").value("EUR"))
                 .andReturn().getResponse().getContentAsString();
         String honoraireJanvier = JsonPath.read(corps, "$[1].id");
 
@@ -136,6 +137,24 @@ class S04HonorairesIntegrationTest {
         mockMvc.perform(post("/api/batch/honoraires").with(bailleurJwt(bailleur)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.honorairesCalcules").value(0));
+    }
+
+    @Test
+    void honorairesPortentLaDeviseDuBailLePlusRecentDuBien() throws Exception {
+        // US-93 (ADR-13) : Honoraire n'a pas de bailId propre (seulement affectationId) ; la
+        // devise affichée est celle du bail le plus récent du bien — approximation documentée.
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "4 rue Devise Honoraires");
+        creerBail(bailleur, bienId, "2026-01-01", "2026-01-31", "CDF");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "g4@test.local");
+        affecter(bailleur, bienId, gestionnaire, "FORFAIT", "50.00");
+        genererEcheances(bailleur);
+
+        mockMvc.perform(post("/api/batch/honoraires").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/biens/{bienId}/honoraires", bienId).with(bailleurJwt(bailleur)))
+                .andExpect(jsonPath("$[0].devise").value("CDF"));
     }
 
     @Test
@@ -200,12 +219,17 @@ class S04HonorairesIntegrationTest {
 
     private String creerBail(String keycloakId, String bienId, String debut, String fin)
             throws Exception {
+        return creerBail(keycloakId, bienId, debut, fin, "EUR");
+    }
+
+    private String creerBail(String keycloakId, String bienId, String debut, String fin, String devise)
+            throws Exception {
         return JsonPath.read(mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
                                 + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"depotGarantie\":850.00,\"dateDebut\":\""
-                                + debut + "\",\"dateFin\":\"" + fin + "\"}"))
+                                + debut + "\",\"dateFin\":\"" + fin + "\",\"devise\":\"" + devise + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }

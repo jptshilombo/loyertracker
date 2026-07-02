@@ -54,6 +54,9 @@ export interface TypeBien {
   actif: boolean;
 }
 
+/** Devises supportées (US-59, ADR-13) — durci en union plutôt que string libre (US-93). */
+export type Devise = 'EUR' | 'USD' | 'CDF';
+
 export interface Bail {
   id: string;
   bienId: string;
@@ -66,7 +69,7 @@ export interface Bail {
   dateDebut: string;
   dateFin: string | null;
   statut: string;
-  devise: string;
+  devise: Devise;
 }
 
 export interface BailPayload {
@@ -77,7 +80,7 @@ export interface BailPayload {
   depotGarantie: number;
   dateDebut: string;
   dateFin: string | null;
-  devise: string;
+  devise: Devise;
 }
 
 export interface Affectation {
