@@ -1,7 +1,6 @@
 package com.loyertracker.garanties;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -125,9 +124,10 @@ public class GarantieService {
      */
     private void enregistrerMouvement(Garantie garantie, TypeMouvementGarantie type,
             BigDecimal debit, BigDecimal credit, String motif, Authentication authentication) {
-        GarantieMovement mouvement = new GarantieMovement(UUID.randomUUID(), garantie.getBailleurId(),
-                garantie.getId(), LocalDate.now(), type, debit, credit, garantie.getSoldeActuel(),
-                motif, resoudreUtilisateur(authentication));
+        GarantieMovement.MouvementMontants montants =
+                new GarantieMovement.MouvementMontants(debit, credit, garantie.getSoldeActuel());
+        GarantieMovement mouvement = new GarantieMovement(garantie.getBailleurId(), garantie.getId(),
+                type, montants, motif, resoudreUtilisateur(authentication));
         mouvements.save(mouvement);
         audit.enregistrer(authentication, garantie.getBailleurId(), type.name(),
                 "garantie_movement", mouvement.getId());

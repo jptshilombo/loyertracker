@@ -62,17 +62,20 @@ public class GarantieMovement {
         // requis par JPA
     }
 
-    public GarantieMovement(UUID id, UUID bailleurId, UUID garantieId, LocalDate dateMouvement,
-            TypeMouvementGarantie type, BigDecimal debit, BigDecimal credit, BigDecimal soldeApres,
-            String motif, String utilisateur) {
-        this.id = id;
+    /** Regroupe l'impact financier d'un mouvement (ADR-14 §1) : débit, crédit et solde résultant. */
+    public record MouvementMontants(BigDecimal debit, BigDecimal credit, BigDecimal soldeApres) {
+    }
+
+    public GarantieMovement(UUID bailleurId, UUID garantieId, TypeMouvementGarantie type,
+            MouvementMontants montants, String motif, String utilisateur) {
+        this.id = UUID.randomUUID();
+        this.dateMouvement = LocalDate.now();
         this.bailleurId = bailleurId;
         this.garantieId = garantieId;
-        this.dateMouvement = dateMouvement;
         this.type = type;
-        this.debit = debit;
-        this.credit = credit;
-        this.soldeApres = soldeApres;
+        this.debit = montants.debit();
+        this.credit = montants.credit();
+        this.soldeApres = montants.soldeApres();
         this.motif = motif;
         this.utilisateur = utilisateur;
     }
