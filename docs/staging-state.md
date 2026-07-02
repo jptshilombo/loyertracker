@@ -29,7 +29,7 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | **déployé : `sha-98afa99a`** (Sprint 5 Lot B PR #115 — B1 bien.statut, B2 patrimoine.adresse, B3 bail.devise, B4 A_VENIR, V16/V17/V18, déployé le 2026-06-30, STG-ISOL-01 PASS, smoke 47/0) |
+| `LOYERTRACKER_TAG` | **déployé : `sha-2da27182`** (Sprint 7 EP-10 US-90 Patrimoine enrichi + Sprint 8 EP-11 US-92/93 Money/Devise, PR #143+#144+#145, V19, déployé le 2026-07-02, STG-ISOL-01 PASS, smoke 59/0) |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
 | Issuer Keycloak | `https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) — basculé le 2026-06-16 (exposition publique) |
@@ -177,12 +177,18 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-30 | `sha-1d200c27` | Fix UX — PR #110 (navbar « Mon profil » BAILLEUR, message 409 quittance actionable) | **4/4** | **47/0** | — / — | STG-ISOL-01 PASS. Smoke 47/0 (port interne `18443`). **Écart NPM découvert et corrigé** (voir §5 écart 5) : basic-auth NPM bloquait les JWT Bearer sur `/api/` ; correctif `location /api/ { auth_basic off; }` appliqué à `18.conf` + `advanced_config` SQLite persisté. Vérification bout-en-bout publique : `GET /api/patrimoines` via `loyertracker.staging.loyerpro.org` + JWT BAILLEUR → 200 ✅ ; sans jeton → 401 (Spring Security) ✅. |
 | 2026-06-30 | `sha-98afa99a` | Sprint 5 Lot B — PR #115 (B1 bien.statut sync, B2 patrimoine.adresse, B3 bail.devise EUR/USD/CDF, B4 StatutPaiement A_VENIR + generer_echeances_loyers() rewritten) | **4/4** | **47/0** | — / — | STG-ISOL-01 live PASS avant/après (9 conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, 2026-06-30T14:44/14:47 UTC). `api` + `nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **3 nouvelles migrations appliquées (V16/V17/V18), total 18/18**. Smoke 47/0 PASS (port interne `18443`). **Gate Staging Sprint 5 Lot B GO — `STAGING_DEPLOYED`**. Prochaine action autorisée : Gate Production Sprint 5 (distinct, aucune promotion autorisée par ce Gate Staging). |
 | 2026-07-01 | `sha-08b366fa` | Sprint 6 — PR #123 (US-70 export/effacement locataire RGPD, US-72 CSP Nginx durci) | **8/8** | **47/0 puis 59/0** | — / — | STG-ISOL-01 PASS constaté après déploiement (8 conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). `api` + `nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **aucune nouvelle migration**, 18/18 inchangé. Smoke 47/0 PASS puis **59/0** après extension du script (§RSV-S6-01). CSP vérifiée live (`script-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` présents). `GET /api/bailleurs/export` et `DELETE .../locataire` désormais couverts par le smoke live (§RSV-S6-01 levée), en complément de `RgpdIntegrationTest` (CI verte). **Gate Staging Sprint 6 GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-sprint6-rgpd-v1.4.1-decision.md`. Prochaine action autorisée : Gate Production Sprint 6 (distinct). |
+| 2026-07-02 | `sha-2da27182` | Sprint 7 EP-10 US-90 (PR #131, jamais passé son propre Gate Staging) + Sprint 8 EP-11 US-92/93 (PR #143 merge `77549a9`, #144 doc-only, #145 correctif smoke) | **9/9** | **4 FAIL puis 59/0** | — / — | Rattrapage combiné : Staging figé sur `sha-08b366fa` (Sprint 6), Sprint 7 fusionné entre-temps sur `main` sans Gate Staging dédié — écart qualifié et accepté par le PO. STG-ISOL-01 PASS avant/après (9 conteneurs `loyertracker-staging-*` + `nginx-proxy-manager` intact, restart=0). `api`+`nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **V19 appliquée** (patrimoine.adresse NOT NULL + 7 colonnes optionnelles, backfill générique), total 19/19. Premier smoke 4 FAIL (`POST /api/patrimoines` sans `adresse`, devenue `@NotBlank` — script jamais exercé contre Sprint 7 réel) ; correctif script seul (PR #145) → **59/0 PASS**. **Réserve RSV-S7-8-01** : confirmation visuelle USD/CDF (quittance PDF + UI Paiements/Honoraires) recommandée avant Gate Production, non bloquante ici. **Gate Staging Sprint 7+8 GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-sprint7-8-v5.4.1-decision.md`. Prochaine action autorisée : Gate Production (Sprint 7 et/ou Sprint 8, distinct). |
 
-> Le **`sha-08b366fa`** (Sprint 6 — PR #123, déployé le 2026-07-01) est le **tag actif en staging**,
-> avec exposition publique active sur `https://loyertracker.staging.loyerpro.org`. Flyway 18/18
-> (inchangé). Smoke **59/0** (47 + 12 assertions RGPD ajoutées, section 9). STG-ISOL-01 PASS. CSP
-> durcie (US-72). **Réserve RSV-S6-01 LEVÉE le 2026-07-01** : `infra/smoke/smoke-stack.sh` couvre
-> désormais `GET /api/bailleurs/export` (contenu + isolation cross-tenant) et `DELETE
+> Le **`sha-2da27182`** (Sprint 7 US-90 + Sprint 8 US-92/93, déployé le 2026-07-02) est le **tag
+> actif en staging**, avec exposition publique active sur `https://loyertracker.staging.loyerpro.org`.
+> Flyway **19/19** (V19 ajoutée). Smoke **59/0**. STG-ISOL-01 PASS. **Réserve RSV-S7-8-01** (non
+> bloquante) : confirmation visuelle USD/CDF (quittance PDF + panneaux Paiements/Honoraires)
+> recommandée avant Gate Production.
+>
+> Le **`sha-08b366fa`** (Sprint 6 — PR #123, déployé le 2026-07-01) était le tag actif précédent.
+> Flyway 18/18 (inchangé). Smoke **59/0** (47 + 12 assertions RGPD ajoutées, section 9). STG-ISOL-01
+> PASS. CSP durcie (US-72). **Réserve RSV-S6-01 LEVÉE le 2026-07-01** : `infra/smoke/smoke-stack.sh`
+> couvre désormais `GET /api/bailleurs/export` (contenu + isolation cross-tenant) et `DELETE
 > /api/biens/{bienId}/baux/{bailId}/locataire` (403 gestionnaire, 204 bailleur, anonymisation
 > `locataireNom`/`locataireEmail` vérifiée, `audit_log` `EFFACEMENT_LOCATAIRE` tracé) — vérifié live
 > sur `ai-test-server`.

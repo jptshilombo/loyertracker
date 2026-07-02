@@ -9,6 +9,21 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Staging Sprint 7 + Sprint 8 — GO, `STAGING_DEPLOYED` (2026-07-02).** Tag **`sha-2da27182`**
+> déployé sur `ai-test-server` : rattrapage combiné du Sprint 7 EP-10 US-90 (PR #131, jamais passé
+> son propre Gate Staging — écart qualifié et accepté par le PO) et du Sprint 8 EP-11 US-92/93
+> (PR #143/#144/#145). STG-ISOL-01 PASS avant/après (9 conteneurs `loyertracker-staging-*`,
+> `nginx-proxy-manager` intact, restart=0). Flyway **V19 appliquée** (`patrimoine.adresse` NOT
+> NULL + 7 colonnes optionnelles, backfill générique), total 19/19 ; aucune migration pour Sprint 8
+> (`bail.devise` existe depuis V17). Premier smoke 4 FAIL (`POST /api/patrimoines` sans `adresse`,
+> devenue `@NotBlank` — script jamais exercé contre le code Sprint 7 réel) ; correctif du script
+> seul (PR #145, aucun code applicatif touché) → **59 PASS / 0 FAIL**. Réserve **RSV-S7-8-01**
+> (non bloquante) : confirmation visuelle USD/CDF (quittance PDF + panneaux Paiements/Honoraires)
+> recommandée avant Gate Production. Décision :
+> `docs/cgpa/07-devsecops/gate-staging-sprint7-8-v5.4.1-decision.md`. Prochaine action autorisée :
+> Gate Production (Sprint 7 et/ou Sprint 8, distinct, aucune promotion autorisée par ce Gate
+> Staging).
+>
 > **Sprint 8 EP-11 (Money/Devise, US-92/93) — intégré à `main` via PR #143 (2026-07-02), GO technique.**
 > PR #143 fusionnée (merge par `jptshilombo`) après CI GitHub intégralement verte (CodeQL
 > Java/Kotlin + JS/TS, Backend, Frontend, Sécurité Gitleaks/SCA/Trivy, Packaging Docker — 7/7).
