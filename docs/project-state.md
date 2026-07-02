@@ -9,6 +9,27 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Déploiement technique `1.6.0` — 2026-07-02 16:22–16:25 UTC, PASS technique.** Artefact
+> `sha-2da27182` déployé sur `loyertracker-prod-server`. `api` + `nginx` recréés ciblés — cette
+> fois **aucun écart** : `postgres`/`keycloak` restés `Running` inchangés (contrairement à
+> l'anomalie non ciblée observée au déploiement `1.5.0`). Digests API/Web vérifiés conformes au
+> Gate Production **avant** recréation. **Flyway V19 appliquée** : « Successfully applied 1
+> migration... now at version v19 » — backfill générique `"Adresse à renseigner"` confirmé sur
+> le patrimoine `d753e6d6-…`, aucune perte de données (2 bailleurs, 3 biens, 3 baux présents).
+> 4/4 `(healthy)`, restart=0. Actuator UP, `/healthz` `ok`, CSP conforme. Prometheus 5/5, Alertmanager
+> 0 alerte (l'alerte `BackupHeartbeatMissing` du Préflight est résolue). `.env` **non modifié**
+> (`sha-08b366fa` persiste jusqu'à validation finale) — `PRODUCTION_DEPLOYED` non atteint.
+> Rapport : `docs/cgpa/09-production/deploiement-technique-v1.6.0-report.md`.
+>
+> **Adresse réelle du patrimoine appliquée — RP-160-05 LEVÉE (2026-07-02).** Écart qualifié et
+> accepté par le PO : appliquée par **mise à jour SQL directe** sur `patrimoine`
+> (`d753e6d6-564e-4e6d-91c4-09a7c3265a91`) au lieu de `PUT /api/patrimoines/{id}` prévu au plan,
+> faute de jeton Bearer valide pour le compte bailleur réel (`hasRole('BAILLEUR')` +
+> vérification de propriété non contournables sans authentification réelle). Les 6 champs
+> (`adresse`, `quartier`, `commune`, `ville`, `province_etat`, `pays`) appliqués et vérifiés par
+> `SELECT` — conformes au mapping communiqué par le PO. Détail : `deploiement-technique-v1.6.0-report.md`
+> §5. Prochaine étape : validation finale `1.6.0` (smoke Production, `PRODUCTION_DEPLOYED`).
+>
 > **Préflight + backup Production `1.6.0` — 2026-07-02, PASS. RP-160-01 et RP-160-02 levées.**
 > Dump `loyertracker-20260702-170536.dump` (312 Kio, SHA-256 `e95064d4…`), globals SHA-256
 > `267cae88…`, permissions 600, `pg_restore --list` 730 entrées OK. 8/8 conteneurs Up, 4/4
