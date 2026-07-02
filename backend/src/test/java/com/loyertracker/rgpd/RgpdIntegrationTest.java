@@ -239,7 +239,7 @@ class RgpdIntegrationTest {
                                 .content("{\"locataireNom\":\"" + locataireNom
                                         + "\",\"locataireEmail\":\"" + locataireEmail
                                         + "\",\"loyerHc\":850.00,\"provisionCharges\":0.00,"
-                                        + "\"depotGarantie\":850.00,\"dateDebut\":\"2026-01-01\","
+                                        + "\"dateDebut\":\"2026-01-01\","
                                         + "\"dateFin\":\"2026-12-31\",\"devise\":\"" + devise + "\"}"))
                         .andExpect(status().isCreated())
                         .andReturn().getResponse().getContentAsString(), "$.id");

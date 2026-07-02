@@ -1,5 +1,6 @@
 package com.loyertracker.rgpd;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,11 @@ public class RgpdService {
                                 List<GarantieDto> gs = garanties
                                         .findByBailIdOrderByDateDepotDesc(bail.getId())
                                         .stream().map(GarantieDto::from).toList();
-                                return new BailExportDto(BailDto.from(bail), gs);
+                                // depotGarantie dérivé (ADR-14 §8) : somme des garanties déjà
+                                // chargées ci-dessus, pas de requête supplémentaire (pas de N+1).
+                                BigDecimal montantDepose = gs.stream().map(GarantieDto::montant)
+                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                return new BailExportDto(BailDto.from(bail, montantDepose), gs);
                             }).toList();
 
                     // Résolution batch (pas de N+1) : réutilise la liste de baux déjà chargée

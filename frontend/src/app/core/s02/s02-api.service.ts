@@ -72,12 +72,17 @@ export interface Bail {
   devise: Devise;
 }
 
+/**
+ * `depotGarantie` n'est plus saisi à la création du bail (ADR-14 §8, Sprint 9) : aucune
+ * `Garantie` n'existe encore à cet instant. Le dépôt se déclare via le flux « Ajouter garantie »
+ * existant, après la création du bail. `Bail.depotGarantie` (lecture) reste exposé par l'API,
+ * désormais calculé côté backend.
+ */
 export interface BailPayload {
   locataireNom: string;
   locataireEmail: string | null;
   loyerHc: number;
   provisionCharges: number;
-  depotGarantie: number;
   dateDebut: string;
   dateFin: string | null;
   devise: Devise;

@@ -41,9 +41,6 @@ public class Bail {
     @Column(name = "loyer_cc", nullable = false)
     private BigDecimal loyerCc;
 
-    @Column(name = "depot_garantie", nullable = false)
-    private BigDecimal depotGarantie;
-
     @Column(name = "date_debut", nullable = false)
     private LocalDate dateDebut;
 
@@ -63,7 +60,7 @@ public class Bail {
     }
 
     public Bail(UUID id, UUID bailleurId, UUID bienId, String locataireNom, String locataireEmail,
-            BigDecimal loyerHc, BigDecimal provisionCharges, BigDecimal depotGarantie,
+            BigDecimal loyerHc, BigDecimal provisionCharges,
             LocalDate dateDebut, LocalDate dateFin, Devise devise) {
         this.id = id;
         this.bailleurId = bailleurId;
@@ -74,7 +71,6 @@ public class Bail {
         this.provisionCharges = provisionCharges;
         // Source de vérité unique : le « charges comprises » est dérivé, jamais saisi (cohérence V11).
         this.loyerCc = loyerHc.add(provisionCharges);
-        this.depotGarantie = depotGarantie;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.statut = StatutBail.ACTIF;
@@ -95,7 +91,8 @@ public class Bail {
     public BigDecimal getLoyerHc() { return loyerHc; }
     public BigDecimal getProvisionCharges() { return provisionCharges; }
     public BigDecimal getLoyerCc() { return loyerCc; }
-    public BigDecimal getDepotGarantie() { return depotGarantie; }
+    // getDepotGarantie() retiré en V20 (ADR-14 §8) : le dépôt de garantie n'est plus stocké sur
+    // `bail`, il est dérivé du ledger de garantie (voir BailDto.from(Bail, BigDecimal)).
     public LocalDate getDateDebut() { return dateDebut; }
     public LocalDate getDateFin() { return dateFin; }
     public StatutBail getStatut() { return statut; }

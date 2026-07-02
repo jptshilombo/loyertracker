@@ -1,10 +1,13 @@
 package com.loyertracker.garanties;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,20 +18,26 @@ import com.loyertracker.baux.BailRepository;
 import com.loyertracker.securite.TenantContext;
 
 /**
- * Gestion du dépôt de garantie d'un bail (US-32, EF-40/41/42, Annexe A.5). Les opérations sont
- * cloisonnées par RLS via {@link TenantContext} ; l'accès est borné au bien (ReBAC {@code @authz}).
+ * Gestion du dépôt de garantie d'un bail (US-32, EF-40/41/42, Annexe A.5) et de son ledger de
+ * mouvements (US-94, ADR-14/D-GAR-001). Les opérations sont cloisonnées par RLS via
+ * {@link TenantContext} ; l'accès est borné au bien (ReBAC {@code @authz}). Chaque transition
+ * d'état ({@code creer}/{@code restituer}) ajuste le cache {@code Garantie.soldeActuel} (via les
+ * méthodes de l'entité) et journalise le mouvement correspondant dans {@code garantie_movement},
+ * dans la même transaction — jamais de mutation directe du solde sans mouvement associé.
  */
 @Service
 public class GarantieService {
 
     private final GarantieRepository garanties;
+    private final GarantieMovementRepository mouvements;
     private final BailRepository baux;
     private final TenantContext tenant;
     private final AuditService audit;
 
-    public GarantieService(GarantieRepository garanties, BailRepository baux, TenantContext tenant,
-            AuditService audit) {
+    public GarantieService(GarantieRepository garanties, GarantieMovementRepository mouvements,
+            BailRepository baux, TenantContext tenant, AuditService audit) {
         this.garanties = garanties;
+        this.mouvements = mouvements;
         this.baux = baux;
         this.tenant = tenant;
         this.audit = audit;
@@ -49,6 +58,8 @@ public class GarantieService {
         Garantie garantie = new Garantie(UUID.randomUUID(), bailleurId, bailId, requete.montant(),
                 requete.typeGarantie(), requete.dateDepot());
         Garantie enregistre = garanties.save(garantie);
+        enregistrerMouvement(enregistre, TypeMouvementGarantie.DEPOT_INITIAL, BigDecimal.ZERO,
+                requete.montant(), "Dépôt initial de la garantie", authentication);
         audit.enregistrer(authentication, bailleurId, "CREATE_GARANTIE", "garantie",
                 enregistre.getId());
         return GarantieDto.from(enregistre);
@@ -63,8 +74,19 @@ public class GarantieService {
                 .filter(g -> g.getBailId().equals(bailId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Garantie introuvable pour ce bail."));
+        BigDecimal soldeAvant = garantie.getSoldeActuel();
         appliquerRestitution(garantie, requete);
         Garantie enregistre = garanties.save(garantie);
+        // Débit = ce que la transition a réellement retiré du solde (générique aux deux
+        // branches TOTALE/PARTIELLE ci-dessous, plutôt que dupliquer la logique de calcul).
+        BigDecimal debit = soldeAvant.subtract(enregistre.getSoldeActuel());
+        if (debit.signum() > 0) {
+            boolean totale = requete.type() == TypeRestitution.TOTALE;
+            enregistrerMouvement(enregistre,
+                    totale ? TypeMouvementGarantie.RESTITUTION : TypeMouvementGarantie.AJUSTEMENT,
+                    debit, BigDecimal.ZERO,
+                    totale ? "Restitution totale" : requete.motifRetenue(), authentication);
+        }
         audit.enregistrer(authentication, bailleurId, "RESTITUER_GARANTIE", "garantie",
                 enregistre.getId());
         return GarantieDto.from(enregistre);
@@ -94,6 +116,28 @@ public class GarantieService {
                     "Le montant retenu ne peut excéder le montant de la garantie.");
         }
         garantie.restituerPartiel(requete.montantRetenu(), requete.motifRetenue());
+    }
+
+    /**
+     * Journalise un mouvement du ledger (ADR-14 §1/§6) : {@code solde_apres} est lu depuis le
+     * cache déjà à jour sur l'entité (mis à jour par {@code Garantie.restituerXxx}/constructeur
+     * avant cet appel), garantissant la cohérence solde/mouvement dans la même transaction.
+     */
+    private void enregistrerMouvement(Garantie garantie, TypeMouvementGarantie type,
+            BigDecimal debit, BigDecimal credit, String motif, Authentication authentication) {
+        GarantieMovement mouvement = new GarantieMovement(UUID.randomUUID(), garantie.getBailleurId(),
+                garantie.getId(), LocalDate.now(), type, debit, credit, garantie.getSoldeActuel(),
+                motif, resoudreUtilisateur(authentication));
+        mouvements.save(mouvement);
+        audit.enregistrer(authentication, garantie.getBailleurId(), type.name(),
+                "garantie_movement", mouvement.getId());
+    }
+
+    /** Identifiant lisible de l'acteur pour le ledger (email si disponible, sinon sub Keycloak). */
+    private static String resoudreUtilisateur(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String email = jwt.getClaimAsString("email");
+        return email != null ? email : jwt.getSubject();
     }
 
     /** Vérifie, sous RLS, que le bail existe et appartient bien au bien ciblé (fail-closed 404). */

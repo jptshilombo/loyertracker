@@ -8,6 +8,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -234,6 +237,59 @@ class S03PaiementsGarantiesIntegrationTest {
     }
 
     @Test
+    void ledgerGarantieEnregistreChaqueMouvementEtSoldeCoherent() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "7 rue Ledger");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-12-31");
+
+        String garantieId = JsonPath.read(mockMvc.perform(
+                        post("/api/biens/{bienId}/baux/{bailId}/garanties", bienId, bailId)
+                                .with(bailleurJwt(bailleur))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"montant\":900.00,\"typeGarantie\":\"CAUTION\",\"dateDepot\":\"2026-01-01\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.soldeActuel").value(900.00))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("900.00");
+        assertThat((BigDecimal) mouvementUnique(garantieId, "DEPOT_INITIAL").get("credit"))
+                .isEqualByComparingTo("900.00");
+        assertThat(compterAudit("DEPOT_INITIAL")).isEqualTo(1);
+
+        // Restitution partielle : retenue 150 -> solde 750, mouvement AJUSTEMENT débit 150
+        // (ADR-14 : type précis de retenue non exposé avant US-95, Sprint 10).
+        mockMvc.perform(restituer(bienId, bailId, garantieId, bailleur,
+                        "{\"type\":\"PARTIELLE\",\"montantRetenu\":150.00,\"motifRetenue\":\"Nettoyage\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldeActuel").value(750.00));
+
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("750.00");
+        assertThat((BigDecimal) mouvementUnique(garantieId, "AJUSTEMENT").get("debit"))
+                .isEqualByComparingTo("150.00");
+        assertThat(compterAudit("AJUSTEMENT")).isEqualTo(1);
+
+        // Restitution totale : solde résiduel (750) intégralement débité -> 0, RESTITUTION.
+        mockMvc.perform(restituer(bienId, bailId, garantieId, bailleur, "{\"type\":\"TOTALE\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldeActuel").value(0));
+
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("0.00");
+        assertThat((BigDecimal) mouvementUnique(garantieId, "RESTITUTION").get("debit"))
+                .isEqualByComparingTo("750.00");
+        assertThat(compterAudit("RESTITUTION")).isEqualTo(1);
+
+        // Invariant du ledger (critère GO Sprint 9) : solde == somme(credit) - somme(debit).
+        BigDecimal sommeCredit = jdbc.queryForObject(
+                "SELECT coalesce(sum(credit),0) FROM garantie_movement WHERE garantie_id = ?::uuid",
+                BigDecimal.class, garantieId);
+        BigDecimal sommeDebit = jdbc.queryForObject(
+                "SELECT coalesce(sum(debit),0) FROM garantie_movement WHERE garantie_id = ?::uuid",
+                BigDecimal.class, garantieId);
+        assertThat(sommeCredit.subtract(sommeDebit)).isEqualByComparingTo(soldeActuel(garantieId));
+    }
+
+    @Test
     void accesFinancierRefuseCrossBailleur() throws Exception {
         String bailleurA = "kc-" + UUID.randomUUID();
         String bailleurB = "kc-" + UUID.randomUUID();
@@ -337,7 +393,7 @@ class S03PaiementsGarantiesIntegrationTest {
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
-                                + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"depotGarantie\":850.00,\"dateDebut\":\""
+                                + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"dateDebut\":\""
                                 + debut + "\",\"dateFin\":\"" + fin + "\",\"devise\":\"" + devise + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");
@@ -391,6 +447,19 @@ class S03PaiementsGarantiesIntegrationTest {
     private Integer compterAudit(String action) {
         return jdbc.queryForObject("SELECT count(*) FROM audit_log WHERE action = ?", Integer.class,
                 action);
+    }
+
+    private BigDecimal soldeActuel(String garantieId) {
+        return jdbc.queryForObject("SELECT solde_actuel FROM garantie WHERE id = ?::uuid",
+                BigDecimal.class, garantieId);
+    }
+
+    private Map<String, Object> mouvementUnique(String garantieId, String type) {
+        List<Map<String, Object>> lignes = jdbc.queryForList(
+                "SELECT * FROM garantie_movement WHERE garantie_id = ?::uuid AND type = ?",
+                garantieId, type);
+        assertThat(lignes).hasSize(1);
+        return lignes.get(0);
     }
 
     private static JwtRequestPostProcessor bailleurJwt(String keycloakId) {

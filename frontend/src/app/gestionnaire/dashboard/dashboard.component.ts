@@ -79,10 +79,6 @@ import { MoneyFormatPipe } from '../../shared/money/money-format.pipe';
           </div>
           <div class="fields">
             <label>
-              Dépôt
-              <input type="number" formControlName="depotGarantie" min="0" step="0.01" />
-            </label>
-            <label>
               Devise
               <select formControlName="devise">
                 <option value="EUR">EUR — Euro</option>
@@ -245,7 +241,6 @@ export class GestionnaireDashboardComponent implements OnInit {
     locataireEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
     loyerHc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     provisionCharges: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
-    depotGarantie: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
     devise: new FormControl<Devise>('EUR', { nonNullable: true, validators: [Validators.required] }),
@@ -295,7 +290,6 @@ export class GestionnaireDashboardComponent implements OnInit {
           locataireEmail: '',
           loyerHc: 0,
           provisionCharges: 0,
-          depotGarantie: 0,
           dateDebut: '',
           dateFin: '',
           devise: 'EUR',

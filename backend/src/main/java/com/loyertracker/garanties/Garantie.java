@@ -45,6 +45,15 @@ public class Garantie {
     @Column(name = "motif_retenue")
     private String motifRetenue;
 
+    /**
+     * Cache transactionnel du solde (ADR-14/D-GAR-001, §3) : recalculé de façon synchrone à
+     * chaque mouvement du ledger {@code garantie_movement}, jamais en asynchrone — condition
+     * nécessaire pour que le batch d'alertes {@code GARANTIE_NON_RESTITUEE} (lecture directe de
+     * {@code statut}, inchangé) continue de fonctionner sans modification.
+     */
+    @Column(name = "solde_actuel", nullable = false)
+    private BigDecimal soldeActuel;
+
     protected Garantie() {
         // requis par JPA
     }
@@ -59,11 +68,15 @@ public class Garantie {
         this.dateDepot = dateDepot;
         this.statut = StatutGarantie.DETENU;
         this.montantRetenu = BigDecimal.ZERO;
+        // Le mouvement DEPOT_INITIAL (ledger) est créé par GarantieService dans la même
+        // transaction ; le cache est initialisé ici en cohérence avec ce mouvement.
+        this.soldeActuel = montant;
     }
 
     /** Restitution intégrale (A.5) : {@code DETENU} ou {@code RESTITUE_PARTIEL} → {@code RESTITUE_TOTAL}. */
     public void restituerTotal() {
         this.statut = StatutGarantie.RESTITUE_TOTAL;
+        this.soldeActuel = BigDecimal.ZERO;
     }
 
     /** Restitution partielle avec retenue + motif (EF-42) : {@code DETENU} → {@code RESTITUE_PARTIEL}. */
@@ -71,6 +84,7 @@ public class Garantie {
         this.statut = StatutGarantie.RESTITUE_PARTIEL;
         this.montantRetenu = montantRetenu;
         this.motifRetenue = motifRetenue;
+        this.soldeActuel = this.montant.subtract(montantRetenu);
     }
 
     public UUID getId() { return id; }
@@ -82,4 +96,5 @@ public class Garantie {
     public StatutGarantie getStatut() { return statut; }
     public BigDecimal getMontantRetenu() { return montantRetenu; }
     public String getMotifRetenue() { return motifRetenue; }
+    public BigDecimal getSoldeActuel() { return soldeActuel; }
 }

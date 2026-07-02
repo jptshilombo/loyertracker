@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |-------|--------|
 | Code de décision | **D-GAR-001** |
-| Statut | **Proposée** — en attente de validation PO (Plan d'Exécution `plan-execution-evolutions-ep10-ep13.md`, Sprints 9-10) |
+| Statut | **Acceptée** — kickoff Sprint 9 le 2026-07-02 (Plan d'Exécution `plan-execution-evolutions-ep10-ep13.md`, Sprints 9-10) |
 | Date | 2026-07-01 |
 | Phase | 07 — Développement (lot post-`1.5.0`, continu) |
 | Documents liés | `analyse-impact-evolutions-ep10-ep13.md` §3-4, `addendum-backlog-ep10-ep12.md` (US-94→98), ADR-13 (Money, dépendance de séquencement) |
@@ -34,7 +34,20 @@ Principes retenus :
 5. **Aucun prélèvement automatique** : toute retenue sur impayé (`RETENUE_LOYER`) résulte d'une action explicite du gestionnaire (choix oui/non, puis montant), jamais d'une règle automatique déclenchée par un paiement en retard. Le mouvement, une fois créé, est relié au paiement concerné via une **FK nullable** `paiement.garantie_movement_id`.
 6. **Traçabilité complète** : chaque mouvement déclenche un appel `AuditService.enregistrer(...)`, selon le pattern déjà en Production pour `EFFACEMENT_LOCATAIRE` (RgpdService).
 7. **Fin de bail — préparation d'architecture uniquement (EP-13)** : le modèle `GarantieMovement` couvre nativement restitution totale (`RESTITUTION` avec `debit = solde_actuel`), restitution partielle (`RESTITUTION` avec `debit < solde_actuel`) et retenues diverses (`RETENUE_CHARGES`/`RETENUE_REPARATION`). Aucune nouvelle table n'est nécessaire. Un futur service d'orchestration (`ClotureBailService`) pourra composer plusieurs mouvements en une seule transaction métier — non développé à ce stade, simple point d'extension documenté ici.
-8. **`bail.depot_garantie`** : son devenir (champ contractuel distinct vs valeur dérivée du ledger) est un arbitrage PO à trancher explicitement en Sprint 9, avant migration — non tranché par cette ADR.
+8. **`bail.depot_garantie` — tranché au kickoff Sprint 9 (2026-07-02)** : devient une **valeur
+   dérivée du ledger**, plus jamais saisie ni stockée sur `bail`. Conséquences d'implémentation :
+   - La colonne `bail.depot_garantie` est **supprimée** (migration V20) — plus de double source
+     de vérité entre `bail` et `garantie`/`garantie_movement`.
+   - `BailRequest.depotGarantie` est retiré : le dépôt ne se saisit plus à la création du bail
+     (aucun `Garantie` n'existe encore à cet instant — incohérence temporelle sinon), mais via le
+     flux « Ajouter garantie » déjà existant (`POST .../garanties`).
+   - `BailDto.depotGarantie` reste exposé dans l'API (pour ne pas casser les consommateurs
+     existants) mais devient **calculé** : somme de `garantie.montant` pour toutes les garanties
+     rattachées au bail (équivalent, à ce stade, à la somme des mouvements `DEPOT_INITIAL` +
+     `COMPLEMENT` du ledger — `COMPLEMENT` n'étant pas encore exposé métier avant le Sprint 10,
+     `garantie.montant` reste la valeur de référence pour l'instant ; à revisiter en Sprint 10
+     quand `COMPLEMENT` deviendra utilisable, en calculant alors directement depuis
+     `garantie_movement`). Un bail fraîchement créé (sans garantie) affiche `0`.
 
 ## Conséquences
 
