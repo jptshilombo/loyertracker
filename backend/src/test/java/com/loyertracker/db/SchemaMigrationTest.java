@@ -58,7 +58,8 @@ class SchemaMigrationTest {
         // + V17 (bail.devise EUR/USD/CDF — Sprint 5 B3).
         // + V18 (StatutPaiement A_VENIR + génération échéances futures — Sprint 5 B4, US-60).
         // + V19 (patrimoine enrichi : champs additionnels + adresse obligatoire — Sprint 7, US-90).
-        assertThat(result.migrationsExecuted).isEqualTo(19);
+        // + V20 (garantie_movement ledger + bail.depot_garantie supprimée — Sprint 9, US-94).
+        assertThat(result.migrationsExecuted).isEqualTo(20);
         assertThat(result.success).isTrue();
     }
 

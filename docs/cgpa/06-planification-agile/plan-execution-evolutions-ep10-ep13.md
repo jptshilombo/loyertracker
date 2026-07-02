@@ -63,12 +63,13 @@ Chaque sprint se termine par : suite de tests verte (`mvn verify` / `ng test`), 
 
 | Élément | Détail |
 |---|---|
+| Statut | **✅ Implémenté et validé localement le 2026-07-02 — GO technique.** Kickoff : arbitrage `bail.depot_garantie` tranché (valeur dérivée du ledger, ADR-14 §8). Rapport : `sprint-9-garantie-ledger-rapport-validation.md`. Reste : PR dédiée + CI GitHub, puis vérification manuelle du backfill en Staging avec les garanties réelles avant fusion `main`. |
 | Stories couvertes | US-94 (modèle `GarantieMovement` + RLS + migration rétroactive) |
-| Pré-requis bloquant | Décision PO sur le devenir de `bail.depot_garantie` (champ dupliqué historique, analyse §3.1) ; validation du principe « `garantie.statut` reste une colonne physique de cache recalculé » pour ne pas casser le batch alertes `GARANTIE_NON_RESTITUEE` (analyse §3.3) |
+| Pré-requis bloquant | ~~Décision PO sur le devenir de `bail.depot_garantie`~~ **✅ Tranché au kickoff (2026-07-02)** : valeur dérivée du ledger (ADR-14 §8) — colonne supprimée, calculée depuis les garanties rattachées. ~~Validation du principe « `garantie.statut` reste une colonne physique de cache recalculé »~~ **✅ Confirmé** : implémenté tel quel, batch `GARANTIE_NON_RESTITUEE` non régressé (test dédié) |
 | Livrables | Migration **V20** : création `garantie_movement` (pattern RLS V12), backfill rétroactif (`DEPOT_INITIAL` pour chaque garantie existante + `RESTITUTION`/`AJUSTEMENT` pour les garanties déjà `RESTITUE_PARTIEL`/`RESTITUE_TOTAL`) ; `TypeMouvementGarantie` (enum) ; `GarantieMovementRepository`/`GarantieMovementDto` ; `GarantieService` recalculant le solde depuis les mouvements ; test verrouillant l'invariant solde == somme des mouvements ; test de non-régression du batch alertes |
 | Dépendances | Sprint 8 recommandé en amont (Money) pour que les montants du ledger soient devise-aware dès la conception, mais pas techniquement bloquant si le PO préfère inverser l'ordre |
-| Risques | **Risque élevé** : migration rétroactive de données réelles de Production (analyse §3.5) — à tester d'abord en Staging avec un export représentatif des garanties réelles, vérification manuelle ligne à ligne avant toute fusion vers `main` |
-| Critères GO (fin de sprint) | ✅ 100 % des garanties existantes ont un historique de mouvements cohérent (solde recalculé == `montant - montant_retenu` actuel, vérifié un par un en Staging) ✅ Batch alertes `GARANTIE_NON_RESTITUEE` non régressé (test dédié) ✅ RLS `ENABLE`+`FORCE` vérifiée sur `garantie_movement` ✅ CI complète verte |
+| Risques | **Risque élevé** : migration rétroactive de données réelles de Production (analyse §3.5) — couverture automatisée ajoutée (`GarantieLedgerBackfillMigrationTest`, 3 scénarios + invariant), **mais la vérification manuelle ligne à ligne en Staging avec les garanties réelles reste requise avant toute fusion vers `main`**, non remplacée par les tests automatisés |
+| Critères GO (fin de sprint) | ✅ 100 % des garanties existantes ont un historique de mouvements cohérent (solde recalculé == `montant - montant_retenu` actuel, vérifié automatiquement ; vérification manuelle en Staging restant due) ✅ Batch alertes `GARANTIE_NON_RESTITUEE` non régressé (test dédié) ✅ RLS `ENABLE`+`FORCE` vérifiée sur `garantie_movement` ⏳ CI complète verte — à confirmer sur la PR |
 
 ---
 

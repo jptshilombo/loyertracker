@@ -470,7 +470,7 @@ class S02BiensBauxAffectationsIntegrationTest {
 
     private static String bailJson(String locataire) {
         return "{\"locataireNom\":\"" + locataire + "\",\"locataireEmail\":\"locataire@test.local\","
-                + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"depotGarantie\":850.00,\"dateDebut\":\"2026-06-01\",\"dateFin\":\"2027-05-31\"}";
+                + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"dateDebut\":\"2026-06-01\",\"dateFin\":\"2027-05-31\"}";
     }
 
     private static String affectationJson(String bienId, UUID gestionnaireId) {

@@ -55,6 +55,24 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - Frontend : `MoneyFormatPipe` partagé (`shared/money/`), miroir exact du formatage backend.
 - Aucune duplication de colonne devise introduite (règle métier ADR-13).
 
+### Ajouts — Garantie : ledger de mouvements (Sprint 9, EP-12a, US-94)
+
+- **`GarantieMovement`** (nouvelle table `garantie_movement`, migration V20) : journal
+  append-only des mouvements de garantie (`DEPOT_INITIAL`, `COMPLEMENT`, `RETENUE_LOYER`,
+  `RETENUE_CHARGES`, `RETENUE_REPARATION`, `RESTITUTION`, `AJUSTEMENT`, `ANNULATION`), isolé par
+  RLS `bailleur_id` (même patron que `patrimoine`).
+- `Garantie.soldeActuel` : cache transactionnel recalculé de façon synchrone à chaque mouvement
+  (création, restitution) — `garantie.statut` inchangé, aucune rupture du batch d'alertes
+  `GARANTIE_NON_RESTITUEE`.
+- Migration rétroactive : chaque garantie existante génère les mouvements reconstituant son
+  historique (dépôt initial, retenue le cas échéant, clôture si déjà totalement restituée) —
+  aucune perte de traçabilité.
+- **`bail.depot_garantie` devient une valeur dérivée** (ADR-14, arbitrage PO kickoff) : la colonne
+  est supprimée, le dépôt ne se saisit plus à la création du bail (il se déclare via le flux
+  « Ajouter garantie » existant) ; `BailDto.depotGarantie` reste exposé, désormais calculé.
+- Aucun nouvel usage métier exposé par ce sprint (retenue typée, réapprovisionnement, écran
+  d'historique) — modèle et migration uniquement, préparant le Sprint 10 (EP-12b).
+
 ## [1.4.0] — 2026-06-30
 
 ### Ajouts — Statut d'échéance `A_VENIR` (Sprint 5 Lot B4, US-60, V18)

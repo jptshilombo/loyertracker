@@ -9,6 +9,25 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Sprint 9 EP-12a Garantie ledger (US-94) — 2026-07-02, implémenté et validé localement, GO
+> technique.** Kickoff : arbitrage PO tranché sur `bail.depot_garantie` — devient une valeur
+> dérivée du ledger (ADR-14 §8, statut passé à **Acceptée**), colonne supprimée. Migration **V20** :
+> `garantie_movement` (ledger append-only, RLS pattern V12), `garantie.solde_actuel` (cache
+> transactionnel synchrone, `garantie.statut` inchangé — batch `GARANTIE_NON_RESTITUEE` non
+> régressé), backfill rétroactif des garanties existantes (`DEPOT_INITIAL` + `AJUSTEMENT`/
+> `RESTITUTION` selon l'état), `ALTER TABLE bail DROP COLUMN depot_garantie`. `GarantieService`
+> journalise désormais chaque mouvement (création, restitution) avec audit dédié. Frontend :
+> champ « Dépôt » retiré du formulaire de création de bail (dépôt déclaré via le flux « Ajouter
+> garantie » existant). Tests : **128/128 backend** (`mvn -o verify`, dont
+> `GarantieLedgerBackfillMigrationTest` nouveau — 3 scénarios de backfill + invariant solde ==
+> somme des mouvements, et l'extension de `S03PaiementsGarantiesIntegrationTest` sur le cycle
+> complet création→restitution), **63/63 frontend** (`ng test`), `ng build` propre. Aucun nouvel
+> usage métier exposé (retenue typée, réapprovisionnement, historique UI — Sprint 10, US-95→98).
+> Rapport : `docs/cgpa/06-planification-agile/sprint-9-garantie-ledger-rapport-validation.md`.
+> **Reste avant fusion `main`** : PR dédiée + CI GitHub complète, puis vérification manuelle du
+> backfill en Staging avec les garanties réelles (non remplacée par les tests automatisés, cf.
+> Plan d'Exécution — risque élevé de cette migration rétroactive).
+>
 > **Hypercare Production `1.6.0` — T0 exécuté le 2026-07-02 à 17:11 UTC, PASS sous surveillance.**
 > 8/8 Up, 4/4 `(healthy)`, restart=0. Tag `sha-2da27182` conforme, digests API/Web identiques au
 > Gate Production. Flyway 19/19. Actuator UP. Prometheus 5/5 up. Alertmanager 0 alerte. p99 ~47 ms,

@@ -192,7 +192,7 @@ class DocumentGenerationIntegrationTest {
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
-                                + "\"loyerHc\":800.00,\"provisionCharges\":50.00,\"depotGarantie\":850.00,"
+                                + "\"loyerHc\":800.00,\"provisionCharges\":50.00,"
                                 + "\"dateDebut\":\"" + debut + "\",\"dateFin\":\"" + fin + "\"}"))
                 .andExpect(status().isCreated());
     }

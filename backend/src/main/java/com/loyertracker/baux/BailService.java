@@ -1,5 +1,6 @@
 package com.loyertracker.baux;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.loyertracker.biens.Bien;
 import com.loyertracker.biens.BienRepository;
 import com.loyertracker.biens.StatutBien;
+import com.loyertracker.garanties.GarantieRepository;
 import com.loyertracker.securite.TenantContext;
 
 import jakarta.persistence.PersistenceException;
@@ -22,11 +24,14 @@ public class BailService {
 
     private final BailRepository baux;
     private final BienRepository biens;
+    private final GarantieRepository garanties;
     private final TenantContext tenant;
 
-    public BailService(BailRepository baux, BienRepository biens, TenantContext tenant) {
+    public BailService(BailRepository baux, BienRepository biens, GarantieRepository garanties,
+            TenantContext tenant) {
         this.baux = baux;
         this.biens = biens;
+        this.garanties = garanties;
         this.tenant = tenant;
     }
 
@@ -47,11 +52,12 @@ public class BailService {
         Devise devise = requete.devise() != null ? requete.devise() : Devise.EUR;
         Bail bail = new Bail(UUID.randomUUID(), bailleurId, bienId, requete.locataireNom(),
                 requete.locataireEmail(), requete.loyerHc(), requete.provisionCharges(),
-                requete.depotGarantie(), requete.dateDebut(), requete.dateFin(), devise);
+                requete.dateDebut(), requete.dateFin(), devise);
         try {
             Bail enregistre = baux.saveAndFlush(bail);
             bien.louer();
-            return BailDto.from(enregistre);
+            // Aucune garantie ne peut encore exister pour un bail qui vient d'être créé.
+            return BailDto.from(enregistre, BigDecimal.ZERO);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Un bail actif existe déjà sur ce bien.");
@@ -67,7 +73,9 @@ public class BailService {
     @Transactional(readOnly = true)
     public List<BailDto> historique(UUID bienId) {
         tenant.activerDepuisBien(bienId);
-        return baux.findByBienIdOrderByDateDebutDesc(bienId).stream().map(BailDto::from).toList();
+        return baux.findByBienIdOrderByDateDebutDesc(bienId).stream()
+                .map(bail -> BailDto.from(bail, garanties.sommeMontantDeposeParBail(bail.getId())))
+                .toList();
     }
 
     private static boolean estViolationUnicite(Throwable t) {
