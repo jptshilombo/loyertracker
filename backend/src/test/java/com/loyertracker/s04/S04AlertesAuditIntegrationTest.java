@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -131,9 +132,11 @@ class S04AlertesAuditIntegrationTest {
         String bailleur = "kc-" + UUID.randomUUID();
         inscrireBailleur(bailleur);
         String bienId = creerBien(bailleur, "6 rue Preavis");
-        // Terme dans la bande de préavis ]J+60 ; J+90] (date du jour ≈ 2026-06) → 1 PREAVIS, 0 FIN_BAIL.
-        // Aucune échéance générée → aucun loyer EN_RETARD : on isole le type PREAVIS.
-        creerBail(bailleur, bienId, "2026-06-01", "2026-09-01");
+        // Terme calé sur J+75 (milieu de la bande ]J+60 ; J+90], generer_alertes/V10), calculé
+        // depuis la date d'exécution du test — évite qu'un terme calendaire fixe ne sorte de la
+        // bande au fil du temps. Aucune échéance générée → aucun loyer EN_RETARD : on isole PREAVIS.
+        LocalDate aujourdHui = LocalDate.now();
+        creerBail(bailleur, bienId, aujourdHui.toString(), aujourdHui.plusDays(75).toString());
 
         // 1er passage : 1 seule alerte PREAVIS (terme > J+60 → pas de FIN_BAIL).
         mockMvc.perform(post("/api/batch/alertes").with(bailleurJwt(bailleur)))
