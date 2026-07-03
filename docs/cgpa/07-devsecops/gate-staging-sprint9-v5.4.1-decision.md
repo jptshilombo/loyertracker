@@ -108,7 +108,41 @@ promu et documenté), et ce Gate promeut directement le candidat suivant.
 
 | Critère | Statut |
 |---|---|
-| Contrôle `STG-ISOL-01` exécuté | ⏳ **Non encore exécuté pour ce candidat** — obligatoire avant toute promotion (hôte mutualisé `ai-test-server`), à exécuter avant/après déploiement selon `stg-isol-01-checklist.md` |
+| Contrôle `STG-ISOL-01` — état **avant** déploiement | ✅ **PASS** (2026-07-03, avant tout déploiement de `sha-6a358eb6`) — détail ci-dessous |
+| Contrôle `STG-ISOL-01` — état **après** déploiement | ⏳ À exécuter une fois le déploiement effectué (§6) |
+
+#### État "avant" (2026-07-03, ~08:20 UTC, avant tout déploiement)
+
+Vérification par SSH (`ubuntu@172.31.11.102`, clé `aws_key/loyerpro-eu-central-1.pem`), sans
+aucune commande de déploiement ni de nettoyage exécutée :
+
+- **Namespace Docker** : `docker-compose.staging.yml` déclare `name: loyertracker-staging`
+  (explicite, en tête de fichier). 8 conteneurs préfixés `loyertracker-staging-*` (`nginx`, `api`,
+  `keycloak`, `postgres`, `alertmanager`, `pushgateway`, `prometheus`, `blackbox`), tous `Up`
+  (4/4 applicatifs `healthy`), tag actuel `sha-2da27182`. Aucune collision de nom de projet avec
+  les autres stacks de l'hôte.
+- **Réseaux** : réseau dédié `loyertracker-staging_loyertracker-net` (namespacé par le projet).
+  Autres réseaux de l'hôte (`bridge`, `host`, `none`, `ubuntu_default`) distincts, non rejoints par
+  aucun service `loyertracker-staging-*`.
+- **Volumes** : `loyertracker-staging_postgres-data` et `loyertracker-staging_prometheus-data`,
+  namespacés par le projet. Volumes des autres projets hébergés (`infra_*`, `tools_*`, `npm_data`,
+  `ubuntu_npm_*`) distincts, non référencés par le Compose de ce projet.
+- **Reverse proxy mutualisé** : `nginx-proxy-manager` (autre projet) `Up 17h`, `RestartCount=0`,
+  ports `80/81/443` inchangés — publication de `loyertracker-staging` par nom DNS
+  (`https://loyertracker.staging.loyerpro.org`), aucune modification de sa configuration.
+- **Ports** : `loyertracker-staging-nginx-1` publie `18080`/`18443` (alternatifs, sans collision
+  avec `80/81/443` de `nginx-proxy-manager`) ; `pushgateway` publie `127.0.0.1:9091` uniquement
+  (interne). Aucun autre service `loyertracker-staging-*` ne publie de port sur l'hôte.
+- **Absence de commande Docker globale** : recherche explicite (`docker stop $(docker ps -q)`,
+  `docker compose down` sans cible, `docker system prune -a`) — aucune occurrence dans
+  `.github/workflows/`, `infra/`, `docker-compose*.yml`.
+- **Restart count baseline (0 attendu partout)** : `api`=0, `nginx`=0, `postgres`=0, `keycloak`=0,
+  `nginx-proxy-manager`=0.
+- **Ressources partagées inventoriées** : `docs/staging-state.md` §11 (hôte, reverse proxy,
+  registre GHCR) — inchangé depuis le Gate Staging Sprint 7+8.
+
+**Verdict `STG-ISOL-01` (état avant) : PASS.** L'état « après » devra reproduire cette même
+vérification une fois `sha-6a358eb6` déployé, avant de clore ce Gate en `STAGING_DEPLOYED`.
 
 ## 5. Analyse de risque — rollback et migration V20
 
@@ -138,7 +172,8 @@ Non couvert par ce document — à réaliser lors du déploiement effectif, puis
 document ou un rapport de suite, selon la convention retenue) :
 
 1. Sauvegarde Staging pré-déploiement (`pg_dump -Fc`), recommandée par §5.
-2. Exécution `STG-ISOL-01` (avant/après déploiement) selon `stg-isol-01-checklist.md`.
+2. ~~Exécution `STG-ISOL-01` (avant/après déploiement)~~ **État avant : ✅ PASS (2026-07-03,
+   §4)** — état après restant à exécuter une fois le déploiement effectué.
 3. Déploiement `LOYERTRACKER_TAG=sha-6a358eb6` (services `api` + `nginx`, migration V20 appliquée).
 4. **Vérification manuelle ligne-à-ligne du backfill V20 sur les garanties réelles** de
    `ai-test-server` — livrable central de ce Gate (Plan d'Exécution, rapport de validation §7),
@@ -169,7 +204,8 @@ encore atteint.**
 
 ### Conditions faisant partie du déploiement lui-même
 
-3. `STG-ISOL-01` = PASS (avant/après).
+3. `STG-ISOL-01` = PASS (avant/après) — **état avant : ✅ PASS (2026-07-03)** ; état après
+   restant à exécuter une fois le déploiement effectué.
 4. Vérification manuelle ligne-à-ligne du backfill V20 sur données réelles — **sans PASS explicite
    sur ce point, ce Gate ne peut pas être clos en `STAGING_DEPLOYED`.**
 5. Smoke Staging complet.
