@@ -164,7 +164,7 @@ divergence visible dans le champ numérique lui-même, au lieu de seulement dans
 |----|--------|----------|------------|
 | **RSV-PROD-S9-01** | Anomalie de données réelle découverte en Production : 2 baux perdraient silencieusement l'affichage de leur dépôt (§4) | **✅ Levée le 2026-07-03** — option A1 exécutée au Préflight : 2 lignes `garantie` reconstituées (`ef87b3aa-…`, `01754057-…`, 600,00 chacune), vérifiées par requête SQL (3/3 baux ont désormais une garantie correspondante). Détail : `preflight-backup-v1.7.0-report.md` §3 |
 | **RSV-S9-03** | Migration V20 (`DROP COLUMN bail.depot_garantie`) : aucune option de rollback applicatif seul, restauration de backup uniquement (§3 Rollback) | **Acceptée explicitement le 2026-07-03** par le Product Owner (jordan) — Chief Delivery Officer (Claude Code) coordonne l'exécution en connaissance de ce risque |
-| RP-160-03 | `CHANGELOG.md` `[Non publié]` mélange encore du contenu déjà livré (Sprint 5/6/7/8) avec du contenu non livré | Non bloquant — dette pré-existante, sans lien avec Sprint 9, action Release Manager déjà tracée depuis le Gate `1.6.0` | À corriger avant toute clôture de release, indépendamment de ce Gate |
+| RP-160-03 | `CHANGELOG.md` `[Non publié]` mélange encore du contenu déjà livré (Sprint 5/6/7/8) avec du contenu non livré | **✅ Levée le 2026-07-03** — `[Non publié]` scindé en `[1.5.0]` (2026-07-01), `[1.6.0]` (2026-07-02), `[1.7.0]` (2026-07-03), liens de comparaison mis à jour |
 | — | Release notes `1.7.0` non encore rédigées | Non bloquant pour cette analyse | À produire avant le Préflight, si ce Gate progresse vers un GO |
 
 ## 6. Avis des rôles

@@ -7,20 +7,27 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
-### Ajouts — RGPD export & effacement locataire (Sprint 6, US-70)
+## [1.7.0] — 2026-07-03
 
-- **`GET /api/bailleurs/export`** : export JSON complet scopé `bailleurId` (patrimoines, biens,
-  baux, paiements, affectations, garanties) — droit d'accès RGPD.
-- **`DELETE /api/biens/{bienId}/baux/{bailId}/locataire`** : anonymisation des données
-  personnelles du locataire (`locataireNom` → `"[anonymisé]"`, `locataireEmail` → `null`),
-  données financières conservées, opération tracée dans `audit_log`
-  (`EFFACEMENT_LOCATAIRE`) — droit à l'effacement RGPD (PR #123).
+### Ajouts — Garantie : ledger de mouvements (Sprint 9, EP-12a, US-94)
 
-### Durcissement — CSP Nginx (Sprint 6, US-72)
+- **`GarantieMovement`** (nouvelle table `garantie_movement`, migration V20) : journal
+  append-only des mouvements de garantie (`DEPOT_INITIAL`, `COMPLEMENT`, `RETENUE_LOYER`,
+  `RETENUE_CHARGES`, `RETENUE_REPARATION`, `RESTITUTION`, `AJUSTEMENT`, `ANNULATION`), isolé par
+  RLS `bailleur_id` (même patron que `patrimoine`).
+- `Garantie.soldeActuel` : cache transactionnel recalculé de façon synchrone à chaque mouvement
+  (création, restitution) — `garantie.statut` inchangé, aucune rupture du batch d'alertes
+  `GARANTIE_NON_RESTITUEE`.
+- Migration rétroactive : chaque garantie existante génère les mouvements reconstituant son
+  historique (dépôt initial, retenue le cas échéant, clôture si déjà totalement restituée) —
+  aucune perte de traçabilité.
+- **`bail.depot_garantie` devient une valeur dérivée** (ADR-14, arbitrage PO kickoff) : la colonne
+  est supprimée, le dépôt ne se saisit plus à la création du bail (il se déclare via le flux
+  « Ajouter garantie » existant) ; `BailDto.depotGarantie` reste exposé, désormais calculé.
+- Aucun nouvel usage métier exposé par ce sprint (retenue typée, réapprovisionnement, écran
+  d'historique) — modèle et migration uniquement, préparant le Sprint 10 (EP-12b).
 
-- Extension de la `Content-Security-Policy` de la SPA : `script-src 'self'`, `font-src 'self'`,
-  `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`
-  (PR #123).
+## [1.6.0] — 2026-07-02
 
 ### Ajouts — Patrimoine enrichi (Sprint 7, EP-10, US-90, V19)
 
@@ -55,23 +62,22 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - Frontend : `MoneyFormatPipe` partagé (`shared/money/`), miroir exact du formatage backend.
 - Aucune duplication de colonne devise introduite (règle métier ADR-13).
 
-### Ajouts — Garantie : ledger de mouvements (Sprint 9, EP-12a, US-94)
+## [1.5.0] — 2026-07-01
 
-- **`GarantieMovement`** (nouvelle table `garantie_movement`, migration V20) : journal
-  append-only des mouvements de garantie (`DEPOT_INITIAL`, `COMPLEMENT`, `RETENUE_LOYER`,
-  `RETENUE_CHARGES`, `RETENUE_REPARATION`, `RESTITUTION`, `AJUSTEMENT`, `ANNULATION`), isolé par
-  RLS `bailleur_id` (même patron que `patrimoine`).
-- `Garantie.soldeActuel` : cache transactionnel recalculé de façon synchrone à chaque mouvement
-  (création, restitution) — `garantie.statut` inchangé, aucune rupture du batch d'alertes
-  `GARANTIE_NON_RESTITUEE`.
-- Migration rétroactive : chaque garantie existante génère les mouvements reconstituant son
-  historique (dépôt initial, retenue le cas échéant, clôture si déjà totalement restituée) —
-  aucune perte de traçabilité.
-- **`bail.depot_garantie` devient une valeur dérivée** (ADR-14, arbitrage PO kickoff) : la colonne
-  est supprimée, le dépôt ne se saisit plus à la création du bail (il se déclare via le flux
-  « Ajouter garantie » existant) ; `BailDto.depotGarantie` reste exposé, désormais calculé.
-- Aucun nouvel usage métier exposé par ce sprint (retenue typée, réapprovisionnement, écran
-  d'historique) — modèle et migration uniquement, préparant le Sprint 10 (EP-12b).
+### Ajouts — RGPD export & effacement locataire (Sprint 6, US-70)
+
+- **`GET /api/bailleurs/export`** : export JSON complet scopé `bailleurId` (patrimoines, biens,
+  baux, paiements, affectations, garanties) — droit d'accès RGPD.
+- **`DELETE /api/biens/{bienId}/baux/{bailId}/locataire`** : anonymisation des données
+  personnelles du locataire (`locataireNom` → `"[anonymisé]"`, `locataireEmail` → `null`),
+  données financières conservées, opération tracée dans `audit_log`
+  (`EFFACEMENT_LOCATAIRE`) — droit à l'effacement RGPD (PR #123).
+
+### Durcissement — CSP Nginx (Sprint 6, US-72)
+
+- Extension de la `Content-Security-Policy` de la SPA : `script-src 'self'`, `font-src 'self'`,
+  `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`
+  (PR #123).
 
 ## [1.4.0] — 2026-06-30
 
@@ -340,7 +346,10 @@ go-live production différé à un lot ultérieur.
 - Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
-[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.4.0...HEAD
+[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/jptshilombo/loyertracker/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/jptshilombo/loyertracker/compare/v1.5.0...v1.6.0
+[1.5.0]: https://github.com/jptshilombo/loyertracker/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/jptshilombo/loyertracker/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jptshilombo/loyertracker/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/jptshilombo/loyertracker/compare/v1.2.0...v1.2.1

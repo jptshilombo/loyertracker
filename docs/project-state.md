@@ -9,6 +9,14 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **RP-160-03 LEVÉE — `CHANGELOG.md` scindé (2026-07-03).** `[Non publié]` mélangeait le contenu
+> de trois releases déjà déployées, jamais promu depuis le Gate `1.6.0`. Scindé en **`[1.5.0]` —
+> 2026-07-01** (Sprint 6 : RGPD export/effacement locataire US-70, CSP Nginx US-72), **`[1.6.0]` —
+> 2026-07-02** (Sprint 7 Patrimoine enrichi US-90, Sprint 8 Devise/Money US-92/93), **`[1.7.0]` —
+> 2026-07-03** (Sprint 9 Garantie ledger US-94). Liens de comparaison (`compare/vX...vY`) mis à
+> jour en conséquence. Dette pré-existante, sans lien direct avec Sprint 9, mais traitée
+> maintenant à la demande explicite du PO.
+>
 > **Hypercare Production `1.7.0` — T0 exécuté le 2026-07-03 à ~13:45 UTC, PASS sous
 > surveillance.** 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0. Tag `sha-6a358eb6` conforme.
 > Flyway 20/20. Actuator UP. Prometheus 5/5 up. Alertmanager `[]`. p99 ~47 ms (cohérent avec la

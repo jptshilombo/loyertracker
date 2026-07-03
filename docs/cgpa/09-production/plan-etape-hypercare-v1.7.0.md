@@ -75,5 +75,5 @@ T+24 prévu : **2026-07-04 ~13:45 UTC** (tolérance ±30 min).
 - Mettre à jour `docs/project-state.md` (bandeau de clôture).
 - Mettre à jour `docs/prod-state.md` §0H (statut clôture).
 - Créer `docs/cgpa/09-production/cloture-release-v1.7.0.md`.
-- Traiter RP-160-03 (`CHANGELOG.md` — scinder `[Non publié]` en releases livrées), dette héritée
-  non résolue par ce sprint.
+- ~~Traiter RP-160-03~~ **✅ Fait le 2026-07-03** — `CHANGELOG.md` scindé en `[1.5.0]`/`[1.6.0]`/
+  `[1.7.0]`.

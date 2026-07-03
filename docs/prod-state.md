@@ -31,8 +31,8 @@ Rapports : `docs/cgpa/09-production/gate-production-v1.7.0-decision.md`,
 `docs/cgpa/09-production/validation-finale-v1.7.0-report.md`.
 
 Réserves ouvertes après ce déploiement : **RSV-S9-03** (aucun rollback applicatif seul viable,
-acceptée par le PO — permanente pour ce schéma), **RSV-S7-8-01** (héritée, non bloquante),
-**RP-160-03** (héritée, non bloquante).
+acceptée par le PO — permanente pour ce schéma), **RSV-S7-8-01** (héritée, non bloquante).
+**RP-160-03 levée le 2026-07-03** (`CHANGELOG.md` scindé en `[1.5.0]`/`[1.6.0]`/`[1.7.0]`).
 
 ## 0G. Déploiement Production `1.6.0` — 2026-07-02
 
