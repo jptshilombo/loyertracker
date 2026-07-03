@@ -10,8 +10,8 @@
 | Digest Web | `sha256:70ae97f2eda455b5c9640cc33aeb6ea4abda9131222b3f948a5ea29768bca5c5` |
 | Staging actuel | `sha-2da27182` (Sprint 7+8, déployé 2026-07-02) |
 | Environnement | `ai-test-server` — Staging mutualisé |
-| Décision | **GO sous réserve — déployé le 2026-07-03, backfill vérifié manuellement PASS** |
-| Statut | Déploiement exécuté (§9) — **`STAGING_DEPLOYED` non encore prononcé : smoke Staging complet et `STG-ISOL-01` état après restant à exécuter** |
+| Décision | **GO sous réserve — déployé, backfill vérifié, smoke 59/59, cycle garantie live vérifié** |
+| Statut | Déploiement + vérifications exécutés (§9/§10) — **`STAGING_DEPLOYED` non encore prononcé : `STG-ISOL-01` état après et mise à jour `docs/staging-state.md` restants** |
 | Plans | `docs/cgpa/06-planification-agile/plan-execution-evolutions-ep10-ep13.md` (§Sprint 9), `sprint-9-garantie-ledger-rapport-validation.md` |
 | PR | #152 (code, merge commit `6a358eb6`), #153/#154/#155/#156 (docs de gouvernance) |
 
@@ -190,9 +190,10 @@ document ou un rapport de suite, selon la convention retenue) :
    le 2026-07-03** (détail §9) — livrable central de ce Gate, non remplacé par
    `GarantieLedgerBackfillMigrationTest` (couverture automatisée sur données synthétiques
    uniquement).
-5. Smoke test Staging complet (cycle garantie création→restitution, non-régression
-   `GARANTIE_NON_RESTITUEE`, isolation cross-bailleur).
-6. Mise à jour `docs/staging-state.md`.
+5. ~~Smoke test Staging complet~~ **✅ 59/59 PASS le 2026-07-03** (détail §10) + ~~cycle garantie
+   création→restitution~~ **✅ vérifié en direct sur l'API réelle** (§10, hors périmètre du script
+   de smoke lui-même).
+6. Mise à jour `docs/staging-state.md` — **restant à faire.**
 
 ## 7. Réserves et conditions
 
@@ -219,13 +220,12 @@ encore atteint.**
    restant à exécuter (§9).
 4. ~~Vérification manuelle ligne-à-ligne du backfill V20 sur données réelles~~ **✅ PASS le
    2026-07-03** (§9).
-5. Smoke Staging complet — **restant à exécuter.**
+5. ~~Smoke Staging complet~~ **✅ 59/59 PASS le 2026-07-03** (§10).
 
 ### Prochaine étape autorisée
 
-Smoke Staging complet + `STG-ISOL-01` état après + mise à jour `docs/staging-state.md` (§6/§9),
-avant de clore ce Gate en `STAGING_DEPLOYED`. **Aucune promotion Production n'est autorisée par ce
-document.**
+`STG-ISOL-01` état après + mise à jour `docs/staging-state.md` (§6/§9), avant de clore ce Gate en
+`STAGING_DEPLOYED`. **Aucune promotion Production n'est autorisée par ce document.**
 
 ## 9. Déploiement exécuté et vérification manuelle du backfill (2026-07-03)
 
@@ -285,3 +285,56 @@ incluant `RESTITUE_TOTAL`). Ce n'est pas un défaut du backfill — c'est une li
 données réel disponible en Staging à ce jour. À garder à l'esprit pour le futur Gate Production
 (si des garanties `RESTITUE_TOTAL` existent en Production, la même vérification manuelle devra
 les couvrir spécifiquement).
+
+## 10. Smoke Staging complet et cycle garantie création→restitution (2026-07-03)
+
+### Smoke test (`infra/smoke/smoke-stack.sh`)
+
+Premier essai — **58 PASS / 1 FAIL** : `Flyway : 20 migrations (attendu 19)`. Cause : le script
+n'avait pas été mis à jour après le passage de V19 (Sprint 7+8) à V20 (Sprint 9) — même type
+d'écart déjà rencontré et corrigé au Gate Staging Sprint 7+8 (PR #145). **Correctif du script
+uniquement** (aucun code applicatif touché), commit `088e272`, PR #158, CI verte, fusionnée
+(`bcb3c0d`), resynchronisé sur `ai-test-server` (`git pull`).
+
+Deuxième essai, après correctif :
+
+```bash
+BASE=https://localhost:18443 CACERT=infra/nginx/certs/localhost.pem \
+  COMPOSE_FILE=docker-compose.staging.yml bash infra/smoke/smoke-stack.sh
+```
+
+**Résultat : 59 PASS / 0 FAIL.** Couverture confirmée en conditions réelles : inscription,
+patrimoine, bien, bail, invitation→acceptation, affectation 8 %, échéances (9 créées, `SECURITY
+DEFINER`), pointage, honoraire (72,00 € — 8 % de 900 encaissés), alertes dont PREAVIS (terme à
+J+75, cf. RSV-S9-04), audit, scoping gestionnaire, isolation cross-tenant live (2e bailleur, 0
+fuite), RGPD US-70 (export scopé, effacement locataire 204, anonymisation confirmée), garde-fous
+AuthN/ports.
+
+**Constat** : le script `smoke-stack.sh` **n'exerce aucun endpoint garantie** (aucune occurrence
+de `garantie`/`GARANTIE` dans le script) — la couverture « cycle garantie création→restitution »
+annoncée au §6 de ce document ne pouvait donc pas venir de ce script. Complété manuellement
+ci-dessous.
+
+### Cycle garantie création→restitution — vérification manuelle live (hors smoke script)
+
+Appel direct de l'API Staging réelle (JWT `bailleur-test@test.local`, échafaudage
+`directAccessGrantsEnabled` temporaire sur `loyertracker-spa`, identique au patron du smoke
+script, révoqué immédiatement après) sur un bail réel existant (`466d054f-…`, bailleur-test) :
+
+1. **`POST /api/biens/{bienId}/baux/{bailId}/garanties`** (montant 850,00, CAUTION) → **201**,
+   `soldeActuel: 850.00`, `statut: DETENU`. Mouvement journalisé : `DEPOT_INITIAL`, crédit 850,00,
+   `utilisateur: bailleur-test@test.local` (contrairement au backfill où `utilisateur: system`).
+2. **`POST .../garanties/{id}/restitution`** (`type: TOTALE`) → **200**, `soldeActuel: 0`,
+   `statut: RESTITUE_TOTAL`. Mouvement journalisé : `RESTITUTION`, débit 850,00, motif
+   « Restitution totale ».
+3. **Invariant** `solde_actuel = Σcrédit − Σdébit` : `0.00 = 850.00 − 850.00` ✅.
+4. **Audit** : `audit_log` trace `CREATE_GARANTIE` puis `RESTITUER_GARANTIE` sur la même
+   `entity_id`, horodatage cohérent avec les deux appels API.
+5. **Non-régression `GARANTIE_NON_RESTITUEE`** : 0 alerte de ce type en base (attendu — bail
+   `ACTIF`, garantie restituée immédiatement, aucune condition de déclenchement réunie).
+6. Échafaudage `directAccessGrantsEnabled` confirmé revenu à `false` après le test.
+
+**Résultat : PASS.** Ce test ferme également, sur données réelles (bien que produites par ce test
+et non préexistantes), le gap noté au §9 sur l'absence de garantie `RESTITUE_TOTAL` réelle : le
+chemin `RESTITUTION` est désormais vérifié de bout en bout (API → service → ledger → cache
+`solde_actuel` → audit) sur `ai-test-server`, pas seulement par le test automatisé synthétique.
