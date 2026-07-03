@@ -10,10 +10,10 @@
 | Digest Web | `sha256:70ae97f2eda455b5c9640cc33aeb6ea4abda9131222b3f948a5ea29768bca5c5` |
 | Staging actuel | `sha-2da27182` (Sprint 7+8, déployé 2026-07-02) |
 | Environnement | `ai-test-server` — Staging mutualisé |
-| Décision | **GO sous réserve — déploiement non encore exécuté** |
-| Statut | Analyse pré-déploiement uniquement — **`STAGING_DEPLOYED` non atteint par ce seul document** |
+| Décision | **GO sous réserve — déployé le 2026-07-03, backfill vérifié manuellement PASS** |
+| Statut | Déploiement exécuté (§9) — **`STAGING_DEPLOYED` non encore prononcé : smoke Staging complet et `STG-ISOL-01` état après restant à exécuter** |
 | Plans | `docs/cgpa/06-planification-agile/plan-execution-evolutions-ep10-ep13.md` (§Sprint 9), `sprint-9-garantie-ledger-rapport-validation.md` |
-| PR | #152 (code, merge commit `6a358eb6`), #153 (docs-only, en cours) |
+| PR | #152 (code, merge commit `6a358eb6`), #153/#154/#155/#156 (docs de gouvernance) |
 
 ## 1. Objet
 
@@ -185,11 +185,11 @@ document ou un rapport de suite, selon la convention retenue) :
    (détail §5) — filet de sécurité en place avant tout déploiement.
 2. ~~Exécution `STG-ISOL-01` (avant/après déploiement)~~ **État avant : ✅ PASS (2026-07-03,
    §4)** — état après restant à exécuter une fois le déploiement effectué.
-3. Déploiement `LOYERTRACKER_TAG=sha-6a358eb6` (services `api` + `nginx`, migration V20 appliquée).
-4. **Vérification manuelle ligne-à-ligne du backfill V20 sur les garanties réelles** de
-   `ai-test-server` — livrable central de ce Gate (Plan d'Exécution, rapport de validation §7),
-   non remplacée par `GarantieLedgerBackfillMigrationTest` (couverture automatisée sur données
-   synthétiques uniquement).
+3. ~~Déploiement `LOYERTRACKER_TAG=sha-6a358eb6`~~ **✅ Fait le 2026-07-03 ~10:10 UTC** (détail §9).
+4. ~~Vérification manuelle ligne-à-ligne du backfill V20 sur les garanties réelles~~ **✅ PASS
+   le 2026-07-03** (détail §9) — livrable central de ce Gate, non remplacé par
+   `GarantieLedgerBackfillMigrationTest` (couverture automatisée sur données synthétiques
+   uniquement).
 5. Smoke test Staging complet (cycle garantie création→restitution, non-régression
    `GARANTIE_NON_RESTITUEE`, isolation cross-bailleur).
 6. Mise à jour `docs/staging-state.md`.
@@ -216,12 +216,72 @@ encore atteint.**
 ### Conditions faisant partie du déploiement lui-même
 
 3. `STG-ISOL-01` = PASS (avant/après) — **état avant : ✅ PASS (2026-07-03)** ; état après
-   restant à exécuter une fois le déploiement effectué.
-4. Vérification manuelle ligne-à-ligne du backfill V20 sur données réelles — **sans PASS explicite
-   sur ce point, ce Gate ne peut pas être clos en `STAGING_DEPLOYED`.**
-5. Smoke Staging complet.
+   restant à exécuter (§9).
+4. ~~Vérification manuelle ligne-à-ligne du backfill V20 sur données réelles~~ **✅ PASS le
+   2026-07-03** (§9).
+5. Smoke Staging complet — **restant à exécuter.**
 
 ### Prochaine étape autorisée
 
-Exécution du déploiement (§6) sur `ai-test-server`, sous décision de déclenchement distincte.
-**Aucune promotion Production n'est autorisée par ce document.**
+Smoke Staging complet + `STG-ISOL-01` état après + mise à jour `docs/staging-state.md` (§6/§9),
+avant de clore ce Gate en `STAGING_DEPLOYED`. **Aucune promotion Production n'est autorisée par ce
+document.**
+
+## 9. Déploiement exécuté et vérification manuelle du backfill (2026-07-03)
+
+### Déploiement
+
+Exécuté sur `ai-test-server` (~10:10 UTC), procédure identique au Gate Staging Sprint 7+8 :
+
+```bash
+cd ~/loyertracker && git fetch origin main && git checkout main && git pull origin main
+sed -i 's/^LOYERTRACKER_TAG=.*/LOYERTRACKER_TAG=sha-6a358eb6/' .env
+docker compose -f docker-compose.staging.yml pull api nginx
+docker compose -f docker-compose.staging.yml up -d api nginx
+```
+
+Digests vérifiés (`docker buildx imagetools inspect`) avant pull — conformes à ceux de l'en-tête
+de ce document. Aucune commande Docker globale utilisée ; `up -d` a signalé les conteneurs
+« orphelins » (overlay monitoring `alertmanager`/`prometheus`/`blackbox`/`pushgateway`, non inclus
+dans cette invocation ciblée) sans `--remove-orphans` : **ils n'ont pas été touchés**.
+
+| Contrôle | Résultat |
+|---|---|
+| Tag actif (api + web) | ✅ `sha-6a358eb6` |
+| Migration V20 | ✅ « Successfully applied 1 migration... now at version v20 », sans erreur |
+| 4/4 conteneurs `healthy` | ✅ api, nginx recréés ; postgres, keycloak inchangés |
+| Restart count | ✅ 0 partout, `nginx-proxy-manager` intact |
+| Actuator `{"status":"UP"}` | ✅ |
+| `/healthz` (port 18080) | ✅ `ok` |
+| Table `garantie_movement` | ✅ créée — RLS `ENABLE`+`FORCE`, policy `bailleur_isolation`, contraintes `CHECK` conformes à V20 |
+| `bail.depot_garantie` | ✅ colonne supprimée (0 lignes dans `information_schema.columns`) |
+
+### Vérification manuelle ligne-à-ligne du backfill V20 (données réelles)
+
+3 garanties réelles présentes sur `ai-test-server` au moment du déploiement :
+
+| Garantie | Statut | Montant | Retenu | `solde_actuel` | Mouvements générés | Invariant `solde = Σcrédit − Σdébit` |
+|---|---|---|---|---|---|---|
+| `aac230a1…` | DETENU | 600,00 | 0,00 | 600,00 | 1× `DEPOT_INITIAL` (crédit 600,00) | ✅ 600,00 = 600,00 |
+| `67f652dc…` | RESTITUE_PARTIEL | 700,00 | 700,00 | 0,00 | `DEPOT_INITIAL` (crédit 700,00) + `AJUSTEMENT` (débit 700,00, motif « Erreur ») | ✅ 0,00 = 700,00−700,00 |
+| `3b3d0dab…` | DETENU | 2100,00 | 0,00 | 2100,00 | 1× `DEPOT_INITIAL` (crédit 2100,00) | ✅ 2100,00 = 2100,00 |
+
+Contrôles complémentaires :
+- Nombre et type de mouvements conformes à la règle de backfill (rapport de validation §2) :
+  `DEPOT_INITIAL` systématique, `AJUSTEMENT` uniquement si `montant_retenu > 0` (motif repris tel
+  quel depuis `garantie.motif_retenue`), aucune `RESTITUTION` ici (aucune garantie
+  `RESTITUE_TOTAL` réelle disponible).
+- Cohérence `bailleur_id` garantie ↔ mouvement : **4/4 lignes cohérentes** (RLS non violée).
+- Invariant `solde_actuel = Σcrédit − Σdébit` : **3/3 garanties OK** (requête `LEFT JOIN` +
+  comparaison directe, pas seulement une relecture de `solde_actuel`).
+
+**Verdict : PASS.**
+
+**Limite de couverture à noter honnêtement** : les 3 garanties réelles disponibles en Staging ne
+couvrent que `DETENU` et `RESTITUE_PARTIEL` — **aucune n'est `RESTITUE_TOTAL`**. Le chemin
+`RESTITUTION` du backfill n'a donc pas pu être vérifié sur données réelles à ce Gate ; il reste
+couvert uniquement par `GarantieLedgerBackfillMigrationTest` (données synthétiques, 3 scénarios
+incluant `RESTITUE_TOTAL`). Ce n'est pas un défaut du backfill — c'est une limite du jeu de
+données réel disponible en Staging à ce jour. À garder à l'esprit pour le futur Gate Production
+(si des garanties `RESTITUE_TOTAL` existent en Production, la même vérification manuelle devra
+les couvrir spécifiquement).
