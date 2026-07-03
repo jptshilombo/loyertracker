@@ -9,6 +9,33 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Production Sprint 9 EP-12a (release `1.7.0`) — NO GO, en attente d'arbitrage PO
+> (2026-07-03).** Analyse produite depuis `STAGING_DEPLOYED` (`sha-6a358eb6`). En vérifiant les
+> données réelles de Production, une **anomalie non détectée en Staging** a été découverte : 2 des
+> 3 baux réels ont `bail.depot_garantie = 600.00` sans aucune ligne `garantie` correspondante — la
+> migration V20 (déjà validée en Staging) ferait afficher `depotGarantie: 0` pour ces 2 baux,
+> silencieusement, y compris dans l'export RGPD. Consignée **RSV-PROD-S9-01**, bloquante, 3
+> options de remédiation présentées (reconstitution au Préflight / correctif de migration + rejeu
+> du Gate Staging / acceptation du risque + recréation post-déploiement), aucune choisie par ce
+> document. **RSV-S9-03** (rollback V20 sans option applicative seule, `DROP COLUMN
+> bail.depot_garantie`) élevée de « reportée » à **bloquante** en Production (données réelles +
+> absence de rollback). Décision : `docs/cgpa/09-production/gate-production-v1.7.0-decision.md`.
+> **Aucun déploiement de Sprint 9 en Production n'est autorisé par ce document.**
+>
+> **Hypercare Production `1.6.0` — T+12 exécuté le 2026-07-03 à ~11:25 UTC, PASS sous
+> surveillance (qualifié).** 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0. Tag `sha-2da27182`
+> inchangé depuis T0. Flyway 19/19. Actuator UP, `/healthz` ok. Prometheus 5/5 up. p99 ~6,2 ms,
+> 5xx=0, Hikari pending=0. 0 erreur critique en logs (60 min). **Écart de planning** : fenêtre
+> T+12 (04:50 UTC ± 30 min) fermée depuis ~6h35 au moment du contrôle réel — qualifié retard de
+> process, sans signal d'incident pendant la fenêtre elle-même. **1 alerte constatée puis
+> remédiée dans la même session** : `BackupHeartbeatMissing` (démarrée 07:19 UTC, après la
+> fenêtre T+12), causée par le daemon `cron` de l'hôte redémarré seulement à 07:48:37 UTC (a
+> raté l'exécution planifiée de 02:15 UTC) — **même cause récurrente que RSV-T24-01** (hypercare
+> `1.4.0`). Remédiation : sauvegarde manuelle exécutée (`loyertracker-20260703-124953.dump`,
+> 316 Kio, SHA-256 `8535ea8f…`, `pg_restore --list` 730 entrées OK), heartbeat repoussé,
+> Alertmanager confirmé `[]` après. Plan : `docs/cgpa/09-production/plan-etape-hypercare-v1.6.0.md`.
+> T+24 inchangé, prévu le 2026-07-03 à 16:50 UTC ± 30 min.
+>
 > **Gate Staging Sprint 9 EP-12a Garantie ledger — GO, `STAGING_DEPLOYED` (2026-07-03).** Tag
 > immuable **`sha-6a358eb6`** déployé sur `ai-test-server`. STG-ISOL-01 PASS avant/après (9
 > conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). Sauvegarde
