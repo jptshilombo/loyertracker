@@ -6,11 +6,11 @@ import java.util.UUID;
 
 public record GarantieMovementDto(UUID id, UUID garantieId, LocalDate dateMouvement, String type,
         BigDecimal debit, BigDecimal credit, BigDecimal soldeApres, String motif,
-        String utilisateur) {
+        String utilisateur, String commentaire, String referenceDocument) {
 
     public static GarantieMovementDto from(GarantieMovement m) {
         return new GarantieMovementDto(m.getId(), m.getGarantieId(), m.getDateMouvement(),
                 m.getType().name(), m.getDebit(), m.getCredit(), m.getSoldeApres(), m.getMotif(),
-                m.getUtilisateur());
+                m.getUtilisateur(), m.getCommentaire(), m.getReferenceDocument());
     }
 }

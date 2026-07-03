@@ -84,7 +84,21 @@ public class Garantie {
         this.statut = StatutGarantie.RESTITUE_PARTIEL;
         this.montantRetenu = montantRetenu;
         this.motifRetenue = motifRetenue;
-        this.soldeActuel = this.montant.subtract(montantRetenu);
+        // Depuis le solde courant (Sprint 10) : depuis le Sprint 9, soldeActuel peut déjà diverger
+        // de montant (RETENUE_LOYER/COMPLEMENT) avant qu'une restitution n'intervienne — soustraire
+        // de montant recalculerait un solde incohérent avec les mouvements déjà enregistrés.
+        this.soldeActuel = this.soldeActuel.subtract(montantRetenu);
+    }
+
+    /** Retenue sur loyer impayé (US-95, ADR-14 §5) : diminue le solde, décision explicite hors
+     * cycle de restitution — le statut ({@code DETENU}/{@code RESTITUE_PARTIEL}) n'est pas affecté. */
+    public void retenirSurLoyer(BigDecimal montant) {
+        this.soldeActuel = this.soldeActuel.subtract(montant);
+    }
+
+    /** Réapprovisionnement (US-96) : augmente le solde disponible, statut inchangé. */
+    public void complementer(BigDecimal montant) {
+        this.soldeActuel = this.soldeActuel.add(montant);
     }
 
     public UUID getId() { return id; }

@@ -8,6 +8,7 @@ import com.loyertracker.affectations.AffectationDto;
 import com.loyertracker.baux.BailDto;
 import com.loyertracker.biens.BienDto;
 import com.loyertracker.garanties.GarantieDto;
+import com.loyertracker.garanties.GarantieMovementDto;
 import com.loyertracker.paiements.PaiementDto;
 
 /**
@@ -28,6 +29,12 @@ public record ExportBailleurDto(
 
     public record BailExportDto(
             BailDto bail,
-            List<GarantieDto> garanties) {
+            List<GarantieExportDto> garanties) {
+    }
+
+    /** Garantie + historique complet de ses mouvements (Sprint 10, US-97/RGPD). */
+    public record GarantieExportDto(
+            GarantieDto garantie,
+            List<GarantieMovementDto> mouvements) {
     }
 }

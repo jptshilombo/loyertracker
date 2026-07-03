@@ -59,7 +59,8 @@ class SchemaMigrationTest {
         // + V18 (StatutPaiement A_VENIR + génération échéances futures — Sprint 5 B4, US-60).
         // + V19 (patrimoine enrichi : champs additionnels + adresse obligatoire — Sprint 7, US-90).
         // + V20 (garantie_movement ledger + bail.depot_garantie supprimée — Sprint 9, US-94).
-        assertThat(result.migrationsExecuted).isEqualTo(20);
+        // + V21 (paiement.garantie_movement_id — Sprint 10, US-95).
+        assertThat(result.migrationsExecuted).isEqualTo(21);
         assertThat(result.success).isTrue();
     }
 

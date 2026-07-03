@@ -13,11 +13,18 @@ public interface GarantieRepository extends JpaRepository<Garantie, UUID> {
     List<Garantie> findByBailIdOrderByDateDepotDesc(UUID bailId);
 
     /**
-     * Montant total déposé sur un bail (ADR-14 §8) : somme de {@code montant} des garanties
-     * rattachées — équivalent, tant que {@code COMPLEMENT} n'est pas exposé métier (Sprint 10),
-     * à la somme des mouvements {@code DEPOT_INITIAL} du ledger. Sert de valeur dérivée pour
-     * {@code BailDto.depotGarantie}, `bail.depot_garantie` étant supprimée en V20.
+     * Montant total déposé sur un bail (ADR-14 §8, recalculée au Sprint 10) : somme des crédits
+     * {@code DEPOT_INITIAL}/{@code COMPLEMENT} du ledger de toutes les garanties rattachées au
+     * bail — reflète désormais les réapprovisionnements (US-96), pas seulement le dépôt initial.
+     * Sert de valeur dérivée pour {@code BailDto.depotGarantie}, `bail.depot_garantie` étant
+     * supprimée en V20.
      */
-    @Query("select coalesce(sum(g.montant), 0) from Garantie g where g.bailId = :bailId")
+    @Query(value = """
+            SELECT COALESCE(SUM(gm.credit), 0)
+            FROM garantie_movement gm
+            JOIN garantie g ON g.id = gm.garantie_id
+            WHERE g.bail_id = :bailId
+              AND gm.type IN ('DEPOT_INITIAL', 'COMPLEMENT')
+            """, nativeQuery = true)
     BigDecimal sommeMontantDeposeParBail(@Param("bailId") UUID bailId);
 }

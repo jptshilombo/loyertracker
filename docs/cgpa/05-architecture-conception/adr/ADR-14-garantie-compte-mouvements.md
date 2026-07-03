@@ -74,3 +74,11 @@ Principes retenus :
 | Recalculer le solde à la volée à chaque lecture (pas de colonne de cache) | Casserait la requête `SECURITY DEFINER` du batch d'alertes existant sans réécriture de celui-ci ; coût de performance non justifié pour un historique généralement court |
 | Développer dès maintenant le processus complet de fin de bail (Évolution 7) | Explicitement hors périmètre demandé par le PO — « ne pas développer toute cette fonctionnalité maintenant, préparer uniquement l'architecture » |
 | Table `garantie_movement` sans `bailleur_id` propre, en s'appuyant uniquement sur la jointure vers `garantie` | Casserait le pattern RLS `FORCE` direct utilisé partout ailleurs dans le projet (défense en profondeur : chaque table métier porte sa propre colonne `bailleur_id`, ADR-01) |
+
+## Addendum — Sprint 10 (2026-07-03)
+
+Point 8 exécuté : `GarantieRepository.sommeMontantDeposeParBail` est désormais recalculée depuis
+`garantie_movement` (somme des crédits `DEPOT_INITIAL`+`COMPLEMENT`) au lieu de `garantie.montant`,
+`COMPLEMENT` étant devenu utilisable métier (US-96). `BailDto.depotGarantie` reflète donc
+désormais les réapprovisionnements. Aucune réécriture des points 7/8 ci-dessus — ce point les
+complète sans les contredire.
