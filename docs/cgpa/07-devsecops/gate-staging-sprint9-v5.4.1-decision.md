@@ -90,8 +90,10 @@ promu et documenté), et ce Gate promeut directement le candidat suivant.
 > préavis ]J+60;J+90] — au 2026-07-03, l'écart J+60 est atteint, faisant basculer le type d'alerte
 > attendu. **Défaut de test pré-existant (dépendant de l'horloge), non introduit par Sprint 9, non
 > couvert par ce Gate.** Sans incidence sur le candidat `sha-6a358eb6` dont le résultat CI (128/128)
-> a été obtenu le 2026-07-02, avant que la fenêtre ne soit franchie. À signaler séparément pour
-> correctif (fixer la date de référence du test plutôt que de dépendre de l'horloge système).
+> a été obtenu le 2026-07-02, avant que la fenêtre ne soit franchie. **Corrigé le 2026-07-03**
+> (commit `92fe9f3`) : le terme est désormais calculé `LocalDate.now().plusDays(75)`, au milieu de
+> la bande, insensible à la date d'exécution — `mvn verify` reconfirmé 128/128 en local. RSV-S9-04
+> ci-dessous mise à jour en conséquence.
 
 ### Déploiement Staging
 
@@ -152,7 +154,7 @@ document ou un rapport de suite, selon la convention retenue) :
 |----|--------|------------|
 | RSV-S9-02 | Validation PO/RM formelle de clôture Sprint 9 non encore tracée distinctement du « GO technique » | **Recommandé avant décision finale** — à obtenir avant ou pendant ce Gate |
 | RSV-S9-03 | Rollback V20 : aucune option applicative seule, uniquement restauration backup (§5) | **Non bloquant pour Staging** (risque accepté, environnement de test) — **à reporter en condition bloquante explicite au futur Gate Production** de ce sprint |
-| RSV-S9-04 | Test `S04AlertesAuditIntegrationTest` dépendant de l'horloge système, échec observé le 2026-07-03 sans lien avec Sprint 9 | **Non bloquant pour ce Gate** (candidat déjà validé par CI le 2026-07-02) — correctif de test à planifier séparément |
+| RSV-S9-04 | Test `S04AlertesAuditIntegrationTest` dépendant de l'horloge système, échec observé le 2026-07-03 sans lien avec Sprint 9 | **Levée le 2026-07-03** (commit `92fe9f3`) — terme de bail calculé relatif à la date d'exécution, `mvn verify` 128/128 reconfirmé |
 
 ## 8. Décision
 
