@@ -9,6 +9,15 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Hypercare Production `1.7.0` — T0 exécuté le 2026-07-03 à ~13:45 UTC, PASS sous
+> surveillance.** 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0. Tag `sha-6a358eb6` conforme.
+> Flyway 20/20. Actuator UP. Prometheus 5/5 up. Alertmanager `[]`. p99 ~47 ms (cohérent avec la
+> charge du smoke qui vient de s'achever), 5xx=0, Hikari pending=0. Heartbeat backup ~31 min.
+> 1 erreur qualifiée (`duplicate key`, smoke inscription 409 — attendue), aucune erreur
+> inattendue. Invariant `garantie.solde_actuel = Σ mouvements` vérifié 3/3. Plan :
+> `docs/cgpa/09-production/plan-etape-hypercare-v1.7.0.md`. T+12 prévu le 2026-07-04 à ~01:45 UTC
+> ± 30 min ; T+24 le 2026-07-04 à ~13:45 UTC ± 30 min.
+>
 > **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 9 `1.7.0` — 2026-07-03 ~13:35 UTC.**
 > Tag **`sha-6a358eb6`** déployé sur `loyertracker-prod-server`. `api`+`nginx` recréés ciblés,
 > aucun écart, `postgres`/`keycloak` inchangés. Flyway **V20 appliquée** : table
