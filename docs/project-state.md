@@ -9,6 +9,18 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Préflight Production `1.7.0` — PASS, RSV-PROD-S9-01 levée (2026-07-03).** Sauvegarde
+> pré-déploiement exécutée et vérifiée (`loyertracker-20260703-131331.dump`, 316 Kio, SHA-256
+> `3e83a277…`, `pg_restore --list` 730 entrées OK). **Option A1 exécutée** : 2 lignes `garantie`
+> reconstituées pour les baux `659ea02c-…`/`cb653273-…` (600,00 chacune, `type_garantie=CAUTION`,
+> `date_depot` = date de début du bail, cohérent avec la garantie sœur déjà existante sur le même
+> bailleur), pendant que `bail.depot_garantie` existait encore. Vérifié : 3/3 baux ont désormais
+> une garantie correspondante, montants cohérents. 8/8 conteneurs Up, 4/4 healthy, restart=0. Tag
+> `sha-2da27182` (`1.6.0`) inchangé, Flyway 19/19 (V20 pas encore appliquée). Rapport :
+> `docs/cgpa/09-production/preflight-backup-v1.7.0-report.md`. **Les deux conditions bloquantes du
+> Gate Production `1.7.0` sont désormais levées.** Prochaine étape autorisée : déploiement
+> technique `1.7.0` (`api`+`nginx`, migration V20), sous décision distincte.
+>
 > **Arbitrage PO — Gate Production Sprint 9 (`1.7.0`) : GO sous réserve (2026-07-03, jordan).**
 > Sur RSV-PROD-S9-01 (2 baux réels perdraient l'affichage de leur dépôt après V20) : **option A1
 > retenue** — reconstitution des 2 garanties manquantes au Préflight, avant application de la
