@@ -10,9 +10,9 @@
 | Digest GHCR API | `sha256:485c8574cca057d4e00f3c0de640faf4ad8b378c302604b76a752563eb98dfba` |
 | Digest GHCR Web | `sha256:70ae97f2eda455b5c9640cc33aeb6ea4abda9131222b3f948a5ea29768bca5c5` |
 | Production actuelle | `1.6.0` — `sha-2da27182` |
-| Rollback disponible | **Aucun rollback applicatif seul viable** — voir §5 (RSV-S9-03) |
-| Décision | **NO GO — en attente d'arbitrage PO** |
-| Statut | `PRODUCTION_READY` **non atteint** |
+| Rollback disponible | **Aucun rollback applicatif seul viable** — voir §5 (RSV-S9-03, acceptée) |
+| Décision | **GO sous réserve** — arbitrage PO rendu le 2026-07-03 (jordan) |
+| Statut | `PRODUCTION_READY` **atteint sous condition** — exécution de A1 requise au Préflight avant migration V20 |
 
 ## 1. Objet
 
@@ -20,10 +20,13 @@ Statuer l'autorisation de promotion Production de Sprint 9 EP-12a (US-94, ledger
 `GarantieMovement`, migration rétroactive V20), depuis son état `STAGING_DEPLOYED` (tag
 `sha-6a358eb6`, `docs/cgpa/07-devsecops/gate-staging-sprint9-v5.4.1-decision.md`).
 
-**Ce document ne peut pas conclure à un GO.** En vérifiant les données réelles de Production
-pendant la préparation de ce Gate, une anomalie de données non détectée en Staging a été
-découverte (§4) — elle doit être arbitrée par le Product Owner avant toute suite. Ce Gate présente
-l'analyse complète et les options, sans en choisir une.
+En vérifiant les données réelles de Production pendant la préparation de ce Gate, une anomalie de
+données non détectée en Staging a été découverte (§4). **Arbitrage rendu le 2026-07-03 (PO,
+jordan)** : option **A1** retenue (reconstitution des garanties manquantes au Préflight, avant
+application de V20) ; **RSV-S9-03 acceptée explicitement** (absence de rollback applicatif seul
+pour V20). Les deux conditions bloquantes du §7 (version initiale) sont levées — **GO sous
+réserve** : l'exécution effective de A1, avec vérification, reste une condition du Préflight
+avant que Flyway n'applique V20.
 
 ## 2. Périmètre
 
@@ -159,8 +162,8 @@ divergence visible dans le champ numérique lui-même, au lieu de seulement dans
 
 | ID | Nature | Sévérité | Traitement |
 |----|--------|----------|------------|
-| **RSV-PROD-S9-01** | Anomalie de données réelle découverte en Production : 2 baux perdraient silencieusement l'affichage de leur dépôt (§4) | **Bloquant** | Nécessite arbitrage PO explicite entre A1/A2/B avant tout déploiement, puis exécution et vérification de l'option choisie |
-| **RSV-S9-03** | Migration V20 (`DROP COLUMN bail.depot_garantie`) : aucune option de rollback applicatif seul, restauration de backup uniquement (§3 Rollback) | **Bloquant** (élevée depuis « reportée » au Gate Staging — données réelles + absence de rollback = sévérité plus haute qu'en Staging) | Nécessite une acceptation écrite explicite (PO + CDO), nommant qui accepte ce risque, avant tout déploiement |
+| **RSV-PROD-S9-01** | Anomalie de données réelle découverte en Production : 2 baux perdraient silencieusement l'affichage de leur dépôt (§4) | **Arbitrée le 2026-07-03** (PO, jordan) : **option A1 retenue** — reconstitution des 2 garanties manquantes au Préflight, avant application de V20. **Reste à exécuter et vérifier au Préflight** (condition de déploiement, pas encore levée en pratique) |
+| **RSV-S9-03** | Migration V20 (`DROP COLUMN bail.depot_garantie`) : aucune option de rollback applicatif seul, restauration de backup uniquement (§3 Rollback) | **Acceptée explicitement le 2026-07-03** par le Product Owner (jordan) — Chief Delivery Officer (Claude Code) coordonne l'exécution en connaissance de ce risque |
 | RP-160-03 | `CHANGELOG.md` `[Non publié]` mélange encore du contenu déjà livré (Sprint 5/6/7/8) avec du contenu non livré | Non bloquant — dette pré-existante, sans lien avec Sprint 9, action Release Manager déjà tracée depuis le Gate `1.6.0` | À corriger avant toute clôture de release, indépendamment de ce Gate |
 | — | Release notes `1.7.0` non encore rédigées | Non bloquant pour cette analyse | À produire avant le Préflight, si ce Gate progresse vers un GO |
 
@@ -168,40 +171,39 @@ divergence visible dans le champ numérique lui-même, au lieu de seulement dans
 
 | Rôle | Avis |
 |---|---|
-| Governance Officer | **NO GO — en attente d'arbitrage PO** — traçabilité Staging complète et solide (STG-ISOL-01, backfill vérifié, smoke, cycle live), mais une anomalie de données réelle non couverte par ces vérifications a été découverte directement en Production ; ne peut pas recommander un GO tant qu'elle n'est pas arbitrée |
-| Enterprise Architect | **NO GO** — la combinaison migration destructive (`DROP COLUMN`) + absence de rollback applicatif + anomalie de données non résolue constitue un profil de risque trop élevé pour une décision GO en l'état |
-| DevSecOps Lead | **GO sous réserve bloquante** — CI et preuves techniques Staging complètes et solides ; le blocage relève d'une décision produit/données (RSV-PROD-S9-01), pas d'un défaut technique |
-| Release Manager | **NO GO** — candidat techniquement recevable (`sha-6a358eb6`), mais les conditions de rollback (RSV-S9-03) et l'anomalie de données (RSV-PROD-S9-01) doivent être actées avant toute planification de déploiement |
-| Product Owner | **Arbitrage en attente** — options de remédiation présentées en §4, aucune n'a encore été choisie |
+| Governance Officer | **GO sous réserve** — traçabilité Staging complète et solide (STG-ISOL-01, backfill vérifié, smoke, cycle live), anomalie de données arbitrée par le PO (A1), risque de rollback accepté explicitement |
+| Enterprise Architect | **GO sous réserve** — la combinaison migration destructive (`DROP COLUMN`) + absence de rollback reste un profil de risque élevé, mais désormais couvert par une acceptation explicite et nommée du PO, condition suffisante pour procéder |
+| DevSecOps Lead | **GO sous réserve** — CI et preuves techniques Staging complètes ; A1 à exécuter et vérifier au Préflight avant toute application de V20 |
+| Release Manager | **GO sous réserve** — candidat techniquement recevable (`sha-6a358eb6`) ; conditions PO/rollback désormais actées, reste l'exécution de A1 au Préflight |
+| Product Owner | **GO** — option **A1** retenue pour RSV-PROD-S9-01, RSV-S9-03 acceptée explicitement, 2026-07-03 (jordan) |
 
 ## 7. Décision finale
 
-**Chief Delivery Officer : NO GO — en attente d'arbitrage PO.**
+**Chief Delivery Officer : GO sous réserve acceptée.**
 
-- `PRODUCTION_READY` : **non atteint.**
-- `PRODUCTION_DEPLOYED` : non atteint.
-- **Aucun déploiement de Sprint 9 en Production n'est autorisé par ce document.**
+- `PRODUCTION_READY` : **atteint**, sous condition d'exécution de A1 au Préflight.
+- `PRODUCTION_DEPLOYED` : non atteint — déploiement à exécuter selon le plan Préflight →
+  Déploiement → Validation finale → Hypercare.
 
-### Conditions bloquantes avant toute nouvelle instruction de déploiement
+### Conditions bloquantes avant déploiement technique
 
-1. **RSV-PROD-S9-01** — décision PO sur l'une des options A1/A2/B (§4), exécutée et vérifiée
-   (requête SQL de confirmation sur les 2 baux concernés).
-2. **RSV-S9-03** — acceptation écrite explicite du risque de rollback (absence d'option
-   applicative seule), nommant qui l'accepte (PO + CDO).
+1. ~~**RSV-PROD-S9-01** — décision PO~~ **✅ Arbitrée** : option A1 retenue. **Reste à exécuter au
+   Préflight** (créer les 2 lignes `garantie` manquantes avant que Flyway n'applique V20), avec
+   vérification SQL de confirmation sur les 2 baux concernés.
+2. ~~**RSV-S9-03** — acceptation écrite explicite du risque de rollback~~ **✅ Acceptée** par le
+   Product Owner (jordan), 2026-07-03.
 
-### Services cibles (une fois les conditions levées)
+### Services cibles
 
 `api` + `nginx` — migration V20 sur le schéma Postgres. `postgres`, `keycloak` et le monitoring
 restent inchangés.
 
 ### Prochaines étapes
 
-| Étape | Document à produire |
-|---|---|
-| Arbitrage PO sur RSV-PROD-S9-01 | Décision à consigner dans `docs/project-state.md` |
-| Exécution de l'option choisie + vérification | Rapport dédié (selon l'option retenue) |
-| Acceptation écrite RSV-S9-03 | À consigner dans ce document ou dans `docs/project-state.md` |
-| Si les deux conditions sont levées : Préflight + backup Production | `preflight-backup-v1.7.0-report.md` |
-| Déploiement technique | `deploiement-technique-v1.7.0-report.md` |
+| Étape | Statut | Document |
+|---|---|---|
+| Arbitrage PO sur RSV-PROD-S9-01 (A1) et acceptation RSV-S9-03 | ✅ **Fait** (2026-07-03) | Ce document §5/§6, `docs/project-state.md` |
+| Préflight + backup Production + exécution A1 (reconstitution des 2 garanties) | ⏳ À exécuter | `preflight-backup-v1.7.0-report.md` |
+| Déploiement technique | ⏳ | `deploiement-technique-v1.7.0-report.md` |
 | Validation finale + smoke Production | `validation-finale-v1.7.0-report.md` |
 | Hypercare + clôture | `plan-etape-hypercare-v1.7.0.md` |
