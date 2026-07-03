@@ -212,10 +212,13 @@ public class GarantieService {
         StringBuilder csv = new StringBuilder(
                 "date;type;debit;credit;solde;auteur;motif;commentaire;referenceDocument\n");
         for (GarantieMovementDto m : lignes) {
-            csv.append(m.dateMouvement()).append(';').append(m.type()).append(';')
-                    .append(m.debit()).append(';').append(m.credit()).append(';')
-                    .append(m.soldeApres()).append(';').append(csvEchapper(m.utilisateur()))
-                    .append(';').append(csvEchapper(m.motif())).append(';')
+            csv.append(csvEchapper(m.dateMouvement().toString())).append(';')
+                    .append(csvEchapper(m.type())).append(';')
+                    .append(csvEchapper(m.debit().toPlainString())).append(';')
+                    .append(csvEchapper(m.credit().toPlainString())).append(';')
+                    .append(csvEchapper(m.soldeApres().toPlainString())).append(';')
+                    .append(csvEchapper(m.utilisateur())).append(';')
+                    .append(csvEchapper(m.motif())).append(';')
                     .append(csvEchapper(m.commentaire())).append(';')
                     .append(csvEchapper(m.referenceDocument())).append('\n');
         }
