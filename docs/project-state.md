@@ -9,6 +9,22 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Staging Sprint 9 EP-12a Garantie ledger — GO, `STAGING_DEPLOYED` (2026-07-03).** Tag
+> immuable **`sha-6a358eb6`** déployé sur `ai-test-server`. STG-ISOL-01 PASS avant/après (9
+> conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). Sauvegarde
+> pré-déploiement (`pg_dump -Fc`) effectuée et vérifiée. Flyway **V20 appliquée** : table
+> `garantie_movement` (RLS `FORCE`), backfill rétroactif, `bail.depot_garantie` supprimée, total
+> 20/20. **Vérification manuelle ligne-à-ligne du backfill** sur les 3 garanties réelles : invariant
+> `solde_actuel = Σcrédit − Σdébit` vérifié 3/3 — PASS. Smoke **58 FAIL/1 puis 59/0** (correctif
+> compteur Flyway du script, PR #158). Le script de smoke n'exerçant aucun endpoint garantie, le
+> **cycle création→restitution a été vérifié manuellement en direct sur l'API réelle**
+> (`DEPOT_INITIAL` puis `RESTITUTION` journalisés, invariant vérifié, `audit_log` cohérent) —
+> ferme le gap sur l'absence de garantie `RESTITUE_TOTAL` réelle en Staging. Décision :
+> `docs/cgpa/07-devsecops/gate-staging-sprint9-v5.4.1-decision.md`. **Réserve RSV-S9-03** :
+> rollback de V20 sans option applicative seule (`DROP COLUMN bail.depot_garantie`), restauration
+> de backup uniquement — reportée en condition bloquante explicite au **Gate Production** de ce
+> sprint (distinct, non autorisé par ce Gate Staging).
+>
 > **GO PO + GO Release Manager — clôture Sprint 9 EP-12a Garantie ledger (US-94), 2026-07-03
 > (jordan).** Validation PO de clôture du sprint tracée (s'ajoute au GO de cadrage sprint-par-sprint
 > du 2026-07-01 et à l'arbitrage kickoff `bail.depot_garantie` du 2026-07-02, ADR-14 §8) : **GO**,

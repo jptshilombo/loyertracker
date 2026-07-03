@@ -8,12 +8,12 @@
 | Tag candidat | `sha-6a358eb6` |
 | Digest API | `sha256:485c8574cca057d4e00f3c0de640faf4ad8b378c302604b76a752563eb98dfba` |
 | Digest Web | `sha256:70ae97f2eda455b5c9640cc33aeb6ea4abda9131222b3f948a5ea29768bca5c5` |
-| Staging actuel | `sha-2da27182` (Sprint 7+8, déployé 2026-07-02) |
+| Staging précédent | `sha-2da27182` (Sprint 7+8, déployé 2026-07-02) |
 | Environnement | `ai-test-server` — Staging mutualisé |
-| Décision | **GO sous réserve — déployé, backfill vérifié, smoke 59/59, cycle garantie live vérifié** |
-| Statut | Déploiement + vérifications exécutés (§9/§10) — **`STAGING_DEPLOYED` non encore prononcé : `STG-ISOL-01` état après et mise à jour `docs/staging-state.md` restants** |
+| Décision | **GO — `STAGING_DEPLOYED` atteint (2026-07-03)** |
+| Statut | **`STAGING_DEPLOYED`** — toutes les conditions du §8 levées : PO/RM GO, `STG-ISOL-01` PASS avant/après, sauvegarde, backfill vérifié, smoke 59/59, cycle garantie live vérifié, `docs/staging-state.md` à jour |
 | Plans | `docs/cgpa/06-planification-agile/plan-execution-evolutions-ep10-ep13.md` (§Sprint 9), `sprint-9-garantie-ledger-rapport-validation.md` |
-| PR | #152 (code, merge commit `6a358eb6`), #153/#154/#155/#156 (docs de gouvernance) |
+| PR | #152 (code, merge commit `6a358eb6`), #153/#154/#155/#156/#157/#158/#159/#160/#161 (docs de gouvernance et correctif smoke) |
 
 ## 1. Objet
 
@@ -204,27 +204,31 @@ document ou un rapport de suite, selon la convention retenue) :
 
 ## 8. Décision
 
-**GO sous réserve — déploiement autorisé sous les conditions suivantes, `STAGING_DEPLOYED` non
-encore atteint.**
+**GO — `STAGING_DEPLOYED` atteint (2026-07-03).**
 
-### Conditions avant déploiement technique
+Toutes les conditions posées par ce Gate sont levées :
 
 1. ~~Tracer la validation PO et Release Manager de clôture Sprint 9 (RSV-S9-02)~~ **✅ Levée
    2026-07-03** — GO PO et GO RM tracés ci-dessus, sans réserve.
 2. ~~Sauvegarde Staging pré-déploiement effectuée~~ **✅ Faite le 2026-07-03 09:42 UTC** (§5).
-
-### Conditions faisant partie du déploiement lui-même
-
 3. ~~`STG-ISOL-01` = PASS (avant/après)~~ **✅ PASS avant (§4) et PASS après (§10bis)**,
    2026-07-03.
 4. ~~Vérification manuelle ligne-à-ligne du backfill V20 sur données réelles~~ **✅ PASS le
    2026-07-03** (§9).
 5. ~~Smoke Staging complet~~ **✅ 59/59 PASS le 2026-07-03** (§10).
+6. ~~Mise à jour `docs/staging-state.md`~~ **✅ Faite le 2026-07-03** (PR #161, merge `093cacd`).
+
+### Réserve reportée au Gate Production
+
+**RSV-S9-03** — rollback de la migration V20 (`DROP COLUMN bail.depot_garantie`) sans option
+applicative seule, restauration de backup uniquement requise en cas de rollback. Non bloquante
+pour ce Gate Staging (risque accepté, environnement de test), **à traiter comme condition
+bloquante explicite au Gate Production** de ce sprint (cf. §5, analyse de risque).
 
 ### Prochaine étape autorisée
 
-Seule la mise à jour de `docs/staging-state.md` (§6) reste avant de clore ce Gate en
-`STAGING_DEPLOYED`. **Aucune promotion Production n'est autorisée par ce document.**
+**Gate Production Sprint 9**, sous décision CDO/Release Manager distincte — cette décision
+`STAGING_DEPLOYED` n'autorise par elle-même aucune promotion Production.
 
 ## 9. Déploiement exécuté et vérification manuelle du backfill (2026-07-03)
 
