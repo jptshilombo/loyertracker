@@ -68,8 +68,8 @@ promu et documenté), et ce Gate promeut directement le candidat suivant.
 | Stories terminées listées | ✅ | US-94 |
 | Stories exclues/reportées listées | ✅ | US-95→98 → Sprint 10 (rapport §6) |
 | Écarts au plan acceptés | ✅ | Aucun écart — séquencement normal (§3) |
-| Validation Product Owner | ⚠️ **À tracer explicitement** | GO de cadrage sprint-par-sprint donné le 2026-07-01 + arbitrage kickoff `bail.depot_garantie` tranché le 2026-07-02 (ADR-14 §8) — mais le rapport de validation ne porte qu'un **« GO technique »** ; aucune validation PO distincte de la *clôture* du sprint n'est encore consignée. **Recommandé avant décision finale de ce Gate.** |
-| Validation Release Manager | ⚠️ **À tracer explicitement** | Non encore obtenue formellement — recommandé au même moment que la validation PO |
+| Validation Product Owner | ✅ **GO** | GO de clôture Sprint 9 tracé le 2026-07-03 (jordan) — s'ajoute au GO de cadrage sprint-par-sprint du 2026-07-01 et à l'arbitrage kickoff `bail.depot_garantie` du 2026-07-02 (ADR-14 §8). Aucune réserve PO supplémentaire. |
+| Validation Release Manager | ✅ **GO** | GO de recevabilité du candidat `sha-6a358eb6` pour promotion Staging tracé le 2026-07-03 (jordan) — CI 7/7 verte, `CHANGELOG.md`/`docs/project-state.md` à jour. Aucune réserve RM supplémentaire. |
 
 ### Contrôles DevSecOps
 
@@ -152,7 +152,7 @@ document ou un rapport de suite, selon la convention retenue) :
 
 | ID | Nature | Traitement |
 |----|--------|------------|
-| RSV-S9-02 | Validation PO/RM formelle de clôture Sprint 9 non encore tracée distinctement du « GO technique » | **Recommandé avant décision finale** — à obtenir avant ou pendant ce Gate |
+| RSV-S9-02 | Validation PO/RM formelle de clôture Sprint 9 non encore tracée distinctement du « GO technique » | **Levée le 2026-07-03** — GO PO (clôture Sprint 9) et GO RM (recevabilité `sha-6a358eb6`) tracés, aucune réserve |
 | RSV-S9-03 | Rollback V20 : aucune option applicative seule, uniquement restauration backup (§5) | **Non bloquant pour Staging** (risque accepté, environnement de test) — **à reporter en condition bloquante explicite au futur Gate Production** de ce sprint |
 | RSV-S9-04 | Test `S04AlertesAuditIntegrationTest` dépendant de l'horloge système, échec observé le 2026-07-03 sans lien avec Sprint 9 | **Levée le 2026-07-03** (commit `92fe9f3`) — terme de bail calculé relatif à la date d'exécution, `mvn verify` 128/128 reconfirmé |
 
@@ -163,8 +163,8 @@ encore atteint.**
 
 ### Conditions avant déploiement technique
 
-1. Tracer la validation PO et Release Manager de clôture Sprint 9 (RSV-S9-02), ou réserve datée
-   explicite si différée.
+1. ~~Tracer la validation PO et Release Manager de clôture Sprint 9 (RSV-S9-02)~~ **✅ Levée
+   2026-07-03** — GO PO et GO RM tracés ci-dessus, sans réserve.
 2. Sauvegarde Staging pré-déploiement effectuée (§5).
 
 ### Conditions faisant partie du déploiement lui-même
