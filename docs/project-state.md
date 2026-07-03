@@ -9,6 +9,27 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Préflight Production `1.7.0` — PASS, RSV-PROD-S9-01 levée (2026-07-03).** Sauvegarde
+> pré-déploiement exécutée et vérifiée (`loyertracker-20260703-131331.dump`, 316 Kio, SHA-256
+> `3e83a277…`, `pg_restore --list` 730 entrées OK). **Option A1 exécutée** : 2 lignes `garantie`
+> reconstituées pour les baux `659ea02c-…`/`cb653273-…` (600,00 chacune, `type_garantie=CAUTION`,
+> `date_depot` = date de début du bail, cohérent avec la garantie sœur déjà existante sur le même
+> bailleur), pendant que `bail.depot_garantie` existait encore. Vérifié : 3/3 baux ont désormais
+> une garantie correspondante, montants cohérents. 8/8 conteneurs Up, 4/4 healthy, restart=0. Tag
+> `sha-2da27182` (`1.6.0`) inchangé, Flyway 19/19 (V20 pas encore appliquée). Rapport :
+> `docs/cgpa/09-production/preflight-backup-v1.7.0-report.md`. **Les deux conditions bloquantes du
+> Gate Production `1.7.0` sont désormais levées.** Prochaine étape autorisée : déploiement
+> technique `1.7.0` (`api`+`nginx`, migration V20), sous décision distincte.
+>
+> **Arbitrage PO — Gate Production Sprint 9 (`1.7.0`) : GO sous réserve (2026-07-03, jordan).**
+> Sur RSV-PROD-S9-01 (2 baux réels perdraient l'affichage de leur dépôt après V20) : **option A1
+> retenue** — reconstitution des 2 garanties manquantes au Préflight, avant application de la
+> migration, pendant que `bail.depot_garantie` existe encore. Sur RSV-S9-03 (aucun rollback
+> applicatif seul pour V20) : **acceptée explicitement** par le PO. Les deux conditions bloquantes
+> du Gate Production sont levées côté gouvernance ; reste l'exécution effective de A1 au
+> Préflight, avec vérification, avant la migration V20. Décision mise à jour :
+> `docs/cgpa/09-production/gate-production-v1.7.0-decision.md`.
+>
 > **Gate Production Sprint 9 EP-12a (release `1.7.0`) — NO GO, en attente d'arbitrage PO
 > (2026-07-03).** Analyse produite depuis `STAGING_DEPLOYED` (`sha-6a358eb6`). En vérifiant les
 > données réelles de Production, une **anomalie non détectée en Staging** a été découverte : 2 des
