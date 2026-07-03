@@ -9,6 +9,24 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 9 `1.7.0` — 2026-07-03 ~13:35 UTC.**
+> Tag **`sha-6a358eb6`** déployé sur `loyertracker-prod-server`. `api`+`nginx` recréés ciblés,
+> aucun écart, `postgres`/`keycloak` inchangés. Flyway **V20 appliquée** : table
+> `garantie_movement` (RLS FORCE), backfill rétroactif sur 3 garanties (dont les 2 reconstituées
+> par l'option A1 au Préflight), `bail.depot_garantie` supprimée — vérifié sans erreur. **RSV-
+> PROD-S9-01 confirmée résolue en conditions réelles** : les 2 baux auparavant orphelins ont
+> désormais un mouvement `DEPOT_INITIAL` cohérent et un `solde_actuel` correct. Smoke Production
+> **59 PASS / 0 FAIL** (après correctifs : synchronisation du dépôt sur l'hôte, resté 40 commits
+> en retard sur `main`, et réactivation temporaire de `bailleur-test@test.local`). Nettoyage
+> transactionnel complet (bailleur2-smoke + gest-smoke supprimés DB+KC, compteurs identiques à la
+> baseline `1.6.0`, garanties passées de 1 à 3 conformément à A1). `.env` persisté
+> `sha-6a358eb6` (backup `.env.bak-pre-1.7.0`). Prometheus 5/5 up, Alertmanager 0 alerte.
+> Rapports : `docs/cgpa/09-production/deploiement-technique-v1.7.0-report.md`,
+> `docs/cgpa/09-production/validation-finale-v1.7.0-report.md`. **Réserves restant ouvertes** :
+> RSV-S9-03 (aucun rollback applicatif seul viable, acceptée par le PO — permanente pour ce
+> schéma), RSV-S7-8-01 et RP-160-03 (héritées de `1.6.0`, non bloquantes). **Hypercare
+> T0/T+12/T+24 requis avant clôture `1.7.0`.**
+>
 > **Préflight Production `1.7.0` — PASS, RSV-PROD-S9-01 levée (2026-07-03).** Sauvegarde
 > pré-déploiement exécutée et vérifiée (`loyertracker-20260703-131331.dump`, 316 Kio, SHA-256
 > `3e83a277…`, `pg_restore --list` 730 entrées OK). **Option A1 exécutée** : 2 lignes `garantie`
