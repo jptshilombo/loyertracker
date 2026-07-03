@@ -9,6 +9,15 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **GO PO + GO Release Manager — clôture Sprint 9 EP-12a Garantie ledger (US-94), 2026-07-03
+> (jordan).** Validation PO de clôture du sprint tracée (s'ajoute au GO de cadrage sprint-par-sprint
+> du 2026-07-01 et à l'arbitrage kickoff `bail.depot_garantie` du 2026-07-02, ADR-14 §8) : **GO**,
+> aucune réserve. Validation Release Manager de recevabilité du candidat `sha-6a358eb6` pour
+> promotion Staging : **GO**, aucune réserve (CI 7/7 verte, `CHANGELOG.md`/`project-state.md` à
+> jour). Ceci lève **RSV-S9-02** (`gate-staging-sprint9-v5.4.1-decision.md` §4/§7). Reste ouvert
+> avant `STAGING_DEPLOYED` : sauvegarde Staging pré-déploiement, `STG-ISOL-01`, vérification
+> manuelle ligne-à-ligne du backfill V20 sur les garanties réelles, smoke Staging complet.
+>
 > **PR #152 fusionnée dans `main` — Sprint 9 EP-12a Garantie ledger (US-94), 2026-07-02 18:28
 > UTC.** Merge commit `6a358eb6` (base `main`, branche `feat/sprint9-garantie-ledger-ep12a`,
 > commits `dc89c3a` + `2b50290`). CI GitHub complète **verte** (7/7) : CodeQL (java-kotlin,
