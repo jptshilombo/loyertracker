@@ -162,16 +162,27 @@ ADR-14 ni dans le rapport de validation Sprint 9 ; à consigner formellement ava
 finale de ce Gate, et à reporter tel quel au futur Gate Production de ce sprint (risque plus
 critique qu'en Staging, données réelles en jeu).
 
-**Recommandation** : sauvegarde (`pg_dump -Fc`) de la base Staging immédiatement avant ce
-déploiement, comme filet de sécurité, même si Staging n'a pas les mêmes exigences de continuité
-que Production.
+**Recommandation exécutée** : sauvegarde (`pg_dump -Fc`) de la base Staging effectuée le
+2026-07-03 à 09:42 UTC, avant tout déploiement — `infra/backup/backup-postgres.sh`
+(`COMPOSE_FILE=docker-compose.staging.yml`), même script versionné que les Préflight Production.
+
+| Élément | Valeur |
+|---|---|
+| Dump | `loyertracker-20260703-094234.dump` (362 861 octets) |
+| SHA-256 dump | `910674b2b542360817cb253e41c8364bc8d57371c958b3554bcade8d69a3533a` |
+| Globals | `loyertracker-20260703-094234.globals.sql` (rôles cluster) |
+| SHA-256 globals | `dbfa4b171df0eaccb82de7c01791961997103a41b92e0d20f7a0c33b2b5f99cb` |
+| Intégrité | `pg_restore --list` : 730 entrées — OK |
+| Permissions | répertoire `700`, fichiers `600`, hors dépôt (`~/loyertracker-backups/daily`) |
+| Heartbeat | poussé au Pushgateway — aucune alerte `BackupHeartbeatMissing` |
 
 ## 6. Ce qui reste à exécuter pour atteindre `STAGING_DEPLOYED`
 
 Non couvert par ce document — à réaliser lors du déploiement effectif, puis à consigner (dans ce
 document ou un rapport de suite, selon la convention retenue) :
 
-1. Sauvegarde Staging pré-déploiement (`pg_dump -Fc`), recommandée par §5.
+1. ~~Sauvegarde Staging pré-déploiement (`pg_dump -Fc`)~~ **✅ Faite le 2026-07-03 09:42 UTC**
+   (détail §5) — filet de sécurité en place avant tout déploiement.
 2. ~~Exécution `STG-ISOL-01` (avant/après déploiement)~~ **État avant : ✅ PASS (2026-07-03,
    §4)** — état après restant à exécuter une fois le déploiement effectué.
 3. Déploiement `LOYERTRACKER_TAG=sha-6a358eb6` (services `api` + `nginx`, migration V20 appliquée).
@@ -200,7 +211,7 @@ encore atteint.**
 
 1. ~~Tracer la validation PO et Release Manager de clôture Sprint 9 (RSV-S9-02)~~ **✅ Levée
    2026-07-03** — GO PO et GO RM tracés ci-dessus, sans réserve.
-2. Sauvegarde Staging pré-déploiement effectuée (§5).
+2. ~~Sauvegarde Staging pré-déploiement effectuée~~ **✅ Faite le 2026-07-03 09:42 UTC** (§5).
 
 ### Conditions faisant partie du déploiement lui-même
 
