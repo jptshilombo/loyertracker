@@ -8,9 +8,9 @@
 
 | Champ | Valeur |
 |---|---|
-| Date initiale / dernière mise à jour | 2026-06-14 / 2026-06-30 |
+| Date initiale / dernière mise à jour | 2026-06-14 / 2026-07-03 |
 | Branche de référence | `main` |
-| Lot initial / dernier déploiement | Production Readiness 4b / Sprint 5 Lot B (PR #115) |
+| Lot initial / dernier déploiement | Production Readiness 4b / Sprint 9 EP-12a Garantie ledger (PR #152) |
 | Hôte | Serveur partagé `ai-test-server` (IP privée `172.31.11.102`) |
 | Reverse proxy mutualisé | nginx-proxy-manager (occupe 80/443 de l'hôte) + autres stacks (loyerpro, outils labo) |
 | Approche d'intégration | Ports alternatifs, smoke local (option retenue) — **aucune modification de l'infra partagée** |
@@ -29,7 +29,7 @@ réseau bridge dédié), sans toucher au reverse proxy mutualisé ni aux stacks 
 |---|---|
 | Fichier Compose | `docker-compose.staging.yml` |
 | Source des images | GHCR (`ghcr.io/jptshilombo`), tag immuable — **jamais `latest`** (ADR-08, lot 1) |
-| `LOYERTRACKER_TAG` | **déployé : `sha-2da27182`** (Sprint 7 EP-10 US-90 Patrimoine enrichi + Sprint 8 EP-11 US-92/93 Money/Devise, PR #143+#144+#145, V19, déployé le 2026-07-02, STG-ISOL-01 PASS, smoke 59/0) |
+| `LOYERTRACKER_TAG` | **déployé : `sha-6a358eb6`** (Sprint 9 EP-12a US-94 Garantie ledger, PR #152, V20, déployé le 2026-07-03, STG-ISOL-01 PASS avant/après, smoke 59/0, cycle garantie création→restitution vérifié live) |
 | Ports hôte (web) | `WEB_HTTP_PORT=18080` → 8080, `WEB_HTTPS_PORT=18443` → 8443 (paramétrables, lot 4b) |
 | Ports internes | `api`, `keycloak`, `postgres` **non publiés** sur l'hôte (joignables uniquement via Nginx) |
 | Issuer Keycloak | `https://loyertracker.staging.loyerpro.org/auth/realms/loyertracker` — **canonique, sans port** (`KC_HOSTNAME=loyertracker.staging.loyerpro.org`) — basculé le 2026-06-16 (exposition publique) |
@@ -178,11 +178,21 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 | 2026-06-30 | `sha-98afa99a` | Sprint 5 Lot B — PR #115 (B1 bien.statut sync, B2 patrimoine.adresse, B3 bail.devise EUR/USD/CDF, B4 StatutPaiement A_VENIR + generer_echeances_loyers() rewritten) | **4/4** | **47/0** | — / — | STG-ISOL-01 live PASS avant/après (9 conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, 2026-06-30T14:44/14:47 UTC). `api` + `nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **3 nouvelles migrations appliquées (V16/V17/V18), total 18/18**. Smoke 47/0 PASS (port interne `18443`). **Gate Staging Sprint 5 Lot B GO — `STAGING_DEPLOYED`**. Prochaine action autorisée : Gate Production Sprint 5 (distinct, aucune promotion autorisée par ce Gate Staging). |
 | 2026-07-01 | `sha-08b366fa` | Sprint 6 — PR #123 (US-70 export/effacement locataire RGPD, US-72 CSP Nginx durci) | **8/8** | **47/0 puis 59/0** | — / — | STG-ISOL-01 PASS constaté après déploiement (8 conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). `api` + `nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **aucune nouvelle migration**, 18/18 inchangé. Smoke 47/0 PASS puis **59/0** après extension du script (§RSV-S6-01). CSP vérifiée live (`script-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` présents). `GET /api/bailleurs/export` et `DELETE .../locataire` désormais couverts par le smoke live (§RSV-S6-01 levée), en complément de `RgpdIntegrationTest` (CI verte). **Gate Staging Sprint 6 GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-sprint6-rgpd-v1.4.1-decision.md`. Prochaine action autorisée : Gate Production Sprint 6 (distinct). |
 | 2026-07-02 | `sha-2da27182` | Sprint 7 EP-10 US-90 (PR #131, jamais passé son propre Gate Staging) + Sprint 8 EP-11 US-92/93 (PR #143 merge `77549a9`, #144 doc-only, #145 correctif smoke) | **9/9** | **4 FAIL puis 59/0** | — / — | Rattrapage combiné : Staging figé sur `sha-08b366fa` (Sprint 6), Sprint 7 fusionné entre-temps sur `main` sans Gate Staging dédié — écart qualifié et accepté par le PO. STG-ISOL-01 PASS avant/après (9 conteneurs `loyertracker-staging-*` + `nginx-proxy-manager` intact, restart=0). `api`+`nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **V19 appliquée** (patrimoine.adresse NOT NULL + 7 colonnes optionnelles, backfill générique), total 19/19. Premier smoke 4 FAIL (`POST /api/patrimoines` sans `adresse`, devenue `@NotBlank` — script jamais exercé contre Sprint 7 réel) ; correctif script seul (PR #145) → **59/0 PASS**. **Réserve RSV-S7-8-01** : confirmation visuelle USD/CDF (quittance PDF + UI Paiements/Honoraires) recommandée avant Gate Production, non bloquante ici. **Gate Staging Sprint 7+8 GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-sprint7-8-v5.4.1-decision.md`. Prochaine action autorisée : Gate Production (Sprint 7 et/ou Sprint 8, distinct). |
+| 2026-07-03 | `sha-6a358eb6` | Sprint 9 EP-12a US-94 Garantie ledger (PR #152, merge `6a358eb6`) | **9/9** | **58 FAIL puis 59/0** | — / — | GO PO + GO RM tracés avant déploiement (aucune réserve). Sauvegarde Staging pré-déploiement (`pg_dump -Fc`, intégrité vérifiée). STG-ISOL-01 PASS avant/après (9 conteneurs `loyertracker-staging-*` + `nginx-proxy-manager` intact, restart=0). `api`+`nginx` recréés ; `postgres`/`keycloak` non redémarrés. Flyway : **V20 appliquée** (table `garantie_movement`, RLS `FORCE`, backfill rétroactif des garanties existantes, `bail.depot_garantie` supprimée), total 20/20. **Vérification manuelle ligne-à-ligne du backfill sur les 3 garanties réelles** : invariant `solde_actuel = Σcrédit − Σdébit` vérifié 3/3, cohérence `bailleur_id` 4/4 — PASS (aucune garantie `RESTITUE_TOTAL` réelle disponible pour ce chemin). Premier smoke 58 PASS/1 FAIL (compteur Flyway du script non aligné sur V20) ; correctif script seul (PR #158) → **59/0 PASS**. Le script de smoke n'exerçant aucun endpoint garantie, **cycle création→restitution vérifié manuellement en direct sur l'API réelle** (`DEPOT_INITIAL` puis `RESTITUTION` journalisés, invariant vérifié, `audit_log` cohérent) — ferme le gap `RESTITUE_TOTAL` réel. **Gate Staging Sprint 9 GO — `STAGING_DEPLOYED`**. Décision : `gate-staging-sprint9-v5.4.1-decision.md`. **Réserve RSV-S9-03** (rollback V20 sans option applicative seule, restauration backup uniquement) reportée en condition bloquante au futur Gate Production. Prochaine action autorisée : Gate Production Sprint 9 (distinct). |
 
-> Le **`sha-2da27182`** (Sprint 7 US-90 + Sprint 8 US-92/93, déployé le 2026-07-02) est le **tag
+> Le **`sha-6a358eb6`** (Sprint 9 EP-12a US-94 Garantie ledger, déployé le 2026-07-03) est le **tag
 > actif en staging**, avec exposition publique active sur `https://loyertracker.staging.loyerpro.org`.
-> Flyway **19/19** (V19 ajoutée). Smoke **59/0**. STG-ISOL-01 PASS. **Réserve RSV-S7-8-01** (non
-> bloquante) : confirmation visuelle USD/CDF (quittance PDF + panneaux Paiements/Honoraires)
+> Flyway **20/20** (V20 ajoutée : `garantie_movement`, backfill rétroactif, `bail.depot_garantie`
+> supprimée). Smoke **59/0**. STG-ISOL-01 PASS avant/après. Vérification manuelle du backfill sur
+> données réelles PASS (3/3 garanties, invariant vérifié) ; cycle garantie création→restitution
+> vérifié en direct sur l'API réelle (hors couverture du script de smoke). **Réserve RSV-S9-03**
+> (non bloquante en Staging) : rollback de V20 sans option applicative seule (`DROP COLUMN
+> bail.depot_garantie`), restauration de backup uniquement — reportée en condition bloquante au
+> futur Gate Production de ce sprint.
+>
+> Le **`sha-2da27182`** (Sprint 7 US-90 + Sprint 8 US-92/93, déployé le 2026-07-02) était le tag
+> actif précédent. Flyway 19/19 (V19 ajoutée). Smoke 59/0. STG-ISOL-01 PASS. **Réserve RSV-S7-8-01**
+> (non bloquante) : confirmation visuelle USD/CDF (quittance PDF + panneaux Paiements/Honoraires)
 > recommandée avant Gate Production.
 >
 > Le **`sha-08b366fa`** (Sprint 6 — PR #123, déployé le 2026-07-01) était le tag actif précédent.
