@@ -9,6 +9,19 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **RSV-S7-8-01 LEVÉE — vérification visuelle USD/CDF en conditions réelles (2026-07-03).** Aucun
+> bail réel USD/CDF n'existant en Production, vérification menée sur `ai-test-server` (Staging) :
+> **USD** confirmé sur le seul bail réel en USD (`64454f13-…`, bailleur `jordan.test@loyerpro.org`)
+> — quittance PDF générée via l'API réelle (`GET .../paiements/2026-01/quittance`), affiche
+> correctement `$700.00` (loyer, provision, total), conforme au format ADR-13. **CDF** : aucun bail
+> réel n'existe dans cette devise nulle part — bien/bail/pointage synthétiques créés temporairement
+> sur `bailleur-test@test.local` (montant 1 500 000,00 CDF), quittance générée et vérifiée
+> (`1 500 000,00 CDF`, séparateur de milliers et virgule décimale conformes ADR-13), puis
+> **entièrement nettoyée** (bien, bail, 13 paiements supprimés ; adresse de profil temporairement
+> renseignée pour lever le 409 « adresse manquante », restaurée à `NULL` après coup). Aucune donnée
+> réelle affectée, `directAccessGrantsEnabled` confirmé `false` après. Réserve levée après un
+> report depuis le Gate Staging Sprint 7+8 (2026-07-02).
+>
 > **RP-160-03 LEVÉE — `CHANGELOG.md` scindé (2026-07-03).** `[Non publié]` mélangeait le contenu
 > de trois releases déjà déployées, jamais promu depuis le Gate `1.6.0`. Scindé en **`[1.5.0]` —
 > 2026-07-01** (Sprint 6 : RGPD export/effacement locataire US-70, CSP Nginx US-72), **`[1.6.0]` —
