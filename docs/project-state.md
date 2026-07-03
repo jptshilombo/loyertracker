@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **PR #152 fusionnée dans `main` — Sprint 9 EP-12a Garantie ledger (US-94), 2026-07-02 18:28
+> UTC.** Merge commit `6a358eb6` (base `main`, branche `feat/sprint9-garantie-ledger-ep12a`,
+> commits `dc89c3a` + `2b50290`). CI GitHub complète **verte** (7/7) : CodeQL (java-kotlin,
+> javascript-typescript), Backend (build + tests + couverture), Frontend (build + tests),
+> Packaging Docker, Sécurité (gitleaks + SCA + Trivy). Ceci lève la condition « PR dédiée + CI
+> GitHub complète » mentionnée ci-dessous. **Reste ouvert avant clôture Sprint 9** : vérification
+> manuelle du backfill V20 en Staging avec les garanties réelles (non remplacée par les tests
+> automatisés, risque élevé de cette migration rétroactive) — soumise au Gate `STG-ISOL-01`
+> avant toute promotion Staging (environnement mutualisé `ai-test-server`). Fusion `main`
+> **n'autorise aucune promotion Staging ni Production** par elle-même.
+>
 > **Sprint 9 EP-12a Garantie ledger (US-94) — 2026-07-02, implémenté et validé localement, GO
 > technique.** Kickoff : arbitrage PO tranché sur `bail.depot_garantie` — devient une valeur
 > dérivée du ledger (ADR-14 §8, statut passé à **Acceptée**), colonne supprimée. Migration **V20** :
