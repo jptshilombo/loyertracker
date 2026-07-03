@@ -6,6 +6,34 @@
 
 
 
+## 0H. Déploiement Production `1.7.0` — 2026-07-03
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.7.0` — Sprint 9 EP-12a US-94 (Garantie ledger) |
+| Tag déployé | **`sha-6a358eb6`** (GHCR, commit `6a358eb6` — merge PR #152) |
+| Tag précédent / rollback | `sha-2da27182` (`1.6.0`) — **aucun rollback applicatif seul viable** (RSV-S9-03, acceptée par le PO) : `bail.depot_garantie` supprimée par V20, l'ancien code planterait sur toute requête `bail` |
+| Anomalie découverte et résolue | **RSV-PROD-S9-01** : 2 des 3 baux réels avaient `bail.depot_garantie` sans ligne `garantie` correspondante — auraient affiché `depotGarantie: 0` après migration. Arbitrage PO : option **A1** (reconstitution des 2 garanties au Préflight, avant migration). Vérifié résolu après déploiement (mouvements `DEPOT_INITIAL` générés normalement, `solde_actuel` correct) |
+| Backup pré-déploiement | `loyertracker-20260703-131331.dump` (316 Kio), SHA-256 `3e83a277…`, globals SHA-256 `47190864…`, `pg_restore --list` 730 entrées OK |
+| Déploiement | `api` + `nginx` recréés ciblés — aucun écart, `postgres`/`keycloak` inchangés |
+| Services post-déploiement | `api`, `nginx`, `postgres`, `keycloak` **(healthy)**, zéro restart |
+| Flyway | V19→**V20** — table `garantie_movement` (RLS FORCE), backfill rétroactif (3 garanties dont 2 reconstituées A1), `bail.depot_garantie` supprimée, appliquée sans erreur |
+| Smoke Production | **59 PASS / 0 FAIL** (2026-07-03 ~13:30 UTC, après correctifs script/compte de test). Nettoyage transactionnel complet (bailleur2-smoke + gest-smoke supprimés DB+KC, bailleur-test réactivé puis redésactivé, aucun orphelin) |
+| Vérification comportementale US-94 | Confirmé par requête SQL post-migration : les 3 garanties (dont les 2 reconstituées) ont un mouvement `DEPOT_INITIAL` cohérent et un `solde_actuel` correct |
+| Observabilité | 5/5 cibles Prometheus up ; Alertmanager 0 alerte active |
+| Réserves levées | **RSV-PROD-S9-01** (via option A1, exécutée et vérifiée) |
+| `.env` persisté | `LOYERTRACKER_TAG=sha-6a358eb6`, backup `.env.bak-pre-1.7.0` (permissions 600) |
+| Décision CGPA | CDO **GO sous réserve acceptée** — `PRODUCTION_DEPLOYED` atteint le 2026-07-03 ~13:35 UTC |
+
+Rapports : `docs/cgpa/09-production/gate-production-v1.7.0-decision.md`,
+`docs/cgpa/09-production/preflight-backup-v1.7.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.7.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.7.0-report.md`.
+
+Réserves ouvertes après ce déploiement : **RSV-S9-03** (aucun rollback applicatif seul viable,
+acceptée par le PO — permanente pour ce schéma), **RSV-S7-8-01** (héritée, non bloquante),
+**RP-160-03** (héritée, non bloquante).
+
 ## 0G. Déploiement Production `1.6.0` — 2026-07-02
 
 | Contrôle | Résultat |

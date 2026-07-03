@@ -207,6 +207,6 @@ restent inchangés.
 |---|---|---|
 | Arbitrage PO sur RSV-PROD-S9-01 (A1) et acceptation RSV-S9-03 | ✅ Fait (2026-07-03) | Ce document §5/§6, `docs/project-state.md` |
 | Préflight + backup Production + exécution A1 (reconstitution des 2 garanties) | ✅ Fait (2026-07-03) | `preflight-backup-v1.7.0-report.md` |
-| Déploiement technique | ⏳ À exécuter | `deploiement-technique-v1.7.0-report.md` |
-| Validation finale + smoke Production | ⏳ | `validation-finale-v1.7.0-report.md` |
-| Hypercare + clôture | ⏳ | `plan-etape-hypercare-v1.7.0.md` |
+| Déploiement technique | ✅ Fait (2026-07-03) | `deploiement-technique-v1.7.0-report.md` |
+| Validation finale + smoke Production | ✅ Fait (2026-07-03) — `PRODUCTION_DEPLOYED` atteint | `validation-finale-v1.7.0-report.md` |
+| Hypercare + clôture | ⏳ À exécuter | `plan-etape-hypercare-v1.7.0.md` |
