@@ -68,6 +68,52 @@ T+24 prévu : **2026-07-03 16:50 UTC** (tolérance ±30 min).
 
 ---
 
+## Checkpoint T+12 — exécuté le 2026-07-03 à ~11:25 UTC
+
+**Statut : PASS (qualifié — retard de planning, cf. ci-dessous)**
+
+| Contrôle | Résultat |
+|---|---|
+| `LOYERTRACKER_TAG=sha-2da27182` persisté dans `.env` | ✅ PASS — aucune dérive depuis T0 |
+| 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0 | ✅ PASS |
+| Flyway 19/19 | ✅ PASS — inchangé (Sprint 9/V20 non déployé) |
+| Actuator `{"status":"UP"}` | ✅ PASS |
+| `/healthz` | ✅ PASS — `ok` |
+| Prometheus 5/5 `up` | ✅ PASS |
+| Alertmanager | ⚠️ **1 alerte active constatée** `BackupHeartbeatMissing` (critical, `startsAt` 07:19:05 UTC) — **remédiée dans la même session** (voir ci-dessous), `[]` confirmé après |
+| Capacité hôte | ✅ disque 32 Gio libres (18 %), mémoire 2,0 Gio dispo, charge 0,31/0,11/0,03 |
+| p99 latence (10 min) | ✅ ~6,2 ms |
+| 5xx rate (10 min) | ✅ 0 (aucun point de données) |
+| Hikari pending | ✅ 0 |
+| Logs API — erreurs critiques (60 min) | ✅ 0 erreur, 0 `duplicate key` |
+
+**Écart de planning constaté** : la fenêtre T+12 (04:50 UTC ± 30 min) était fermée depuis
+~6h35 au moment du contrôle réel (~11:25 UTC). **Qualifié comme retard de process, pas comme
+signal d'incident** : l'alerte `BackupHeartbeatMissing` elle-même n'a commencé à sonner qu'à
+07:19 UTC — soit **après** la fermeture de la fenêtre T+12 — aucun signal n'existait pendant la
+fenêtre cible elle-même. Aucun autre contrôle (conteneurs, Flyway, latence, erreurs) ne montre de
+dérive sur la période.
+
+**Cause de `BackupHeartbeatMissing` et remédiation** : dernier dump sur disque avant ce contrôle
+= `loyertracker-20260702-170536.dump` (Préflight pré-déploiement, 2026-07-02 17:05 UTC). Le cron
+est correctement configuré (`15 2 * * * … backup-postgres.sh`), mais **le daemon `cron` lui-même
+n'a redémarré que le 2026-07-03 07:48:37** (arrêt/redémarrage non expliqué, probablement lié à une
+maintenance système comme les précédents redémarrages `unattended-upgrades` déjà observés en
+hypercare `1.4.0`) — il a donc raté l'exécution planifiée de 02:15 UTC ce matin. **Même cause
+récurrente et déjà qualifiée que RSV-T24-01** (hypercare `1.4.0`, 2026-07-01) : cron peu fiable
+sur cet hôte, jamais bloquant, résolu à chaque fois par une exécution manuelle du script de
+sauvegarde. Remédiation exécutée : `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+./infra/backup/backup-postgres.sh` → `loyertracker-20260703-124953.dump` (316 Kio, SHA-256
+`8535ea8f…`, globals SHA-256 `528a343e…`, `pg_restore --list` 730 entrées OK, permissions 600).
+Heartbeat repoussé au Pushgateway ; `GET /api/v2/alerts` Alertmanager confirmé **`[]`** (0 alerte
+active) après remédiation.
+
+**Décision T+12 : PASS** — hypercare sous surveillance, aucun critère de suspension déclenché.
+
+T+24 inchangé, toujours prévu : **2026-07-03 16:50 UTC** (tolérance ±30 min).
+
+---
+
 ## Post-clôture (après décision CDO GO au T+24)
 
 - Promouvoir `CHANGELOG.md` : scinder `[Non publié]` en `[1.5.0] — 2026-07-01` (rétroactif) +

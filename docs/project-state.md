@@ -9,6 +9,20 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Hypercare Production `1.6.0` — T+12 exécuté le 2026-07-03 à ~11:25 UTC, PASS sous
+> surveillance (qualifié).** 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0. Tag `sha-2da27182`
+> inchangé depuis T0. Flyway 19/19. Actuator UP, `/healthz` ok. Prometheus 5/5 up. p99 ~6,2 ms,
+> 5xx=0, Hikari pending=0. 0 erreur critique en logs (60 min). **Écart de planning** : fenêtre
+> T+12 (04:50 UTC ± 30 min) fermée depuis ~6h35 au moment du contrôle réel — qualifié retard de
+> process, sans signal d'incident pendant la fenêtre elle-même. **1 alerte constatée puis
+> remédiée dans la même session** : `BackupHeartbeatMissing` (démarrée 07:19 UTC, après la
+> fenêtre T+12), causée par le daemon `cron` de l'hôte redémarré seulement à 07:48:37 UTC (a
+> raté l'exécution planifiée de 02:15 UTC) — **même cause récurrente que RSV-T24-01** (hypercare
+> `1.4.0`). Remédiation : sauvegarde manuelle exécutée (`loyertracker-20260703-124953.dump`,
+> 316 Kio, SHA-256 `8535ea8f…`, `pg_restore --list` 730 entrées OK), heartbeat repoussé,
+> Alertmanager confirmé `[]` après. Plan : `docs/cgpa/09-production/plan-etape-hypercare-v1.6.0.md`.
+> T+24 inchangé, prévu le 2026-07-03 à 16:50 UTC ± 30 min.
+>
 > **Gate Staging Sprint 9 EP-12a Garantie ledger — GO, `STAGING_DEPLOYED` (2026-07-03).** Tag
 > immuable **`sha-6a358eb6`** déployé sur `ai-test-server`. STG-ISOL-01 PASS avant/après (9
 > conteneurs `loyertracker-staging-*`, `nginx-proxy-manager` intact, restart=0). Sauvegarde
