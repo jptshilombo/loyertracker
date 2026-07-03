@@ -9,6 +9,30 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **PR #152 fusionnée dans `main` — Sprint 9 EP-12a Garantie ledger (US-94), 2026-07-02 18:28
+> UTC.** Merge commit `6a358eb6` (base `main`, branche `feat/sprint9-garantie-ledger-ep12a`,
+> commits `dc89c3a` + `2b50290`). CI GitHub complète **verte** (7/7) : CodeQL (java-kotlin,
+> javascript-typescript), Backend (build + tests + couverture), Frontend (build + tests),
+> Packaging Docker, Sécurité (gitleaks + SCA + Trivy). Ceci lève la condition « PR dédiée + CI
+> GitHub complète » mentionnée ci-dessous. **Reste ouvert avant clôture Sprint 9** : vérification
+> manuelle du backfill V20 en Staging avec les garanties réelles (non remplacée par les tests
+> automatisés, risque élevé de cette migration rétroactive) — soumise au Gate `STG-ISOL-01`
+> avant toute promotion Staging (environnement mutualisé `ai-test-server`). Fusion `main`
+> **n'autorise aucune promotion Staging ni Production** par elle-même.
+>
+> **RSV-S9-01 — 2 alertes Dependabot ouvertes sur `main`, réserve non bloquante (2026-07-02).**
+> `@babel/core` 7.28.3 (severity low, CVE-2026-49356, lecture arbitraire de fichier via
+> `sourceMappingURL`, correctif 7.29.6) et `uuid` 8.3.2 (severity moderate, CVE-2026-41907,
+> absence de vérification des bornes du buffer v3/v5/v6, correctif 11.1.1). Les deux sont des
+> dépendances **transitives de la toolchain de build** (`@angular-devkit/build-angular` →
+> `@angular/compiler-cli` pour `@babel/core` ; `@angular-devkit/build-angular` →
+> `webpack-dev-server` → `sockjs` pour `uuid`), absentes du bundle Production —
+> `npm audit --omit=dev` confirme **0 vulnérabilité** en scope production. Seul correctif
+> disponible aujourd'hui (`npm audit fix --force`) imposerait un downgrade cassant vers
+> `@angular-devkit/build-angular@15.2.11` — écarté. **Action différée** : réévaluer au prochain
+> `ng update` d'Angular, quand une version amont embarquera des `@babel/core`/`uuid` corrigés.
+> Sans impact sur les Gates Staging/Production ni sur la clôture Sprint 9.
+>
 > **Sprint 9 EP-12a Garantie ledger (US-94) — 2026-07-02, implémenté et validé localement, GO
 > technique.** Kickoff : arbitrage PO tranché sur `bail.depot_garantie` — devient une valeur
 > dérivée du ledger (ADR-14 §8, statut passé à **Acceptée**), colonne supprimée. Migration **V20** :
