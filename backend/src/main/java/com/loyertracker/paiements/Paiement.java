@@ -54,6 +54,9 @@ public class Paiement {
     @Column(nullable = false)
     private StatutPaiement statut;
 
+    @Column(name = "garantie_movement_id")
+    private UUID garantieMovementId;
+
     protected Paiement() {
         // requis par JPA
     }
@@ -62,6 +65,11 @@ public class Paiement {
     public void pointer(BigDecimal montantRecu, StatutPaiement statut) {
         this.montantRecu = montantRecu;
         this.statut = statut;
+    }
+
+    /** Relie ce paiement au mouvement de garantie qui l'a couvert (US-95, ADR-14 §5). */
+    public void lierMouvementGarantie(UUID garantieMovementId) {
+        this.garantieMovementId = garantieMovementId;
     }
 
     /** Reste dû = max(0, attendu - reçu) (EF-32). */
@@ -79,4 +87,5 @@ public class Paiement {
     public BigDecimal getMontantRecu() { return montantRecu; }
     public LocalDate getDateExigibilite() { return dateExigibilite; }
     public StatutPaiement getStatut() { return statut; }
+    public UUID getGarantieMovementId() { return garantieMovementId; }
 }

@@ -24,11 +24,14 @@ import com.loyertracker.baux.Devise;
 import com.loyertracker.biens.BienDto;
 import com.loyertracker.biens.BienRepository;
 import com.loyertracker.garanties.GarantieDto;
+import com.loyertracker.garanties.GarantieMovementDto;
+import com.loyertracker.garanties.GarantieMovementRepository;
 import com.loyertracker.garanties.GarantieRepository;
 import com.loyertracker.paiements.PaiementDto;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.rgpd.ExportBailleurDto.BailExportDto;
 import com.loyertracker.rgpd.ExportBailleurDto.BienExportDto;
+import com.loyertracker.rgpd.ExportBailleurDto.GarantieExportDto;
 import com.loyertracker.securite.TenantContext;
 
 @Service
@@ -39,17 +42,20 @@ public class RgpdService {
     private final BailRepository baux;
     private final PaiementRepository paiements;
     private final GarantieRepository garanties;
+    private final GarantieMovementRepository mouvements;
     private final AffectationRepository affectations;
     private final AuditService audit;
 
     public RgpdService(TenantContext tenant, BienRepository biens, BailRepository baux,
             PaiementRepository paiements, GarantieRepository garanties,
-            AffectationRepository affectations, AuditService audit) {
+            GarantieMovementRepository mouvements, AffectationRepository affectations,
+            AuditService audit) {
         this.tenant = tenant;
         this.biens = biens;
         this.baux = baux;
         this.paiements = paiements;
         this.garanties = garanties;
+        this.mouvements = mouvements;
         this.affectations = affectations;
         this.audit = audit;
     }
@@ -65,16 +71,37 @@ public class RgpdService {
 
                     List<Bail> bauxDuBien = baux.findByBienIdOrderByDateDebutDesc(bien.getId());
 
+                    // Garanties de chaque bail du bien, avec leur historique de mouvements
+                    // (Sprint 10, US-97/RGPD) chargé par lot (pas de N+1 par garantie).
+                    Map<UUID, List<GarantieDto>> garantiesParBail = bauxDuBien.stream()
+                            .collect(Collectors.toMap(Bail::getId,
+                                    bail -> garanties.findByBailIdOrderByDateDepotDesc(bail.getId())
+                                            .stream().map(GarantieDto::from).toList()));
+                    List<UUID> garantieIds = garantiesParBail.values().stream()
+                            .flatMap(List::stream).map(GarantieDto::id).toList();
+                    Map<UUID, List<GarantieMovementDto>> mouvementsParGarantie = mouvements
+                            .findByGarantieIdIn(garantieIds).stream()
+                            .map(GarantieMovementDto::from)
+                            .collect(Collectors.groupingBy(GarantieMovementDto::garantieId));
+
                     List<BailExportDto> bailExports = bauxDuBien.stream()
                             .map(bail -> {
-                                List<GarantieDto> gs = garanties
-                                        .findByBailIdOrderByDateDepotDesc(bail.getId())
-                                        .stream().map(GarantieDto::from).toList();
-                                // depotGarantie dérivé (ADR-14 §8) : somme des garanties déjà
-                                // chargées ci-dessus, pas de requête supplémentaire (pas de N+1).
-                                BigDecimal montantDepose = gs.stream().map(GarantieDto::montant)
+                                List<GarantieExportDto> garantieExports = garantiesParBail
+                                        .get(bail.getId()).stream()
+                                        .map(g -> new GarantieExportDto(g,
+                                                mouvementsParGarantie.getOrDefault(g.id(), List.of())))
+                                        .toList();
+                                // depotGarantie dérivé (ADR-14 §8, recalculé au Sprint 10) : somme
+                                // en mémoire des crédits DEPOT_INITIAL/COMPLEMENT déjà chargés
+                                // ci-dessus, pas de requête supplémentaire (pas de N+1).
+                                BigDecimal montantDepose = garantieExports.stream()
+                                        .flatMap(ge -> ge.mouvements().stream())
+                                        .filter(m -> m.type().equals("DEPOT_INITIAL")
+                                                || m.type().equals("COMPLEMENT"))
+                                        .map(GarantieMovementDto::credit)
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                                return new BailExportDto(BailDto.from(bail, montantDepose), gs);
+                                return new BailExportDto(BailDto.from(bail, montantDepose),
+                                        garantieExports);
                             }).toList();
 
                     // Résolution batch (pas de N+1) : réutilise la liste de baux déjà chargée

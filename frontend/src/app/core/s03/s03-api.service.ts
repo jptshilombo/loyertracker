@@ -8,6 +8,15 @@ import { Devise } from '../s02/s02-api.service';
 export type StatutPaiement = 'A_VENIR' | 'IMPAYE' | 'PARTIEL' | 'RECU' | 'EN_RETARD';
 export type StatutGarantie = 'DETENU' | 'RESTITUE_PARTIEL' | 'RESTITUE_TOTAL';
 export type TypeRestitution = 'PARTIELLE' | 'TOTALE';
+export type TypeMouvementGarantie =
+  | 'DEPOT_INITIAL'
+  | 'COMPLEMENT'
+  | 'RETENUE_LOYER'
+  | 'RETENUE_CHARGES'
+  | 'RETENUE_REPARATION'
+  | 'RESTITUTION'
+  | 'AJUSTEMENT'
+  | 'ANNULATION';
 
 export interface Paiement {
   id: string;
@@ -37,6 +46,32 @@ export interface Garantie {
   statut: StatutGarantie;
   montantRetenu: number;
   motifRetenue: string | null;
+  /** Solde courant du ledger (Sprint 9, ADR-14) — diverge de `montant` après retenue/complément. */
+  soldeActuel: number;
+}
+
+export interface GarantieMovement {
+  id: string;
+  garantieId: string;
+  dateMouvement: string;
+  type: TypeMouvementGarantie;
+  debit: number;
+  credit: number;
+  soldeApres: number;
+  motif: string | null;
+  utilisateur: string | null;
+  commentaire: string | null;
+  referenceDocument: string | null;
+}
+
+export interface RetenueLoyerPayload {
+  paiementId: string;
+  montant: number;
+}
+
+export interface ComplementPayload {
+  montant: number;
+  motif: string;
 }
 
 export interface GarantiePayload {
@@ -120,6 +155,51 @@ export class S03ApiService {
     return this.http.post<Garantie>(
       `${API_BASE_URL}/biens/${bienId}/baux/${bailId}/garanties/${garantieId}/restitution`,
       payload,
+    );
+  }
+
+  /** Retenue explicite sur un loyer impayé (US-95) — jamais un prélèvement automatique. */
+  retenirSurLoyer(
+    bienId: string,
+    bailId: string,
+    garantieId: string,
+    payload: RetenueLoyerPayload,
+  ): Observable<Garantie> {
+    return this.http.post<Garantie>(
+      `${API_BASE_URL}/biens/${bienId}/baux/${bailId}/garanties/${garantieId}/retenue-loyer`,
+      payload,
+    );
+  }
+
+  /** Réapprovisionnement d'une garantie active (US-96). */
+  complementer(
+    bienId: string,
+    bailId: string,
+    garantieId: string,
+    payload: ComplementPayload,
+  ): Observable<Garantie> {
+    return this.http.post<Garantie>(
+      `${API_BASE_URL}/biens/${bienId}/baux/${bailId}/garanties/${garantieId}/complement`,
+      payload,
+    );
+  }
+
+  /** Historique des mouvements du ledger d'une garantie (US-97). */
+  listerMouvements(
+    bienId: string,
+    bailId: string,
+    garantieId: string,
+  ): Observable<GarantieMovement[]> {
+    return this.http.get<GarantieMovement[]>(
+      `${API_BASE_URL}/biens/${bienId}/baux/${bailId}/garanties/${garantieId}/mouvements`,
+    );
+  }
+
+  /** Export CSV de l'historique des mouvements (US-97). */
+  exporterMouvements(bienId: string, bailId: string, garantieId: string): Observable<Blob> {
+    return this.http.get(
+      `${API_BASE_URL}/biens/${bienId}/baux/${bailId}/garanties/${garantieId}/mouvements/export`,
+      { responseType: 'blob' },
     );
   }
 }

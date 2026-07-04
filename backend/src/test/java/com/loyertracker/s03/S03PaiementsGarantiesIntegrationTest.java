@@ -290,6 +290,151 @@ class S03PaiementsGarantiesIntegrationTest {
     }
 
     @Test
+    void retenueLoyerCouvreImpayeEtRecalculeHonoraires() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "10 rue Retenue");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-02-28");
+        genererEcheances(bailleur); // 2026-01 échu -> EN_RETARD, montant attendu 850.00
+
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "gest@test.local");
+        affecter(bailleur, bienId, gestionnaire); // POURCENTAGE 10%
+
+        String garantieId = creerGarantie(bienId, bailId, bailleur, "900.00");
+        String paiementId = paiementIdPourPeriode(bienId, "2026-01", bailleur);
+
+        mockMvc.perform(retenueLoyer(bienId, bailId, garantieId, bailleur,
+                        "{\"paiementId\":\"" + paiementId + "\",\"montant\":850.00}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldeActuel").value(50.00));
+
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("50.00");
+        assertThat((BigDecimal) mouvementUnique(garantieId, "RETENUE_LOYER").get("debit"))
+                .isEqualByComparingTo("850.00");
+        assertThat(compterAudit("RETENUE_LOYER_GARANTIE")).isEqualTo(1);
+        assertThat(compterAudit("RETENUE_LOYER")).isEqualTo(1);
+
+        // Le paiement couvert bascule RECU (montant >= attendu) et référence le mouvement.
+        Map<String, Object> paiement = jdbc.queryForMap(
+                "SELECT statut, montant_recu, garantie_movement_id FROM paiement WHERE id = ?::uuid",
+                paiementId);
+        assertThat(paiement).containsEntry("statut", "RECU");
+        assertThat((BigDecimal) paiement.get("montant_recu")).isEqualByComparingTo("850.00");
+        assertThat(paiement.get("garantie_movement_id")).isNotNull();
+
+        // Honoraires recalculés comme un pointage normal (10% de 850.00 = 85.00).
+        assertThat(jdbc.queryForObject(
+                "SELECT montant FROM honoraire WHERE periode = '2026-01'", BigDecimal.class))
+                .isEqualByComparingTo("85.00");
+    }
+
+    @Test
+    void retenueLoyerRefuseeMontantExcedantSoldeOuResteDu() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "11 rue Refus");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-02-28");
+        genererEcheances(bailleur);
+
+        String garantieId = creerGarantie(bienId, bailId, bailleur, "100.00");
+        String paiementId = paiementIdPourPeriode(bienId, "2026-01", bailleur);
+
+        // Montant > solde disponible de la garantie (100.00).
+        mockMvc.perform(retenueLoyer(bienId, bailId, garantieId, bailleur,
+                        "{\"paiementId\":\"" + paiementId + "\",\"montant\":150.00}"))
+                .andExpect(status().isBadRequest());
+
+        String garantieId2 = creerGarantie(bienId, bailId, bailleur, "5000.00");
+        // Montant > reste dû du paiement (850.00), même si le solde de la garantie le permettrait.
+        mockMvc.perform(retenueLoyer(bienId, bailId, garantieId2, bailleur,
+                        "{\"paiementId\":\"" + paiementId + "\",\"montant\":900.00}"))
+                .andExpect(status().isBadRequest());
+
+        assertThat(compterAudit("RETENUE_LOYER")).isZero();
+    }
+
+    @Test
+    void retenueLoyerRefuseePaiementDeAutreBien() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bien1 = creerBien(bailleur, "12 rue Bien1");
+        String bail1 = creerBail(bailleur, bien1, "2026-01-01", "2026-02-28");
+        genererEcheances(bailleur);
+        String garantieId = creerGarantie(bien1, bail1, bailleur, "900.00");
+
+        // 2e bien / bail du même bailleur : son paiement n'appartient ni à bien1 ni à bail1.
+        String bien2 = creerBien(bailleur, "13 rue Bien2");
+        creerBail(bailleur, bien2, "2026-01-01", "2026-02-28");
+        genererEcheances(bailleur);
+        String paiementAutreBien = paiementIdPourPeriode(bien2, "2026-01", bailleur);
+
+        mockMvc.perform(retenueLoyer(bien1, bail1, garantieId, bailleur,
+                        "{\"paiementId\":\"" + paiementAutreBien + "\",\"montant\":100.00}"))
+                .andExpect(status().isNotFound());
+
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("900.00");
+        assertThat(compterAudit("RETENUE_LOYER")).isZero();
+        assertThat(jdbc.queryForObject(
+                "SELECT garantie_movement_id FROM paiement WHERE id = ?::uuid", UUID.class,
+                paiementAutreBien)).isNull();
+    }
+
+    @Test
+    void complementAugmenteLeSoldeEtEstAudite() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "14 rue Complement");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-12-31");
+        String garantieId = creerGarantie(bienId, bailId, bailleur, "500.00");
+
+        mockMvc.perform(complement(bienId, bailId, garantieId, bailleur,
+                        "{\"montant\":200.00,\"motif\":\"Réapprovisionnement suite retenue\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldeActuel").value(700.00));
+
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("700.00");
+        assertThat((BigDecimal) mouvementUnique(garantieId, "COMPLEMENT").get("credit"))
+                .isEqualByComparingTo("200.00");
+        assertThat(compterAudit("COMPLEMENT_GARANTIE")).isEqualTo(1);
+    }
+
+    @Test
+    void restitutionPartielleApresRetenueLoyerResteCoherente() throws Exception {
+        // Régression du bug corrigé (Sprint 10) : restituerPartiel calculait depuis `montant`
+        // plutôt que depuis `soldeActuel`, ce qui aurait ignoré une retenue déjà survenue.
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "15 rue Regression");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-02-28");
+        genererEcheances(bailleur);
+
+        String garantieId = creerGarantie(bienId, bailId, bailleur, "900.00");
+        String paiementId = paiementIdPourPeriode(bienId, "2026-01", bailleur);
+
+        // Retenue de 850 -> solde 50.
+        mockMvc.perform(retenueLoyer(bienId, bailId, garantieId, bailleur,
+                        "{\"paiementId\":\"" + paiementId + "\",\"montant\":850.00}"))
+                .andExpect(status().isOk());
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("50.00");
+
+        // Restitution partielle de 30 (<= solde 50, PAS <= montant initial 900) -> solde 20.
+        mockMvc.perform(restituer(bienId, bailId, garantieId, bailleur,
+                        "{\"type\":\"PARTIELLE\",\"montantRetenu\":30.00,\"motifRetenue\":\"Frais\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldeActuel").value(20.00));
+        assertThat(soldeActuel(garantieId)).isEqualByComparingTo("20.00");
+
+        // Invariant global : solde == somme(credit) - somme(debit) sur tous les mouvements.
+        BigDecimal sommeCredit = jdbc.queryForObject(
+                "SELECT coalesce(sum(credit),0) FROM garantie_movement WHERE garantie_id = ?::uuid",
+                BigDecimal.class, garantieId);
+        BigDecimal sommeDebit = jdbc.queryForObject(
+                "SELECT coalesce(sum(debit),0) FROM garantie_movement WHERE garantie_id = ?::uuid",
+                BigDecimal.class, garantieId);
+        assertThat(sommeCredit.subtract(sommeDebit)).isEqualByComparingTo(soldeActuel(garantieId));
+    }
+
+    @Test
     void accesFinancierRefuseCrossBailleur() throws Exception {
         String bailleurA = "kc-" + UUID.randomUUID();
         String bailleurB = "kc-" + UUID.randomUUID();
@@ -430,6 +575,47 @@ class S03PaiementsGarantiesIntegrationTest {
                 .with(bailleurJwt(bailleurKc))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body);
+    }
+
+    private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder retenueLoyer(
+            String bienId, String bailId, String garantieId, String bailleurKc, String body) {
+        return post("/api/biens/{bienId}/baux/{bailId}/garanties/{gid}/retenue-loyer",
+                bienId, bailId, garantieId)
+                .with(bailleurJwt(bailleurKc))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body);
+    }
+
+    private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder complement(
+            String bienId, String bailId, String garantieId, String bailleurKc, String body) {
+        return post("/api/biens/{bienId}/baux/{bailId}/garanties/{gid}/complement",
+                bienId, bailId, garantieId)
+                .with(bailleurJwt(bailleurKc))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body);
+    }
+
+    private String creerGarantie(String bienId, String bailId, String bailleurKc, String montant)
+            throws Exception {
+        return JsonPath.read(mockMvc.perform(
+                        post("/api/biens/{bienId}/baux/{bailId}/garanties", bienId, bailId)
+                                .with(bailleurJwt(bailleurKc))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"montant\":" + montant
+                                        + ",\"typeGarantie\":\"CAUTION\",\"dateDepot\":\"2026-01-01\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
+    private String paiementIdPourPeriode(String bienId, String periode, String bailleurKc)
+            throws Exception {
+        String corps = mockMvc.perform(get("/api/biens/{bienId}/paiements", bienId)
+                        .with(bailleurJwt(bailleurKc)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        List<String> ids = JsonPath.read(corps, "$[?(@.periode=='" + periode + "')].id");
+        assertThat(ids).hasSize(1);
+        return ids.get(0);
     }
 
     private UUID insererGestionnaire(String keycloakId, String email) {

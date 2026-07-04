@@ -1,6 +1,7 @@
 package com.loyertracker.garanties;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,6 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 import com.loyertracker.audit.AuditService;
 import com.loyertracker.baux.Bail;
 import com.loyertracker.baux.BailRepository;
+import com.loyertracker.honoraires.HonoraireService;
+import com.loyertracker.paiements.Paiement;
+import com.loyertracker.paiements.PaiementRepository;
+import com.loyertracker.paiements.StatutPaiement;
 import com.loyertracker.securite.TenantContext;
 
 /**
@@ -27,19 +32,27 @@ import com.loyertracker.securite.TenantContext;
 @Service
 public class GarantieService {
 
+    /** Type de cible utilisé pour journaliser les opérations sur l'entité garantie. */
+    private static final String CIBLE_AUDIT_GARANTIE = "garantie";
+
     private final GarantieRepository garanties;
     private final GarantieMovementRepository mouvements;
     private final BailRepository baux;
+    private final PaiementRepository paiements;
     private final TenantContext tenant;
     private final AuditService audit;
+    private final HonoraireService honoraires;
 
     public GarantieService(GarantieRepository garanties, GarantieMovementRepository mouvements,
-            BailRepository baux, TenantContext tenant, AuditService audit) {
+            BailRepository baux, PaiementRepository paiements, TenantContext tenant,
+            AuditService audit, HonoraireService honoraires) {
         this.garanties = garanties;
         this.mouvements = mouvements;
         this.baux = baux;
+        this.paiements = paiements;
         this.tenant = tenant;
         this.audit = audit;
+        this.honoraires = honoraires;
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +72,7 @@ public class GarantieService {
         Garantie enregistre = garanties.save(garantie);
         enregistrerMouvement(enregistre, TypeMouvementGarantie.DEPOT_INITIAL, BigDecimal.ZERO,
                 requete.montant(), "Dépôt initial de la garantie", authentication);
-        audit.enregistrer(authentication, bailleurId, "CREATE_GARANTIE", "garantie",
+        audit.enregistrer(authentication, bailleurId, "CREATE_GARANTIE", CIBLE_AUDIT_GARANTIE,
                 enregistre.getId());
         return GarantieDto.from(enregistre);
     }
@@ -69,10 +82,7 @@ public class GarantieService {
             RestitutionRequest requete, Authentication authentication) {
         UUID bailleurId = tenant.activerDepuisBien(bienId);
         exigerBailDuBien(bienId, bailId);
-        Garantie garantie = garanties.findById(garantieId)
-                .filter(g -> g.getBailId().equals(bailId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Garantie introuvable pour ce bail."));
+        Garantie garantie = exigerGarantieDuBail(bailId, garantieId);
         BigDecimal soldeAvant = garantie.getSoldeActuel();
         appliquerRestitution(garantie, requete);
         Garantie enregistre = garanties.save(garantie);
@@ -86,7 +96,7 @@ public class GarantieService {
                     debit, BigDecimal.ZERO,
                     totale ? "Restitution totale" : requete.motifRetenue(), authentication);
         }
-        audit.enregistrer(authentication, bailleurId, "RESTITUER_GARANTIE", "garantie",
+        audit.enregistrer(authentication, bailleurId, "RESTITUER_GARANTIE", CIBLE_AUDIT_GARANTIE,
                 enregistre.getId());
         return GarantieDto.from(enregistre);
     }
@@ -110,11 +120,130 @@ public class GarantieService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Une restitution partielle exige un montant retenu (> 0) et un motif.");
         }
-        if (requete.montantRetenu().compareTo(garantie.getMontant()) > 0) {
+        if (requete.montantRetenu().compareTo(garantie.getSoldeActuel()) > 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Le montant retenu ne peut excéder le montant de la garantie.");
+                    "Le montant retenu ne peut excéder le solde disponible de la garantie.");
         }
         garantie.restituerPartiel(requete.montantRetenu(), requete.motifRetenue());
+    }
+
+    /**
+     * Retenue explicite sur un loyer impayé (US-95, ADR-14 §5) : jamais un prélèvement
+     * automatique — le mouvement n'existe que parce que le gestionnaire a choisi ce paiement et ce
+     * montant. Fait transitionner le paiement couvert vers {@code RECU}/{@code PARTIEL} (mêmes
+     * seuils que {@link com.loyertracker.paiements.PaiementService#pointer}) et déclenche le
+     * recalcul des honoraires, exactement comme un pointage manuel.
+     */
+    @Transactional
+    public GarantieDto retenirSurLoyer(UUID bienId, UUID bailId, UUID garantieId,
+            RetenueLoyerRequest requete, Authentication authentication) {
+        UUID bailleurId = tenant.activerDepuisBien(bienId);
+        exigerBailDuBien(bienId, bailId);
+        Garantie garantie = exigerGarantieDuBail(bailId, garantieId);
+        if (garantie.getStatut() == StatutGarantie.RESTITUE_TOTAL) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Garantie déjà restituée intégralement.");
+        }
+        Paiement paiement = paiements.findById(requete.paiementId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Paiement introuvable."));
+        exigerPaiementDuBail(paiement, bienId, bailId);
+        if (paiement.getGarantieMovementId() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Ce paiement est déjà couvert par un mouvement de garantie.");
+        }
+        if (requete.montant().compareTo(garantie.getSoldeActuel()) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Le montant excède le solde disponible de la garantie.");
+        }
+        if (requete.montant().compareTo(paiement.getResteDu()) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Le montant excède le reste dû de ce paiement.");
+        }
+
+        garantie.retenirSurLoyer(requete.montant());
+        Garantie enregistre = garanties.save(garantie);
+        GarantieMovement mouvement = enregistrerMouvement(enregistre, TypeMouvementGarantie.RETENUE_LOYER,
+                requete.montant(), BigDecimal.ZERO, "Retenue sur loyer impayé", authentication);
+
+        StatutPaiement statutResultant = requete.montant().compareTo(paiement.getMontantAttendu()) >= 0
+                ? StatutPaiement.RECU : StatutPaiement.PARTIEL;
+        paiement.pointer(requete.montant(), statutResultant);
+        paiement.lierMouvementGarantie(mouvement.getId());
+        paiements.save(paiement);
+
+        audit.enregistrer(authentication, bailleurId, "RETENUE_LOYER_GARANTIE", "paiement",
+                paiement.getId());
+        honoraires.recalculerPourBien(bienId);
+        return GarantieDto.from(enregistre);
+    }
+
+    /** Réapprovisionnement d'une garantie active (US-96). */
+    @Transactional
+    public GarantieDto complementer(UUID bienId, UUID bailId, UUID garantieId,
+            ComplementRequest requete, Authentication authentication) {
+        UUID bailleurId = tenant.activerDepuisBien(bienId);
+        exigerBailDuBien(bienId, bailId);
+        Garantie garantie = exigerGarantieDuBail(bailId, garantieId);
+        if (garantie.getStatut() == StatutGarantie.RESTITUE_TOTAL) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Garantie déjà restituée intégralement.");
+        }
+        garantie.complementer(requete.montant());
+        Garantie enregistre = garanties.save(garantie);
+        enregistrerMouvement(enregistre, TypeMouvementGarantie.COMPLEMENT, BigDecimal.ZERO,
+                requete.montant(), requete.motif(), authentication);
+        audit.enregistrer(authentication, bailleurId, "COMPLEMENT_GARANTIE", CIBLE_AUDIT_GARANTIE,
+                enregistre.getId());
+        return GarantieDto.from(enregistre);
+    }
+
+    /** Historique complet des mouvements d'une garantie, ordonné chronologiquement (US-97). */
+    @Transactional(readOnly = true)
+    public List<GarantieMovementDto> listerMouvements(UUID bienId, UUID bailId, UUID garantieId) {
+        return chargerMouvements(bienId, bailId, garantieId);
+    }
+
+    /** Export CSV de l'historique des mouvements d'une garantie (US-97). */
+    @Transactional(readOnly = true)
+    public byte[] exporterMouvementsCsv(UUID bienId, UUID bailId, UUID garantieId) {
+        List<GarantieMovementDto> lignes = chargerMouvements(bienId, bailId, garantieId);
+        StringBuilder csv = new StringBuilder(
+                "date;type;debit;credit;solde;auteur;motif;commentaire;referenceDocument\n");
+        for (GarantieMovementDto m : lignes) {
+            csv.append(csvEchapper(m.dateMouvement().toString())).append(';')
+                    .append(csvEchapper(m.type())).append(';')
+                    .append(csvEchapper(m.debit().toPlainString())).append(';')
+                    .append(csvEchapper(m.credit().toPlainString())).append(';')
+                    .append(csvEchapper(m.soldeApres().toPlainString())).append(';')
+                    .append(csvEchapper(m.utilisateur())).append(';')
+                    .append(csvEchapper(m.motif())).append(';')
+                    .append(csvEchapper(m.commentaire())).append(';')
+                    .append(csvEchapper(m.referenceDocument())).append('\n');
+        }
+        return csv.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Contrôles d'accès (RLS + appartenance bail/garantie) puis chargement ordonné des mouvements.
+     * Partagé par {@link #listerMouvements} et {@link #exporterMouvementsCsv} sans auto-invocation
+     * transactionnelle (le proxy Spring ne s'applique pas aux appels via {@code this}).
+     */
+    private List<GarantieMovementDto> chargerMouvements(UUID bienId, UUID bailId, UUID garantieId) {
+        tenant.activerDepuisBien(bienId);
+        exigerBailDuBien(bienId, bailId);
+        exigerGarantieDuBail(bailId, garantieId);
+        return mouvements.findByGarantieIdOrderByDateMouvementAscIdAsc(garantieId).stream()
+                .map(GarantieMovementDto::from).toList();
+    }
+
+    private static String csvEchapper(String valeur) {
+        if (valeur == null) {
+            return "";
+        }
+        String echappe = valeur.replace("\"", "\"\"");
+        return echappe.contains(";") || echappe.contains("\"") || echappe.contains("\n")
+                ? "\"" + echappe + "\"" : echappe;
     }
 
     /**
@@ -122,15 +251,16 @@ public class GarantieService {
      * cache déjà à jour sur l'entité (mis à jour par {@code Garantie.restituerXxx}/constructeur
      * avant cet appel), garantissant la cohérence solde/mouvement dans la même transaction.
      */
-    private void enregistrerMouvement(Garantie garantie, TypeMouvementGarantie type,
+    private GarantieMovement enregistrerMouvement(Garantie garantie, TypeMouvementGarantie type,
             BigDecimal debit, BigDecimal credit, String motif, Authentication authentication) {
         GarantieMovement.MouvementMontants montants =
                 new GarantieMovement.MouvementMontants(debit, credit, garantie.getSoldeActuel());
         GarantieMovement mouvement = new GarantieMovement(garantie.getBailleurId(), garantie.getId(),
                 type, montants, motif, resoudreUtilisateur(authentication));
-        mouvements.save(mouvement);
+        GarantieMovement enregistre = mouvements.save(mouvement);
         audit.enregistrer(authentication, garantie.getBailleurId(), type.name(),
-                "garantie_movement", mouvement.getId());
+                "garantie_movement", enregistre.getId());
+        return enregistre;
     }
 
     /** Identifiant lisible de l'acteur pour le ledger (email si disponible, sinon sub Keycloak). */
@@ -148,6 +278,27 @@ public class GarantieService {
         if (!bail.getBienId().equals(bienId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Bail introuvable pour ce bien.");
+        }
+    }
+
+    /** Vérifie que la garantie existe et appartient bien au bail ciblé (fail-closed 404). */
+    private Garantie exigerGarantieDuBail(UUID bailId, UUID garantieId) {
+        return garanties.findById(garantieId)
+                .filter(g -> g.getBailId().equals(bailId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Garantie introuvable pour ce bail."));
+    }
+
+    /**
+     * Vérifie que le paiement résolu par id appartient bien au bien et au bail ciblés
+     * (fail-closed 404, ADR-14 §5) : Postgres ne peut pas vérifier nativement cette cohérence
+     * cross-table — un même bien peut avoir eu plusieurs baux successifs générant chacun ses
+     * propres paiements.
+     */
+    private void exigerPaiementDuBail(Paiement paiement, UUID bienId, UUID bailId) {
+        if (!paiement.getBienId().equals(bienId) || !paiement.getBailId().equals(bailId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Paiement introuvable pour ce bail.");
         }
     }
 }

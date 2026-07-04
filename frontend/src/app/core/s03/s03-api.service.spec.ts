@@ -115,4 +115,61 @@ describe('S03ApiService', () => {
     });
     req.flush({});
   });
+
+  it('retient sur un loyer impayé (US-95)', () => {
+    service
+      .retenirSurLoyer('bien-1', 'bail-1', 'g-1', { paiementId: 'p-1', montant: 850 })
+      .subscribe();
+
+    const req = http.expectOne('/api/biens/bien-1/baux/bail-1/garanties/g-1/retenue-loyer');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ paiementId: 'p-1', montant: 850 });
+    req.flush({});
+  });
+
+  it('complète une garantie active (US-96)', () => {
+    service
+      .complementer('bien-1', 'bail-1', 'g-1', { montant: 150, motif: 'Réapprovisionnement' })
+      .subscribe();
+
+    const req = http.expectOne('/api/biens/bien-1/baux/bail-1/garanties/g-1/complement');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ montant: 150, motif: 'Réapprovisionnement' });
+    req.flush({});
+  });
+
+  it('liste les mouvements du ledger d une garantie (US-97)', (done) => {
+    service.listerMouvements('bien-1', 'bail-1', 'g-1').subscribe((mouvements) => {
+      expect(mouvements.length).toBe(1);
+      expect(mouvements[0].type).toBe('DEPOT_INITIAL');
+      done();
+    });
+
+    const req = http.expectOne('/api/biens/bien-1/baux/bail-1/garanties/g-1/mouvements');
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      {
+        id: 'm-1',
+        garantieId: 'g-1',
+        dateMouvement: '2026-01-01T10:00:00Z',
+        type: 'DEPOT_INITIAL',
+        debit: 0,
+        credit: 850,
+        soldeApres: 850,
+        motif: 'Dépôt initial de la garantie',
+        utilisateur: 'bailleur@exemple.org',
+        commentaire: null,
+        referenceDocument: null,
+      },
+    ]);
+  });
+
+  it('exporte les mouvements en CSV (blob, US-97)', () => {
+    service.exporterMouvements('bien-1', 'bail-1', 'g-1').subscribe();
+
+    const req = http.expectOne('/api/biens/bien-1/baux/bail-1/garanties/g-1/mouvements/export');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob(['date;type\n'], { type: 'text/csv' }));
+  });
 });

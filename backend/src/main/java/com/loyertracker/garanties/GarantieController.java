@@ -3,7 +3,11 @@ package com.loyertracker.garanties;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,5 +54,41 @@ public class GarantieController {
             @PathVariable UUID garantieId, @Valid @RequestBody RestitutionRequest requete,
             Authentication authentication) {
         return garantieService.restituer(bienId, bailId, garantieId, requete, authentication);
+    }
+
+    @PostMapping("/{garantieId}/retenue-loyer")
+    @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
+    public GarantieDto retenueLoyer(@PathVariable UUID bienId, @PathVariable UUID bailId,
+            @PathVariable UUID garantieId, @Valid @RequestBody RetenueLoyerRequest requete,
+            Authentication authentication) {
+        return garantieService.retenirSurLoyer(bienId, bailId, garantieId, requete, authentication);
+    }
+
+    @PostMapping("/{garantieId}/complement")
+    @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
+    public GarantieDto complement(@PathVariable UUID bienId, @PathVariable UUID bailId,
+            @PathVariable UUID garantieId, @Valid @RequestBody ComplementRequest requete,
+            Authentication authentication) {
+        return garantieService.complementer(bienId, bailId, garantieId, requete, authentication);
+    }
+
+    @GetMapping("/{garantieId}/mouvements")
+    @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
+    public List<GarantieMovementDto> mouvements(@PathVariable UUID bienId, @PathVariable UUID bailId,
+            @PathVariable UUID garantieId) {
+        return garantieService.listerMouvements(bienId, bailId, garantieId);
+    }
+
+    @GetMapping("/{garantieId}/mouvements/export")
+    @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
+    public ResponseEntity<byte[]> exporterMouvements(@PathVariable UUID bienId,
+            @PathVariable UUID bailId, @PathVariable UUID garantieId) {
+        byte[] csv = garantieService.exporterMouvementsCsv(bienId, bailId, garantieId);
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename("garantie-" + garantieId + "-mouvements.csv").build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .body(csv);
     }
 }

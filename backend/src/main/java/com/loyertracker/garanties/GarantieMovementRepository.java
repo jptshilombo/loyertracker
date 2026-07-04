@@ -8,4 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface GarantieMovementRepository extends JpaRepository<GarantieMovement, UUID> {
 
     List<GarantieMovement> findByGarantieIdOrderByDateMouvementAscIdAsc(UUID garantieId);
+
+    /** Chargement par lot (export RGPD) : évite une requête par garantie. */
+    List<GarantieMovement> findByGarantieIdIn(List<UUID> garantieIds);
 }
