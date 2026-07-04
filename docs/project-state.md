@@ -9,6 +9,22 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Préflight Production `1.8.0` — PASS (2026-07-04, ~16:07–16:15 UTC).** Toutes les conditions
+> de Préflight du Gate Production `1.8.0` sont satisfaites. Hôte démarré ~15:40 UTC (pratique
+> documentée) : 8/8 conteneurs Up, 4/4 healthy, restart=0, tag `sha-6a358eb6` conforme, Flyway
+> 20/20, Prometheus 5/5, capacité OK. Alerte `BackupHeartbeatMissing` à l'arrivée — cause
+> récurrente connue (pushgateway purgé au boot, cron non joué hôte éteint), **résorbée dans la
+> session** par le heartbeat de la sauvegarde. Dépôt hôte resynchronisé (retard récurrent :
+> PR #163 → `3a4aec6`). **Sauvegarde vérifiée** : `loyertracker-20260704-170836.dump` (317 Kio,
+> SHA-256 `69aec15e…`, `pg_restore --list` 740 entrées) + globals, permissions 600.
+> **Vérifications lecture seule §4.2 : 4/4 PASS** — `cree_le` 3/3 non NULL, invariant ledger
+> 3/3, colonne V21 absente (migration propre), **0 cas OBS-S10-01 en Production** (confirmé
+> comme prédit au Gate). Release notes `1.8.0` rédigées (`docs/release-notes-v1.8.0.md`),
+> `CHANGELOG.md` promu `[1.8.0]` — 2026-07-04. Rapport :
+> `docs/cgpa/09-production/preflight-backup-v1.8.0-report.md`. **Prochaine étape autorisée** :
+> déploiement technique `1.8.0` (`api`+`nginx`, migration V21 additive) — **décision distincte,
+> non prise à ce stade.**
+>
 > **Gate Production Sprint 10 (release `1.8.0`) — GO, `PRODUCTION_READY` atteint (2026-07-04,
 > ~15:49 UTC).** Arbitrage PO rendu : **option S1** (jordan), exécutée le jour même —
 > **RSV-S10-02 LEVÉE**. Redéploiement Staging ciblé du candidat **`sha-2c5f43c7`** sur
