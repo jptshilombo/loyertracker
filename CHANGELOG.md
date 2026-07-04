@@ -27,6 +27,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - ADR-14 §8 exécuté : `sommeMontantDeposeParBail` recalculé depuis `garantie_movement`.
 - Couverture de test frontend du panneau Garanties (17 scénarios composant + 4 méthodes API),
   exigée par le Quality Gate SonarQube (`new_coverage` ≥ 80 %).
+- Correctif (RSV-S10-01) : ordre chronologique stable du ledger pour les mouvements d'un même
+  jour — `date_mouvement` est un `DATE` et le tri retombait sur l'UUID aléatoire ; tri désormais
+  `date_mouvement, cree_le, id` (`cree_le` TIMESTAMPTZ posé par Postgres depuis V20, mappé en
+  lecture seule), appliqué à l'historique US-97 et à l'export RGPD. Aucune migration.
 
 ## [1.7.0] — 2026-07-03
 
