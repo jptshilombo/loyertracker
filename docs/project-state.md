@@ -9,6 +9,19 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Release `1.7.0` CLÔTURÉE — CDO GO (2026-07-04, ~10:45 UTC).** Les cinq jalons du cycle sont
+> PASS : PR #152 (Sprint 9 EP-12a US-94) → Gate Staging → Gate Production (GO sous réserve
+> acceptée, condition A1) → Préflight/backup + déploiement `sha-6a358eb6` + smoke 59/0 →
+> Hypercare T0 + checkpoint combiné T+12/T+24 (bandeau ci-dessous). US-94 confirmée en
+> Production : V20 opérationnelle, backfill vérifié, invariant du ledger 3/3, `depotGarantie`
+> dérivé cohérent. Réserves : RSV-PROD-S9-01, RSV-S7-8-01, RP-160-03 **levées** ; RSV-S9-03
+> **acceptée permanente** (aucun rollback applicatif seul viable pour ce schéma — consignée) ;
+> `BackupHeartbeatMissing` qualifiée sans impact (pushgateway purgé au boot, backup réel ~21 h
+> < 26 h). Dossier : `docs/cgpa/09-production/cloture-release-v1.7.0.md` ; `docs/prod-state.md`
+> §0H mis à jour. **Prochaine action autorisée** : promotion Sprint 10 (EP-12b, sur `main` via
+> PR #168) selon le parcours gouverné — Gate `STG-ISOL-01` puis Gate Staging v5.3 — ou autre
+> priorité du backlog PO.
+>
 > **Hypercare Production `1.7.0` — checkpoint combiné T+12 (rattrapage) / T+24 (anticipé)
 > exécuté le 2026-07-04 à 10:18 UTC, PASS.** Écarts de fenêtre qualifiés et tranchés par le PO
 > (précédents `1.3.0`/`1.4.0`) : le serveur de production était **volontairement éteint pendant
