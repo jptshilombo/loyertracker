@@ -8,6 +8,13 @@
 
 ## 0H. Déploiement Production `1.7.0` — 2026-07-03
 
+> **RELEASE `1.7.0` CLÔTURÉE — CDO GO (2026-07-04).** Hypercare T0 PASS (2026-07-03) +
+> checkpoint combiné T+12 (rattrapage) / T+24 (anticipé) PASS (2026-07-04 10:18 UTC — écarts de
+> fenêtre qualifiés, hôte volontairement éteint pendant la fenêtre T+12, T+24 anticipé sur
+> décision PO). Invariant `garantie.solde_actuel = Σ mouvements` 3/3, zéro dérive tag/digests,
+> 0 erreur API depuis le boot. RSV-PROD-S9-01, RSV-S7-8-01, RP-160-03 levées ; RSV-S9-03
+> acceptée permanente. Dossier : `docs/cgpa/09-production/cloture-release-v1.7.0.md`.
+
 | Contrôle | Résultat |
 |---|---|
 | Release | `1.7.0` — Sprint 9 EP-12a US-94 (Garantie ledger) |
