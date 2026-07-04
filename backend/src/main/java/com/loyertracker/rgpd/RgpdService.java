@@ -79,8 +79,11 @@ public class RgpdService {
                                             .stream().map(GarantieDto::from).toList()));
                     List<UUID> garantieIds = garantiesParBail.values().stream()
                             .flatMap(List::stream).map(GarantieDto::id).toList();
+                    // groupingBy préserve l'ordre de parcours : le tri stable (date, cree_le, id)
+                    // de la requête vaut donc aussi pour chaque liste par garantie (RSV-S10-01).
                     Map<UUID, List<GarantieMovementDto>> mouvementsParGarantie = mouvements
-                            .findByGarantieIdIn(garantieIds).stream()
+                            .findByGarantieIdInOrderByDateMouvementAscCreeLeAscIdAsc(garantieIds)
+                            .stream()
                             .map(GarantieMovementDto::from)
                             .collect(Collectors.groupingBy(GarantieMovementDto::garantieId));
 
