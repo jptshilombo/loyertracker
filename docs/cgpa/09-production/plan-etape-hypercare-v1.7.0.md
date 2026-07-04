@@ -70,6 +70,47 @@ T+24 prévu : **2026-07-04 ~13:45 UTC** (tolérance ±30 min).
 
 ---
 
+## Checkpoint combiné T+12 (rattrapage) / T+24 (anticipé) — 2026-07-04 10:18 UTC
+
+**Statut : PASS**
+
+**Qualification des écarts de fenêtre (décision PO du 2026-07-04, précédents `1.3.0`/`1.4.0`)** :
+le serveur de production était **volontairement éteint pendant la nuit** (pratique documentée —
+produit non annoncé publiquement) et a été démarré le 2026-07-04 à ~09:09 UTC. Le T+12
+(fenêtre 01:15–02:15 UTC) était donc **matériellement inexécutable** (hôte hors tension), et le
+T+24 est exécuté par anticipation (~3 h 27 avant l'ancre de 13:45 UTC) sur décision explicite
+du PO. Checkpoint unique valant T+12 en rattrapage et T+24 anticipé.
+
+| Contrôle | Résultat |
+|---|---|
+| 8/8 conteneurs Up, 4/4 `(healthy)`, restart=0 | ✅ PASS (up ~1 h 09, démarrage propre au boot de l'hôte) |
+| `LOYERTRACKER_TAG=sha-6a358eb6` persisté dans `.env` | ✅ PASS — zéro dérive |
+| Digest API `sha256:485c8574…` | ✅ conforme au Gate Production |
+| Digest Web `sha256:70ae97f2…` | ✅ conforme au Gate Production |
+| Flyway | ✅ 20/20 `success` |
+| Actuator | ✅ `{"status":"UP"}` |
+| Prometheus | ✅ 5/5 cibles `up` |
+| Alertmanager | ⚠️ 1 alerte `BackupHeartbeatMissing` — **qualifiée** (cf. ci-dessous), exclue des critères de suspension par ce plan (RSV-T24-01) |
+| p99 latence (1 h) | ✅ ~24,7 ms |
+| 5xx rate (1 h) | ✅ 0 (aucun point de données) |
+| 401 (1 h) | ✅ ~2 — négligeable |
+| Hikari pending | ✅ 0 |
+| Capacité hôte | ✅ charge 0,00/0,02/0,01 ; mémoire dispo 2,0 Gio ; disque 31 Go libres (81 %) |
+| Logs API — erreurs depuis le boot | ✅ **0** ; les seules entrées ERROR du conteneur datent du 2026-07-03 (2× `duplicate key bailleur_keycloak_id_key` + WARN associés — smoke inscription 409, déjà qualifiées au T0) |
+| Invariant `garantie.solde_actuel = Σ mouvements` | ✅ PASS — 3/3 garanties cohérentes (2100,00 / 600,00 / 600,00), 3 mouvements |
+
+**Qualification `BackupHeartbeatMissing` + métriques pushgateway absentes** : le pushgateway ne
+persiste pas ses métriques au redémarrage — le boot de 09:09 UTC les a purgées (heartbeat backup,
+batchs alertes/loyers). De plus, le cron de backup (02:15 UTC quotidien) n'a pas pu jouer cette
+nuit, l'hôte étant éteint. Dernier backup réel : `loyertracker-20260703-131331.dump`
+(2026-07-03 13:13 UTC, ~21 h — **sous le seuil de 26 h**). L'alerte se résorbera au prochain
+passage du cron (2026-07-05 02:15 UTC si l'hôte reste allumé) ; sans impact sur le verdict.
+
+**Décision au checkpoint : PASS.** Les critères techniques de clôture sont satisfaits ; la
+clôture de la release `1.7.0` reste suspendue à la **décision CDO GO** (étape distincte).
+
+---
+
 ## Post-clôture (après décision CDO GO au T+24)
 
 - Mettre à jour `docs/project-state.md` (bandeau de clôture).

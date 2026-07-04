@@ -9,6 +9,25 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Hypercare Production `1.7.0` — checkpoint combiné T+12 (rattrapage) / T+24 (anticipé)
+> exécuté le 2026-07-04 à 10:18 UTC, PASS.** Écarts de fenêtre qualifiés et tranchés par le PO
+> (précédents `1.3.0`/`1.4.0`) : le serveur de production était **volontairement éteint pendant
+> la nuit** (pratique documentée, produit non annoncé) et démarré à ~09:09 UTC — le T+12
+> (fenêtre 01:15–02:15 UTC) était matériellement inexécutable ; le T+24 est anticipé de ~3 h 27
+> sur décision explicite du PO, en checkpoint unique. Résultats : 8/8 conteneurs Up, 4/4
+> `(healthy)`, restart=0 ; `LOYERTRACKER_TAG=sha-6a358eb6` et digests API `sha256:485c8574…` /
+> Web `sha256:70ae97f2…` conformes au Gate Production (zéro dérive) ; Flyway 20/20 ; Actuator
+> UP ; Prometheus 5/5 up ; p99 ~24,7 ms ; 5xx=0 ; 401≈2/h ; Hikari pending=0 ; charge 0,00,
+> mémoire 2,0 Gio dispo, disque 31 Go libres ; **0 erreur API depuis le boot** (seules entrées
+> ERROR : les 2 `duplicate key` du smoke du 2026-07-03, déjà qualifiées au T0) ; invariant
+> `garantie.solde_actuel = Σ mouvements` **3/3 PASS**. Un point qualifié sans impact : alerte
+> `BackupHeartbeatMissing` active + métriques pushgateway absentes — pushgateway purgé par le
+> reboot et cron backup (02:15 UTC) non joué hôte éteint ; dernier backup réel du 2026-07-03
+> 13:13 UTC (~21 h, sous seuil 26 h), résorption attendue au prochain cron. Accès strictement
+> en lecture (aucune mutation Docker/`.env`/DB). **Les critères techniques de clôture `1.7.0`
+> sont satisfaits ; la clôture reste suspendue à la décision CDO GO** (étape distincte, non
+> prise à ce stade). Dossier : `docs/cgpa/09-production/plan-etape-hypercare-v1.7.0.md`.
+>
 > **Sprint 10 EP-12b Garantie usage métier (US-95/96/97) — clôturé côté `main` : PR #168 mergée
 > le 2026-07-04T09:43:51Z** (merge commit `1d1c2a5d`) par `jptshilombo`. Contenu : **US-95**
 > (retenue explicite sur loyer impayé — jamais automatique, ADR-14 §5 : endpoint
