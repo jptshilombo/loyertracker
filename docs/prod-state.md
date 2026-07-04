@@ -8,8 +8,10 @@
 
 ## 0I. Déploiement Production `1.8.0` — 2026-07-04
 
-> **`PRODUCTION_DEPLOYED` atteint le 2026-07-04 à ~16:45 UTC.** Hypercare T0/T+12/T+24 requis
-> avant clôture de release (plan à créer).
+> **`PRODUCTION_DEPLOYED` atteint le 2026-07-04 à ~16:45 UTC.** Hypercare **T0 PASS**
+> (2026-07-04 ~16:35 UTC — `plan-etape-hypercare-v1.8.0.md`) ; T+12 prévu 2026-07-05 ~04:45 UTC
+> (rattrapage qualifié attendu, hôte éteint la nuit), T+24 prévu 2026-07-05 ~16:45 UTC. Clôture
+> suspendue à la décision CDO GO après T+24.
 
 | Contrôle | Résultat |
 |---|---|

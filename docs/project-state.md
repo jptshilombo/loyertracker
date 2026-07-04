@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Hypercare Production `1.8.0` — T0 exécuté le 2026-07-04 à ~16:35 UTC, PASS.** 8/8 conteneurs
+> Up, 4/4 `(healthy)`, restart=0. Tag `sha-2c5f43c7` et digests conformes au Gate. Flyway 21/21.
+> Actuator UP. Prometheus 5/5 up, Alertmanager `[]`. p99 ~81 ms (fenêtre incluant le smoke),
+> 5xx=0, Hikari pending=0, heartbeat backup ~26 min. 1 erreur qualifiée (`duplicate key`, smoke
+> inscription — attendue), aucune inattendue. Invariant ledger 3/3. `bailleur-test` désactivé
+> vérifié. **Rollback applicatif seul viable** (V21 additive — première release depuis `1.6.0`
+> avec cette option). Plan : `docs/cgpa/09-production/plan-etape-hypercare-v1.8.0.md`. T+12
+> prévu le 2026-07-05 à ~04:45 UTC ± 30 min (**rattrapage qualifié attendu**, hôte éteint la
+> nuit — précédent `1.7.0`) ; T+24 le 2026-07-05 à ~16:45 UTC ± 30 min. La clôture `1.8.0`
+> restera suspendue à la décision CDO GO après T+24.
+>
 > **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 10 `1.8.0` — 2026-07-04 ~16:45 UTC.**
 > Tag **`sha-2c5f43c7`** déployé sur `loyertracker-prod-server` : `api`+`nginx` recréés ciblés,
 > digests conformes au Gate (vérifiés avant et après), `postgres`/`keycloak` inchangés. Flyway
