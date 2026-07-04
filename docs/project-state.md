@@ -9,6 +9,24 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Production Sprint 10 (release `1.8.0`) — INSTRUIT : NO GO en l'état, en attente
+> d'arbitrage PO sur RSV-S10-02 (2026-07-04).** Candidat **`sha-2c5f43c7`** (merge PR #173 —
+> Sprint 10 EP-12b US-95/96/97 + correctif RSV-S10-01, digests GHCR relevés), version **`1.8.0`**
+> (MINOR). Tous les critères de la checklist sont PASS sauf un, procédural : le candidat incluant
+> le correctif exigé par le Gate Staging est **postérieur** au tag validé en Staging
+> (`sha-1d1c2a5d`) — delta d'un seul commit backend (`71a7a73`), jamais stagé. Consigné
+> **RSV-S10-02 (bloquante)**, deux options au PO : **S1** redéploiement Staging ciblé du candidat
+> (bascule de tag seule, aucune migration, vérification live de l'ordre intra-jour sur les
+> mouvements réels du 2026-07-04) — **recommandée** ; **S2** acceptation écrite du delta non
+> stagé. Profil de risque nettement plus bas que `1.7.0` : **V21 additive** (FK nullable, aucun
+> backfill), **rollback applicatif seul viable** vers `sha-6a358eb6` (contraste explicite avec
+> RSV-S9-03/V20). Conditions de Préflight définies (vérifications lecture seule `cree_le`,
+> invariant 3/3, colonne absente — la lecture directe de Production n'a pas été effectuée à
+> l'instruction, hôte non sollicité). Release notes `1.8.0` et promotion CHANGELOG `[1.8.0]` à
+> produire avant déploiement (ligne du correctif RSV-S10-01 ajoutée à `[Non publié]`). Décision :
+> `docs/cgpa/09-production/gate-production-v1.8.0-decision.md`. **Aucun déploiement Production
+> n'est autorisé par ce document.**
+>
 > **RSV-S10-01 LEVÉE — tri stable du ledger intra-jour (2026-07-04, ~14:42 UTC).** Correctif
 > mergé sur `main` via **PR #173** (commit `71a7a73`, merge `2c5f43c7`, CI 7/7 verte) :
 > `garantie_movement.cree_le` (`TIMESTAMPTZ DEFAULT now()`, présent depuis V20 mais non mappé
