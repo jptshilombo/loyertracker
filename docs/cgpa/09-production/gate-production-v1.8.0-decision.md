@@ -11,8 +11,8 @@
 | Digest GHCR Web | `sha256:9c8915f0eca279bf75c548d7a4846d48c266a9d44be7c9b405bd526847cd3f87` |
 | Production actuelle | `1.7.0` — `sha-6a358eb6` (release clôturée CDO GO 2026-07-04) |
 | Rollback disponible | **Oui — rollback applicatif seul viable** vers `sha-6a358eb6` (V21 additive, FK nullable) — voir §3 Rollback |
-| Décision | **NO GO en l'état — en attente d'arbitrage PO sur RSV-S10-02 (§4.1)** ; le reste de la checklist est PASS |
-| Statut | `PRODUCTION_READY` **non atteint** |
+| Décision | **GO — arbitrage PO S1 rendu et exécuté avec succès le 2026-07-04 (§8)** ; RSV-S10-02 levée |
+| Statut | `PRODUCTION_READY` **atteint** (2026-07-04, ~15:49 UTC) — conditions de Préflight restantes (§7) |
 
 ## 1. Objet
 
@@ -169,7 +169,7 @@ point ouvert est procédural : la preuve Staging du candidat exact (§4.1).
 
 | ID | Nature | Sévérité | Traitement |
 |----|--------|----------|------------|
-| **RSV-S10-02** | Le tag candidat `sha-2c5f43c7` (incluant le correctif RSV-S10-01 exigé) n'a pas été déployé en Staging — delta d'un commit backend par rapport au tag validé `sha-1d1c2a5d` | **Bloquante** | **À arbitrer par le PO** : option S1 (redéploiement Staging ciblé + vérification live, recommandée) ou S2 (acceptation écrite du delta) — §4.1. Assignée PO (jordan), 2026-07-04 |
+| **RSV-S10-02** | Le tag candidat `sha-2c5f43c7` (incluant le correctif RSV-S10-01 exigé) n'a pas été déployé en Staging — delta d'un commit backend par rapport au tag validé `sha-1d1c2a5d` | **✅ Levée le 2026-07-04** | **Arbitrage PO : S1** (2026-07-04, jordan), exécutée le jour même : `sha-2c5f43c7` déployé sur `ai-test-server` (STG-ISOL-01 PASS avant/après, smoke 59/0 au premier passage), ordre intra-jour vérifié en direct sur l'API réelle avec preuve discriminante — §8. Statut à l'ouverture : bloquante, assignée PO |
 | RSV-S10-01 | Ordre intra-jour du ledger non déterministe | **✅ Levée le 2026-07-04** | PR #173 (`2c5f43c7`), incluse dans le candidat — addendum §9 du Gate Staging Sprint 10 |
 | RSV-S9-03 | Aucun rollback applicatif seul pour V20 (héritée, acceptée permanente) | Acceptée | **Ne s'applique pas à V21** (additive) ; reste vraie pour tout retour antérieur à `1.7.0`, hors périmètre de ce Gate |
 | — | Vérifications lecture seule au Préflight (§4.2) : `cree_le` non NULL, invariant 3/3, absence de colonne préexistante | Condition de Préflight | À exécuter avec le backup pré-déploiement, avant migration V21 |
@@ -183,23 +183,21 @@ point ouvert est procédural : la preuve Staging du candidat exact (§4.1).
 | Enterprise Architect | **GO sous condition S1 ou S2** — profil de risque technique bas (migration additive, rollback viable) ; le delta d'un commit de tri est architecturalement bénin, mais la vérification live sur les données Staging qui ont révélé le défaut (S1) est la seule preuve empirique possible du correctif |
 | DevSecOps Lead | **GO sous condition S1** — recommande S1 : bascule de tag sans migration, STG-ISOL-01, smoke déjà aligné (21/21), vérification de l'ordre sur les mouvements réels du 2026-07-04 |
 | Release Manager | **GO sous condition** — candidat `sha-2c5f43c7` techniquement recevable (CI verte, images GHCR présentes, digests relevés) ; recevabilité définitive suspendue à RSV-S10-02 |
-| Product Owner | **⏳ Arbitrage attendu** — choix S1/S2 (RSV-S10-02) |
+| Product Owner | **GO — option S1 retenue** (2026-07-04, jordan), exécutée avec succès le jour même (§8) |
 
 ## 7. Décision finale
 
-**Chief Delivery Officer : NO GO en l'état — en attente de l'arbitrage PO sur RSV-S10-02.**
+**Chief Delivery Officer : GO.**
 
-- `PRODUCTION_READY` : **non atteint**.
-- Tous les autres critères de la checklist sont PASS ou couverts par des conditions de Préflight
-  définies (§4.2, §5).
-- **Recommandation CDO : option S1** (redéploiement Staging ciblé de `sha-2c5f43c7`, sans
-  migration, avec vérification live de l'ordre intra-jour) — elle transforme la réserve en preuve
-  positive pour un coût d'une session Staging courte.
+- `PRODUCTION_READY` : **atteint** le 2026-07-04 (~15:49 UTC), après exécution complète de S1.
+- Tous les critères de la checklist sont PASS ; les conditions de Préflight (§4.2, §5) restent à
+  exécuter avant le déploiement technique, qui demeure une **décision distincte**.
 
 ### Conditions bloquantes avant `PRODUCTION_READY`
 
-1. **RSV-S10-02** — arbitrage PO : S1 exécutée avec succès (STG-ISOL-01 PASS, smoke 59/0, ordre
-   intra-jour vérifié) **ou** acceptation écrite explicite du delta non stagé (S2).
+1. ~~**RSV-S10-02** — arbitrage PO : S1 exécutée avec succès (STG-ISOL-01 PASS, smoke 59/0, ordre
+   intra-jour vérifié) **ou** acceptation écrite explicite du delta non stagé (S2)~~ **✅ Levée** :
+   arbitrage PO **S1** rendu et exécuté le 2026-07-04 — preuves au §8.
 
 ### Conditions de Préflight (si GO prononcé ensuite)
 
@@ -216,10 +214,58 @@ monitoring restent inchangés.
 
 | Étape | Statut | Document |
 |---|---|---|
-| Arbitrage PO RSV-S10-02 (S1/S2) | ⏳ Attendu | Ce document §4.1/§5 |
-| Si S1 : redéploiement Staging `sha-2c5f43c7` + vérifications ciblées | ⏳ | Consigner dans `staging-state.md` + addendum de ce document |
-| Mise à jour de ce Gate (GO / GO sous réserve) | ⏳ | Ce document |
-| Préflight + backup Production + vérifications §4.2 | ⏳ | `preflight-backup-v1.8.0-report.md` (à créer) |
+| Arbitrage PO RSV-S10-02 (S1/S2) | ✅ Fait (2026-07-04) — **S1** | Ce document §4.1/§5 |
+| S1 : redéploiement Staging `sha-2c5f43c7` + vérifications ciblées | ✅ Fait (2026-07-04) | §8 + `staging-state.md` |
+| Mise à jour de ce Gate | ✅ Fait (2026-07-04) — **GO**, `PRODUCTION_READY` atteint | Ce document |
+| Préflight + backup Production + vérifications §4.2 | ⏳ À exécuter | `preflight-backup-v1.8.0-report.md` (à créer) |
 | Déploiement technique | ⏳ | `deploiement-technique-v1.8.0-report.md` (à créer) |
 | Validation finale + smoke Production | ⏳ | `validation-finale-v1.8.0-report.md` (à créer) |
 | Hypercare + clôture | ⏳ | `plan-etape-hypercare-v1.8.0.md` (à créer) |
+
+## 8. Addendum — exécution de S1 (2026-07-04, ~15:36–15:49 UTC)
+
+**RSV-S10-02 est LEVÉE.** Arbitrage PO rendu (option **S1**, jordan), exécution le jour même sur
+`ai-test-server`, dans l'ordre gouverné :
+
+1. **STG-ISOL-01 avant (15:36 UTC) : PASS** — 8 conteneurs `loyertracker-staging-*` +
+   `nginx-proxy-manager`, tous `Up`, restart=0 ; réseaux (`loyertracker-staging_loyertracker-net`,
+   `ubuntu_default`) et volumes projet/tiers conformes à l'inventaire.
+2. **Sauvegarde pré-déploiement vérifiée** : `~/staging-backups/loyertracker-staging-20260704-153707.dump`
+   (368 Kio, `pg_restore --list` 742 entrées OK).
+3. **Dépôt hôte synchronisé** (`057aae1` → `20d6701`, `git pull --ff-only`) ; `.env` sauvegardé
+   (`.env.bak-pre-s1-2c5f43c7`, 600) puis tag basculé `sha-1d1c2a5d` → **`sha-2c5f43c7`**.
+4. **Recréation ciblée `api`+`nginx`** — invocation canonique
+   `docker compose -f docker-compose.staging.yml` seule (leçon du Gate Staging Sprint 10
+   appliquée : aucun incident cette fois). Images confirmées
+   `ghcr.io/jptshilombo/loyertracker-{api,web}:sha-2c5f43c7`, 4/4 `(healthy)`, restart=0.
+   **Flyway inchangé 21/21** (aucune migration — attendu).
+5. **STG-ISOL-01 après : PASS** — identique à l'avant, `nginx-proxy-manager` intact.
+6. **Smoke 59 PASS / 0 FAIL au premier passage** (`BASE=https://localhost:18443`,
+   `COMPOSE_FILE=docker-compose.staging.yml`), échafaudage révoqué par le script.
+7. **Vérification live de l'ordre intra-jour (le cœur de S1)** — les mouvements synthétiques du
+   2026-07-04 ayant été nettoyés à 0 résidu au Gate Staging, le scénario a été **recréé en direct
+   sur l'API réelle** (bailleur-test@test.local, échafaudage kcadm activé puis révoqué) :
+   dépôt 1000 → retenue 300 sur loyer en retard → complément 200, les trois le même jour.
+   - `GET .../mouvements` → **`DEPOT_INITIAL, RETENUE_LOYER, COMPLEMENT`** ✅ (soldes 1000 → 700
+     → 900 cohérents) ; export CSV : même ordre ✅.
+   - **Preuve discriminante** : sur ces données réelles, l'ancien tri (`date_mouvement, id`)
+     aurait restitué **`RETENUE_LOYER, DEPOT_INITIAL, COMPLEMENT`** (UUID de la retenue
+     `2bb4c0e5…` < UUID du dépôt `2c99f5c4…`) — le désordre exact de RSV-S10-01, démontré corrigé
+     par `sha-2c5f43c7` sur un cas qui aurait échoué sous l'ancien code.
+   - Liaison V21 vérifiée en conditions réelles : le paiement couvert portait
+     `garantie_movement_id` (la FK a d'ailleurs fait échouer — proprement, transaction annulée —
+     une première tentative de nettoyage mal ordonnée, rejouée dans le bon ordre).
+   - Invariant `solde_actuel = Σ(crédit − débit)` : **5/5 PASS** (garantie synthétique incluse).
+   - **Nettoyage transactionnel 0 résidu vérifié** : compteurs revenus exactement à la baseline
+     (mouvements 6, garanties 4, baux 29, biens 30, paiements 295, audit 82), y compris 2 biens
+     orphelins des mises au point du scénario (bail refusé 409 « bien non LIBRE », échéances à
+     générer via `POST /api/batch/echeances`).
+
+**Observation qualifiée OBS-S10-01 (non bloquante, cosmétique)** : pour les lignes **backfillées
+par V20 dans une même transaction**, `cree_le` est identique (constaté sur la garantie
+`67f652dc…` : `DEPOT_INITIAL` + `AJUSTEMENT` du 2026-01-01, même `cree_le` au µs) — le tri
+retombe alors sur l'UUID et peut afficher l'`AJUSTEMENT` avant le `DEPOT_INITIAL`. L'ordre est
+désormais **stable** (objet de RSV-S10-01) et chaque ligne porte son `solde_apres` ; aucun impact
+sur les soldes ni l'invariant. En Production, les 3 garanties issues du backfill V20 n'ont qu'un
+mouvement chacune — aucun cas concerné. À traiter, si le PO le souhaite, par un critère métier
+secondaire (ex. priorité `DEPOT_INITIAL`) dans un sprint ultérieur.
