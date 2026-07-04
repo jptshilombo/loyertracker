@@ -9,6 +9,27 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Staging Sprint 10 EP-12b Garantie usage métier — GO, `STAGING_DEPLOYED` (2026-07-04,
+> ~10:59 UTC).** Tag immuable **`sha-1d1c2a5d`** (merge PR #168) déployé sur `ai-test-server`
+> (accès via IP privée `172.31.11.102` — SG port 22 restreint aux adresses privées du VPC).
+> STG-ISOL-01 PASS avant/après (9 conteneurs `loyertracker-staging-*` + `nginx-proxy-manager`
+> intact, restart=0). Sauvegarde pré-déploiement vérifiée (365 Kio, 740 entrées). **Incident de
+> déploiement corrigé en ~1 min, sans impact tiers** : première recréation avec le pattern
+> Compose Production (base+overlay) → fusion des listes `ports`, bind 80 refusé par le noyau
+> (port NPM) ; invocation canonique Staging rétablie (`-f docker-compose.staging.yml` seul,
+> vérifiée sur les labels Compose). Flyway **V21 appliquée** (`paiement.garantie_movement_id`),
+> 21/21. Smoke **59/0 au premier passage** — compteur Flyway aligné **avant** déploiement
+> (PR #171), défaut récurrent R-S04-1 anticipé pour la première fois. US-95/96/97 **vérifiées
+> manuellement en direct sur l'API réelle** (20 contrôles : retenue 400/200/409 + transition
+> RECU + liaison V21, complément, mouvements + export CSV, invariant ledger 4/4, nettoyage
+> synthétique 0 résidu, échafaudage kcadm révoqué). **Nouvelle réserve RSV-S10-01 (non
+> bloquante)** : ordre intra-jour du ledger non déterministe (`date_mouvement` est un `DATE`,
+> tie-break sur UUID aléatoire — constaté en réel : `RETENUE_LOYER, DEPOT_INITIAL, COMPLEMENT`
+> le même jour) ; sans impact sur les soldes/invariant, correction d'un critère de tri stable
+> attendue **avant le Gate Production Sprint 10** (assignée backend, 2026-07-04). Décision :
+> `docs/cgpa/07-devsecops/gate-staging-sprint10-v5.4.1-decision.md`. **Ce Gate n'autorise
+> aucune promotion Production** — décision distincte, non prise à ce stade.
+>
 > **Release `1.7.0` CLÔTURÉE — CDO GO (2026-07-04, ~10:45 UTC).** Les cinq jalons du cycle sont
 > PASS : PR #152 (Sprint 9 EP-12a US-94) → Gate Staging → Gate Production (GO sous réserve
 > acceptée, condition A1) → Préflight/backup + déploiement `sha-6a358eb6` + smoke 59/0 →
