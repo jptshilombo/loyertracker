@@ -399,6 +399,34 @@ class S03PaiementsGarantiesIntegrationTest {
     }
 
     @Test
+    void mouvementsDUnMemeJourRestentDansLOrdreDInsertion() throws Exception {
+        // RSV-S10-01 : date_mouvement est un DATE — sans le tie-break cree_le, trois mouvements
+        // du même jour se trient sur l'UUID aléatoire (désordre constaté en Staging le 2026-07-04).
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "16 rue Ordre Ledger");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-02-28");
+        genererEcheances(bailleur);
+
+        String garantieId = creerGarantie(bienId, bailId, bailleur, "900.00");
+        String paiementId = paiementIdPourPeriode(bienId, "2026-01", bailleur);
+        mockMvc.perform(retenueLoyer(bienId, bailId, garantieId, bailleur,
+                        "{\"paiementId\":\"" + paiementId + "\",\"montant\":850.00}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(complement(bienId, bailId, garantieId, bailleur,
+                        "{\"montant\":100.00,\"motif\":\"Réappro même jour\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/biens/{bienId}/baux/{bailId}/garanties/{gid}/mouvements",
+                        bienId, bailId, garantieId).with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].type").value("DEPOT_INITIAL"))
+                .andExpect(jsonPath("$[1].type").value("RETENUE_LOYER"))
+                .andExpect(jsonPath("$[2].type").value("COMPLEMENT"));
+    }
+
+    @Test
     void restitutionPartielleApresRetenueLoyerResteCoherente() throws Exception {
         // Régression du bug corrigé (Sprint 10) : restituerPartiel calculait depuis `montant`
         // plutôt que depuis `soldeActuel`, ce qui aurait ignoré une retenue déjà survenue.

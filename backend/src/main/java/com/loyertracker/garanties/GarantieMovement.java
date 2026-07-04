@@ -2,6 +2,7 @@ package com.loyertracker.garanties;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -58,6 +59,14 @@ public class GarantieMovement {
     @Column(name = "reference_document", updatable = false)
     private String referenceDocument;
 
+    /**
+     * Timestamp d'insertion, posé par le DEFAULT now() Postgres (colonne V20) — jamais écrit par
+     * l'application ({@code insertable = false}). Critère de tri stable entre deux mouvements
+     * d'un même jour, {@code dateMouvement} n'étant qu'une date (RSV-S10-01).
+     */
+    @Column(name = "cree_le", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime creeLe;
+
     protected GarantieMovement() {
         // requis par JPA
     }
@@ -92,4 +101,5 @@ public class GarantieMovement {
     public String getUtilisateur() { return utilisateur; }
     public String getCommentaire() { return commentaire; }
     public String getReferenceDocument() { return referenceDocument; }
+    public OffsetDateTime getCreeLe() { return creeLe; }
 }

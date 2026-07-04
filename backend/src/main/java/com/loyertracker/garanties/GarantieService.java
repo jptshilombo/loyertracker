@@ -233,7 +233,7 @@ public class GarantieService {
         tenant.activerDepuisBien(bienId);
         exigerBailDuBien(bienId, bailId);
         exigerGarantieDuBail(bailId, garantieId);
-        return mouvements.findByGarantieIdOrderByDateMouvementAscIdAsc(garantieId).stream()
+        return mouvements.findByGarantieIdOrderByDateMouvementAscCreeLeAscIdAsc(garantieId).stream()
                 .map(GarantieMovementDto::from).toList();
     }
 
