@@ -7,6 +7,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.8.0] — 2026-07-04
+
 ### Ajouts — Garantie : usage métier du ledger (Sprint 10, EP-12b, US-95/96/97)
 
 - **Retenue explicite sur un loyer impayé (US-95)** : nouvel endpoint
@@ -371,7 +373,8 @@ go-live production différé à un lot ultérieur.
 - Alerting validé sur staging puis prouvé en production lors du Gate 10.
 - OpenAPI non encore produit ; UX S02 minimale.
 
-[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.7.0...HEAD
+[Non publié]: https://github.com/jptshilombo/loyertracker/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/jptshilombo/loyertracker/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/jptshilombo/loyertracker/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/jptshilombo/loyertracker/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/jptshilombo/loyertracker/compare/v1.4.0...v1.5.0
