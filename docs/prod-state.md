@@ -6,6 +6,39 @@
 
 
 
+## 0I. Déploiement Production `1.8.0` — 2026-07-04
+
+> **`PRODUCTION_DEPLOYED` atteint le 2026-07-04 à ~16:45 UTC.** Hypercare **T0 PASS**
+> (2026-07-04 ~16:35 UTC — `plan-etape-hypercare-v1.8.0.md`) ; T+12 prévu 2026-07-05 ~04:45 UTC
+> (rattrapage qualifié attendu, hôte éteint la nuit), T+24 prévu 2026-07-05 ~16:45 UTC. Clôture
+> suspendue à la décision CDO GO après T+24.
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.8.0` — Sprint 10 EP-12b US-95/96/97 (Garantie usage métier) + correctif RSV-S10-01 (tri stable du ledger) |
+| Tag déployé | **`sha-2c5f43c7`** (GHCR, commit `2c5f43c7` — merge PR #173 ; digests API `sha256:bab66aa3…` / Web `sha256:9c8915f0…` conformes au Gate, vérifiés avant **et** après recréation) |
+| Tag précédent / rollback | `sha-6a358eb6` (`1.7.0`) — **rollback applicatif seul viable** (V21 additive, l'ancien code ignore la colonne ; contraste explicite avec V20/RSV-S9-03). Limite : mouvements `RETENUE_LOYER`/`COMPLEMENT` créés entre-temps resteraient en base, cohérents mais non « explicables » dans l'UI `1.7.0` |
+| Backup pré-déploiement | `loyertracker-20260704-170836.dump` (317 Kio), SHA-256 `69aec15e…`, globals SHA-256 `fc714186…`, `pg_restore --list` 740 entrées OK (Préflight) |
+| Déploiement | `api` + `nginx` recréés ciblés — aucun écart, `postgres`/`keycloak` inchangés |
+| Services post-déploiement | 8/8 Up, 4/4 **(healthy)**, restart=0 |
+| Flyway | V20→**V21** (`21 - sprint10 garantie usage`) appliquée sans erreur, 21/21 — colonne `paiement.garantie_movement_id` (nullable) + FK + index vérifiés |
+| Données réelles | Invariant `garantie.solde_actuel = Σ mouvements` **3/3** avant et après migration (V21 additive, aucune ligne modifiée) ; 0 cas OBS-S10-01 |
+| Smoke Production | **59 PASS / 0 FAIL au premier passage** — première release de l'historique sans correctif préalable au smoke (compteur Flyway aligné PR #171, dépôt synchronisé au Préflight). Nettoyage transactionnel 0 résidu (bailleur2-smoke + gest-smoke supprimés DB+KC, bailleur-test réactivé sur instruction PO puis redésactivé, compteurs identiques à la baseline, garanties réelles intactes) |
+| Erreurs API | 1, qualifiée (`duplicate key` du test d'inscription du smoke — même qualification que `1.7.0` T0), 0 inattendue |
+| Observabilité | Prometheus 5/5 up ; Alertmanager `[]` ; site public `https://loyertracker.loyerpro.org` → 200 |
+| `.env` persisté | `LOYERTRACKER_TAG=sha-2c5f43c7`, backup `.env.bak-pre-1.8.0` (600) |
+| Décision CGPA | CDO **GO** (Gate Production `1.8.0`, arbitrage PO S1) — `PRODUCTION_DEPLOYED` atteint le 2026-07-04 ~16:45 UTC |
+
+Rapports : `docs/cgpa/09-production/gate-production-v1.8.0-decision.md`,
+`docs/cgpa/09-production/preflight-backup-v1.8.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.8.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.8.0-report.md`.
+
+Réserves ouvertes après ce déploiement : **RSV-S9-03** (héritée, acceptée permanente — sans
+objet pour V21 mais toujours vraie pour tout retour antérieur à `1.7.0`) ; **OBS-S10-01**
+(observation cosmétique, non bloquante, 0 cas en Production). RSV-S10-01 et RSV-S10-02 levées
+avant ce déploiement (Gate `1.8.0` §8).
+
 ## 0H. Déploiement Production `1.7.0` — 2026-07-03
 
 > **RELEASE `1.7.0` CLÔTURÉE — CDO GO (2026-07-04).** Hypercare T0 PASS (2026-07-03) +
