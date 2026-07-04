@@ -9,8 +9,26 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
-> **Gate Production Sprint 10 (release `1.8.0`) — INSTRUIT : NO GO en l'état, en attente
-> d'arbitrage PO sur RSV-S10-02 (2026-07-04).** Candidat **`sha-2c5f43c7`** (merge PR #173 —
+> **Gate Production Sprint 10 (release `1.8.0`) — GO, `PRODUCTION_READY` atteint (2026-07-04,
+> ~15:49 UTC).** Arbitrage PO rendu : **option S1** (jordan), exécutée le jour même —
+> **RSV-S10-02 LEVÉE**. Redéploiement Staging ciblé du candidat **`sha-2c5f43c7`** sur
+> `ai-test-server` : STG-ISOL-01 PASS avant/après (restart=0, NPM intact), sauvegarde
+> pré-déploiement vérifiée (368 Kio, 742 entrées), invocation canonique sans incident, Flyway
+> inchangé 21/21, smoke **59/0 au premier passage**. **Vérification live de RSV-S10-01 avec
+> preuve discriminante** : scénario réel dépôt→retenue→complément le même jour —
+> `GET /mouvements` et export CSV dans l'ordre chronologique, alors que l'ancien tri UUID aurait
+> rendu `RETENUE_LOYER, DEPOT_INITIAL, COMPLEMENT` sur ces mêmes données ; liaison V21 vérifiée
+> en réel ; invariant ledger 5/5 ; nettoyage transactionnel 0 résidu (compteurs et audit à la
+> baseline) ; échafaudage kcadm révoqué. Observation qualifiée **OBS-S10-01** (cosmétique, non
+> bloquante) : lignes backfillées V20 à `cree_le` identique triées par UUID — aucun cas en
+> Production. Décision et preuves :
+> `docs/cgpa/09-production/gate-production-v1.8.0-decision.md` §8. **Prochaine étape autorisée** :
+> Préflight Production `1.8.0` (backup + vérifications lecture seule §4.2, release notes,
+> promotion CHANGELOG `[1.8.0]`), puis déploiement technique — **décisions distinctes, le
+> déploiement n'est pas autorisé par ce Gate seul.**
+>
+> **Gate Production Sprint 10 (release `1.8.0`) — instruction initiale : NO GO en l'état, en
+> attente d'arbitrage PO sur RSV-S10-02 (2026-07-04).** Candidat **`sha-2c5f43c7`** (merge PR #173 —
 > Sprint 10 EP-12b US-95/96/97 + correctif RSV-S10-01, digests GHCR relevés), version **`1.8.0`**
 > (MINOR). Tous les critères de la checklist sont PASS sauf un, procédural : le candidat incluant
 > le correctif exigé par le Gate Staging est **postérieur** au tag validé en Staging
