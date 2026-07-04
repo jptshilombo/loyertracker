@@ -187,8 +187,10 @@ staging avec ce tag (`LOYERTRACKER_TAG`) → re-vérification observabilité + s
 > `https://loyertracker.staging.loyerpro.org`. Flyway **21/21** (V21 ajoutée :
 > `paiement.garantie_movement_id`). Smoke **59/0** au premier passage. STG-ISOL-01 PASS
 > avant/après. US-95/96/97 vérifiées en direct sur l'API réelle (chemins nominaux et d'erreur,
-> invariant ledger 4/4). **Réserves** : RSV-S10-01 (ordre intra-jour du ledger, non bloquante,
-> à corriger avant Gate Production Sprint 10) ; RSV-S9-03 (héritée, acceptée permanente).
+> invariant ledger 4/4). **Réserves** : RSV-S10-01 **LEVÉE le 2026-07-04** (tri stable
+> `date_mouvement, cree_le, id`, PR #173 merge `2c5f43c7` sur `main` — correctif postérieur à
+> `sha-1d1c2a5d`, donc **absent du tag actif en staging** ; à embarquer dans le tag candidat du
+> Gate Production Sprint 10) ; RSV-S9-03 (héritée, acceptée permanente).
 >
 > Historique — le `sha-6a358eb6` (Sprint 9 EP-12a US-94 Garantie ledger, déployé le 2026-07-03)
 > était le tag actif précédent, promu en Production `1.7.0` (release clôturée le 2026-07-04).

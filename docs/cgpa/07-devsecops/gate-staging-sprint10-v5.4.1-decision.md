@@ -108,7 +108,7 @@ création ou séquence) — assignée backend, avant le Gate Production Sprint 1
 
 | ID | Nature | Statut |
 |----|--------|--------|
-| **RSV-S10-01** | Ordre intra-jour du ledger non déterministe (`date_mouvement` DATE + tie-break UUID) | **OUVERTE** — non bloquante pour Staging ; correction attendue avant le Gate Production Sprint 10 (2026-07-04, assignée backend) |
+| **RSV-S10-01** | Ordre intra-jour du ledger non déterministe (`date_mouvement` DATE + tie-break UUID) | **LEVÉE (2026-07-04)** — PR #173 mergée (`2c5f43c7`), tri stable `date_mouvement, cree_le, id` ; voir §9. Statut à l'ouverture (2026-07-04) : OUVERTE, non bloquante pour Staging, correction attendue avant le Gate Production Sprint 10 (assignée backend) |
 | RSV-S9-03 | Rollback applicatif seul non viable (héritée, V20) | Acceptée permanente — V21 est additive (FK nullable), le rollback V21 seul resterait possible mais sans objet tant que RSV-S9-03 s'applique |
 
 ## 8. Décision
@@ -120,3 +120,26 @@ création ou séquence) — assignée backend, avant le Gate Production Sprint 1
   invariant ledger 4/4 ; nettoyage synthétique 0 résidu.
 - **Ce Gate ne constitue pas une autorisation Production.** Le Gate Production Sprint 10 est une
   décision distincte, conditionnée notamment au traitement de RSV-S10-01.
+
+## 9. Addendum — levée de RSV-S10-01 (2026-07-04)
+
+**RSV-S10-01 est LEVÉE.** Correctif livré sur `main` par la **PR #173**
+(`fix/rsv-s10-01-ordre-ledger`, commit `71a7a73`, merge `2c5f43c7` le 2026-07-04 à 14:42 UTC
+par `jptshilombo`), CI 7/7 verte (Backend, Frontend, CodeQL ×2, Sécurité, Packaging Docker).
+
+Contenu du correctif :
+
+- La colonne `garantie_movement.cree_le` (`TIMESTAMPTZ DEFAULT now()`, présente depuis V20 mais
+  non mappée côté JPA) est désormais mappée **en lecture seule** (`insertable = false` — la
+  valeur reste posée par Postgres). **Aucune migration Flyway** (le compteur smoke reste 21/21).
+- Tri du ledger rendu stable et chronologique : `ORDER BY date_mouvement, cree_le, id`
+  (repository des mouvements US-97 **et** chargement par lot de l'export RGPD).
+- Test d'intégration ajouté : `DEPOT_INITIAL → RETENUE_LOYER → COMPLEMENT` le même jour, ordre
+  vérifié sur `GET /mouvements` (`S03PaiementsGarantiesIntegrationTest`).
+
+Limite documentée : les mouvements **antérieurs** au correctif conservent leur `cree_le`
+d'insertion réel (posé par Postgres depuis V20), l'ordre intra-jour historique est donc lui
+aussi correct. La condition posée au §8 pour le Gate Production Sprint 10 (« traitement de
+RSV-S10-01 ») est satisfaite ; le correctif étant mergé **après** `sha-1d1c2a5d`, il devra être
+inclus dans le tag candidat retenu par le Gate Production Sprint 10 (décision distincte, non
+prise par le présent addendum).

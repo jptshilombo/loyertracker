@@ -9,6 +9,19 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **RSV-S10-01 LEVÉE — tri stable du ledger intra-jour (2026-07-04, ~14:42 UTC).** Correctif
+> mergé sur `main` via **PR #173** (commit `71a7a73`, merge `2c5f43c7`, CI 7/7 verte) :
+> `garantie_movement.cree_le` (`TIMESTAMPTZ DEFAULT now()`, présent depuis V20 mais non mappé
+> côté JPA) mappé en lecture seule, tri du ledger rendu stable `date_mouvement, cree_le, id` —
+> appliqué au repository des mouvements US-97 **et** au chargement par lot de l'export RGPD.
+> Test d'intégration ajouté (`DEPOT_INITIAL → RETENUE_LOYER → COMPLEMENT` le même jour, ordre
+> vérifié sur `GET /mouvements`). **Aucune migration Flyway** — compteur smoke inchangé 21/21.
+> La condition posée par le Gate Staging Sprint 10 pour le Gate Production (« traitement de
+> RSV-S10-01 ») est satisfaite ; le correctif étant postérieur à `sha-1d1c2a5d`, il devra être
+> **inclus dans le tag candidat** retenu au Gate Production Sprint 10. Addendum §9 :
+> `docs/cgpa/07-devsecops/gate-staging-sprint10-v5.4.1-decision.md`. **Cette levée n'autorise
+> aucune promotion Staging ni Production** — décisions distinctes, non prises à ce stade.
+>
 > **Gate Staging Sprint 10 EP-12b Garantie usage métier — GO, `STAGING_DEPLOYED` (2026-07-04,
 > ~10:59 UTC).** Tag immuable **`sha-1d1c2a5d`** (merge PR #168) déployé sur `ai-test-server`
 > (accès via IP privée `172.31.11.102` — SG port 22 restreint aux adresses privées du VPC).
