@@ -318,7 +318,7 @@ class S03PaiementsGarantiesIntegrationTest {
         Map<String, Object> paiement = jdbc.queryForMap(
                 "SELECT statut, montant_recu, garantie_movement_id FROM paiement WHERE id = ?::uuid",
                 paiementId);
-        assertThat(paiement.get("statut")).isEqualTo("RECU");
+        assertThat(paiement).containsEntry("statut", "RECU");
         assertThat((BigDecimal) paiement.get("montant_recu")).isEqualByComparingTo("850.00");
         assertThat(paiement.get("garantie_movement_id")).isNotNull();
 
@@ -350,7 +350,7 @@ class S03PaiementsGarantiesIntegrationTest {
                         "{\"paiementId\":\"" + paiementId + "\",\"montant\":900.00}"))
                 .andExpect(status().isBadRequest());
 
-        assertThat(compterAudit("RETENUE_LOYER")).isEqualTo(0);
+        assertThat(compterAudit("RETENUE_LOYER")).isZero();
     }
 
     @Test
@@ -373,7 +373,7 @@ class S03PaiementsGarantiesIntegrationTest {
                 .andExpect(status().isNotFound());
 
         assertThat(soldeActuel(garantieId)).isEqualByComparingTo("900.00");
-        assertThat(compterAudit("RETENUE_LOYER")).isEqualTo(0);
+        assertThat(compterAudit("RETENUE_LOYER")).isZero();
         assertThat(jdbc.queryForObject(
                 "SELECT garantie_movement_id FROM paiement WHERE id = ?::uuid", UUID.class,
                 paiementAutreBien)).isNull();

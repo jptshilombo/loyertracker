@@ -32,6 +32,9 @@ import com.loyertracker.securite.TenantContext;
 @Service
 public class GarantieService {
 
+    /** Type de cible utilisé pour journaliser les opérations sur l'entité garantie. */
+    private static final String CIBLE_AUDIT_GARANTIE = "garantie";
+
     private final GarantieRepository garanties;
     private final GarantieMovementRepository mouvements;
     private final BailRepository baux;
@@ -69,7 +72,7 @@ public class GarantieService {
         Garantie enregistre = garanties.save(garantie);
         enregistrerMouvement(enregistre, TypeMouvementGarantie.DEPOT_INITIAL, BigDecimal.ZERO,
                 requete.montant(), "Dépôt initial de la garantie", authentication);
-        audit.enregistrer(authentication, bailleurId, "CREATE_GARANTIE", "garantie",
+        audit.enregistrer(authentication, bailleurId, "CREATE_GARANTIE", CIBLE_AUDIT_GARANTIE,
                 enregistre.getId());
         return GarantieDto.from(enregistre);
     }
@@ -93,7 +96,7 @@ public class GarantieService {
                     debit, BigDecimal.ZERO,
                     totale ? "Restitution totale" : requete.motifRetenue(), authentication);
         }
-        audit.enregistrer(authentication, bailleurId, "RESTITUER_GARANTIE", "garantie",
+        audit.enregistrer(authentication, bailleurId, "RESTITUER_GARANTIE", CIBLE_AUDIT_GARANTIE,
                 enregistre.getId());
         return GarantieDto.from(enregistre);
     }
@@ -190,7 +193,7 @@ public class GarantieService {
         Garantie enregistre = garanties.save(garantie);
         enregistrerMouvement(enregistre, TypeMouvementGarantie.COMPLEMENT, BigDecimal.ZERO,
                 requete.montant(), requete.motif(), authentication);
-        audit.enregistrer(authentication, bailleurId, "COMPLEMENT_GARANTIE", "garantie",
+        audit.enregistrer(authentication, bailleurId, "COMPLEMENT_GARANTIE", CIBLE_AUDIT_GARANTIE,
                 enregistre.getId());
         return GarantieDto.from(enregistre);
     }
@@ -198,17 +201,13 @@ public class GarantieService {
     /** Historique complet des mouvements d'une garantie, ordonné chronologiquement (US-97). */
     @Transactional(readOnly = true)
     public List<GarantieMovementDto> listerMouvements(UUID bienId, UUID bailId, UUID garantieId) {
-        tenant.activerDepuisBien(bienId);
-        exigerBailDuBien(bienId, bailId);
-        exigerGarantieDuBail(bailId, garantieId);
-        return mouvements.findByGarantieIdOrderByDateMouvementAscIdAsc(garantieId).stream()
-                .map(GarantieMovementDto::from).toList();
+        return chargerMouvements(bienId, bailId, garantieId);
     }
 
     /** Export CSV de l'historique des mouvements d'une garantie (US-97). */
     @Transactional(readOnly = true)
     public byte[] exporterMouvementsCsv(UUID bienId, UUID bailId, UUID garantieId) {
-        List<GarantieMovementDto> lignes = listerMouvements(bienId, bailId, garantieId);
+        List<GarantieMovementDto> lignes = chargerMouvements(bienId, bailId, garantieId);
         StringBuilder csv = new StringBuilder(
                 "date;type;debit;credit;solde;auteur;motif;commentaire;referenceDocument\n");
         for (GarantieMovementDto m : lignes) {
@@ -223,6 +222,19 @@ public class GarantieService {
                     .append(csvEchapper(m.referenceDocument())).append('\n');
         }
         return csv.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Contrôles d'accès (RLS + appartenance bail/garantie) puis chargement ordonné des mouvements.
+     * Partagé par {@link #listerMouvements} et {@link #exporterMouvementsCsv} sans auto-invocation
+     * transactionnelle (le proxy Spring ne s'applique pas aux appels via {@code this}).
+     */
+    private List<GarantieMovementDto> chargerMouvements(UUID bienId, UUID bailId, UUID garantieId) {
+        tenant.activerDepuisBien(bienId);
+        exigerBailDuBien(bienId, bailId);
+        exigerGarantieDuBail(bailId, garantieId);
+        return mouvements.findByGarantieIdOrderByDateMouvementAscIdAsc(garantieId).stream()
+                .map(GarantieMovementDto::from).toList();
     }
 
     private static String csvEchapper(String valeur) {
