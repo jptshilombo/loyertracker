@@ -7,6 +7,27 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Garantie : usage métier du ledger (Sprint 10, EP-12b, US-95/96/97)
+
+- **Retenue explicite sur un loyer impayé (US-95)** : nouvel endpoint
+  `POST .../garanties/{id}/retenue-loyer` — jamais un prélèvement automatique (ADR-14 §5), le
+  gestionnaire choisit le paiement et le montant. Le paiement couvert transitionne vers
+  `RECU`/`PARTIEL` (mêmes seuils qu'un pointage manuel), les honoraires sont recalculés, et le
+  mouvement `RETENUE_LOYER` est lié au paiement via `paiement.garantie_movement_id`
+  (migration V21, FK nullable + index).
+- **Réapprovisionnement d'une garantie active (US-96)** : endpoint
+  `POST .../garanties/{id}/complement` avec motif obligatoire, audit `COMPLEMENT_GARANTIE`.
+- **Historique des mouvements (US-97)** : endpoints `GET .../mouvements` (chronologique) et
+  `GET .../mouvements/export` (CSV, tous champs échappés contre la formula injection) ; UI
+  triable et filtrable par type dans le panneau Garanties ; l'export RGPD du bailleur inclut
+  désormais le ledger complet (chargement batch, sans N+1).
+- Correctif : `Garantie.restituerPartiel` calculait le solde depuis le montant initial au lieu
+  du `soldeActuel` courant — sans effet avant ce sprint, critique dès qu'une retenue ou un
+  complément existe.
+- ADR-14 §8 exécuté : `sommeMontantDeposeParBail` recalculé depuis `garantie_movement`.
+- Couverture de test frontend du panneau Garanties (17 scénarios composant + 4 méthodes API),
+  exigée par le Quality Gate SonarQube (`new_coverage` ≥ 80 %).
+
 ## [1.7.0] — 2026-07-03
 
 ### Ajouts — Garantie : ledger de mouvements (Sprint 9, EP-12a, US-94)

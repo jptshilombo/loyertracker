@@ -9,6 +9,30 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Sprint 10 EP-12b Garantie usage métier (US-95/96/97) — clôturé côté `main` : PR #168 mergée
+> le 2026-07-04T09:43:51Z** (merge commit `1d1c2a5d`) par `jptshilombo`. Contenu : **US-95**
+> (retenue explicite sur loyer impayé — jamais automatique, ADR-14 §5 : endpoint
+> `retenue-loyer`, transition du paiement couvert vers `RECU`/`PARTIEL`, recalcul des honoraires,
+> liaison `paiement.garantie_movement_id` via migration **V21**), **US-96** (réapprovisionnement
+> `complement` avec motif, audit `COMPLEMENT_GARANTIE`), **US-97** (historique des mouvements :
+> endpoints `mouvements` + export CSV échappé anti formula-injection, UI triable/filtrable,
+> export RGPD incluant le ledger complet sans N+1). Correctif embarqué : `restituerPartiel`
+> calculait depuis le montant initial au lieu du `soldeActuel` courant — inoffensif avant ce
+> sprint, critique dès qu'une retenue/complément existe. ADR-14 §8 exécuté
+> (`sommeMontantDeposeParBail` recalculé depuis le ledger), addendum daté 2026-07-03. La CI a
+> échoué une première fois sur les deux Quality Gates SonarQube : backend `new_violations` 5
+> (S1192 littéral dupliqué, S6809 auto-invocation `@Transactional` via `this`, 3× S5838 style
+> d'assertions) et frontend `new_coverage` 52,3 % < 80 % (`garanties-bail.component.ts` couvert
+> 1/168 lignes). Corrigés par le commit `b0b797f` (constante `CIBLE_AUDIT_GARANTIE`, extraction
+> `chargerMouvements()` hors auto-invocation proxy, assertions AssertJ idiomatiques, spec
+> composant 17 tests + spec S03ApiService 4 méthodes EP-12b → fichiers PR couverts à 94,6 %/
+> 100 %), **pré-validé contre l'instance SonarQube réelle avant push** (backend PASSED, frontend
+> PASSED — même pratique que PR #81). CI finale intégralement verte (Backend 133 tests, Frontend
+> 85 tests, CodeQL ×2, Sécurité, Packaging Docker). **Ce merge clôture le Sprint ; il n'autorise
+> aucune promotion Staging ni Production** — décisions distinctes, non prises à ce stade.
+> Réserves ouvertes inchangées ; hypercare `1.7.0` (T+12/T+24 du 2026-07-04) suit son propre
+> calendrier, non affectée.
+>
 > **RSV-S7-8-01 LEVÉE — vérification visuelle USD/CDF en conditions réelles (2026-07-03).** Aucun
 > bail réel USD/CDF n'existant en Production, vérification menée sur `ai-test-server` (Staging) :
 > **USD** confirmé sur le seul bail réel en USD (`64454f13-…`, bailleur `jordan.test@loyerpro.org`)
