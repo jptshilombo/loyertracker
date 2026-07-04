@@ -9,6 +9,21 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **`PRODUCTION_DEPLOYED` — Déploiement Production Sprint 10 `1.8.0` — 2026-07-04 ~16:45 UTC.**
+> Tag **`sha-2c5f43c7`** déployé sur `loyertracker-prod-server` : `api`+`nginx` recréés ciblés,
+> digests conformes au Gate (vérifiés avant et après), `postgres`/`keycloak` inchangés. Flyway
+> **V21 appliquée** (`paiement.garantie_movement_id`, additive), 21/21 ; colonne + FK + index
+> vérifiés ; invariant ledger 3/3 intact. Smoke Production **59/0 au premier passage** —
+> première release de l'historique sans correctif préalable au smoke (compteur aligné PR #171,
+> dépôt synchronisé au Préflight). `bailleur-test` réactivé **sur instruction explicite du PO**
+> puis redésactivé ; nettoyage transactionnel 0 résidu (compteurs et audit à la baseline,
+> garanties réelles intactes) ; 1 erreur API qualifiée attendue (duplicate key du smoke), 0
+> inattendue ; Prometheus 5/5, Alertmanager `[]`, site public 200. **Rollback applicatif seul
+> viable** vers `sha-6a358eb6` (V21 additive — contraste avec RSV-S9-03). Rapports :
+> `deploiement-technique-v1.8.0-report.md`, `validation-finale-v1.8.0-report.md` ;
+> `docs/prod-state.md` §0I. **Hypercare T0/T+12/T+24 requis avant clôture `1.8.0`** (plan à
+> créer, pratique hôte éteint la nuit à qualifier comme en `1.7.0`).
+>
 > **Préflight Production `1.8.0` — PASS (2026-07-04, ~16:07–16:15 UTC).** Toutes les conditions
 > de Préflight du Gate Production `1.8.0` sont satisfaites. Hôte démarré ~15:40 UTC (pratique
 > documentée) : 8/8 conteneurs Up, 4/4 healthy, restart=0, tag `sha-6a358eb6` conforme, Flyway
