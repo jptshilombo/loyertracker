@@ -9,6 +9,22 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **EP-14 instruit — Quittances certifiées, vérifiables et infalsifiables (PO, 2026-07-05).**
+> Dossier de gouvernance produit : **ADR-15** (D-QC-001, **acceptée** — persistance des
+> quittances supplantant l'arbitrage C pour ce périmètre sans réécrire l'historique, double
+> hash `content_hash`/`pdf_hash`, token HMAC non stocké/non expirant à révocation par statut,
+> QR ZXing, lecture publique via fonction `SECURITY DEFINER` pattern V10/V12/V13, thème
+> injectable + PAdES-ready), **plan d'exécution EP-14** (Sprints 11–12, release Production
+> unique **`1.9.0`**, V22 additive) et **addendum backlog US-99→104**. Kickoff tranché par le
+> PO (K1–K5) : numérotation **par bailleur+année** ; page publique = **liste complète du
+> besoin** (exposition confirmée ADR-03, token = capability) ; statuts sans `BROUILLON`
+> (`EMISE`/`ANNULEE`/`REMPLACEE`) ; domaine `loyertracker.loyerpro.org` ; **2 sprints, une
+> release**. Sprint 11 (EP-14a socle certifié + PDF redesign) démarre après fusion du dossier ;
+> promotion Production du Sprint 11 seul explicitement interdite (QR sans page de
+> vérification). Références : `docs/cgpa/05-architecture-conception/adr/ADR-15-quittances-certifiees.md`,
+> `docs/cgpa/06-planification-agile/plan-execution-ep14-quittances-certifiees.md`,
+> `docs/cgpa/06-planification-agile/addendum-backlog-ep14.md`.
+>
 > **OBS-S10-01 statuée — ACCEPTÉE EN L'ÉTAT, CLOSE (PO, 2026-07-05).** Assiette réelle
 > re-vérifiée en Production le jour de l'arbitrage : **0 groupe ambigu** (les 3 garanties
 > réelles ont chacune 1 seul mouvement — aucun cas de tie-break possible, ni rétroactif : le
