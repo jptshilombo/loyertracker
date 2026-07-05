@@ -24,6 +24,7 @@ import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
 import com.loyertracker.comptes.InvitationService;
 import com.loyertracker.documents.QuittanceService;
+import com.loyertracker.quittances.QuittanceCertifieeService;
 import com.loyertracker.garanties.GarantieService;
 import com.loyertracker.honoraires.HonoraireService;
 import com.loyertracker.paiements.PaiementService;
@@ -82,6 +83,9 @@ class SecurityIntegrationTest {
     // Documents locatifs (V11, PR2) : dépend des repositories JPA, neutralisé pour ce test sans BDD.
     @MockitoBean
     QuittanceService quittanceService;
+    // Quittances certifiées (V22, EP-14) : même neutralisation.
+    @MockitoBean
+    QuittanceCertifieeService quittanceCertifieeService;
     // Patrimoine & TypeBien (V12, US-80/81) : dépendent de repositories JPA, neutralisés comme les autres.
     @MockitoBean
     PatrimoineService patrimoineService;

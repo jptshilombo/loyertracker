@@ -3,7 +3,9 @@ package com.loyertracker.rgpd;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -112,6 +114,40 @@ class RgpdIntegrationTest {
         mockMvc.perform(get("/api/bailleurs/export").with(bailleurJwt(kcId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.biens[0].paiements[0].devise").value("USD"));
+    }
+
+    @Test
+    void export_avecQuittanceCertifiee_contientLesMetadonneesSansLesOctetsDuPdf() throws Exception {
+        // EP-14 (ADR-15 §RGPD) : l'export porte les métadonnées et le contenu canonique certifié
+        // des quittances — jamais les octets du PDF (téléchargeable par ailleurs).
+        String kcId = "kc-" + UUID.randomUUID();
+        inscrireBailleur(kcId);
+        mockMvc.perform(put("/api/bailleurs/profil").with(bailleurJwt(kcId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"adresse\":\"10 rue du Bailleur, 75001 Paris\"}"))
+                .andExpect(status().isOk());
+        String bienId = creerBien(kcId, "7 rue de la Quittance");
+        creerBail(kcId, bienId, "Paul Quittancé", "paul@test.local");
+        mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(kcId)))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/biens/{b}/paiements/{p}/pointage", bienId, "2026-01")
+                        .with(bailleurJwt(kcId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"montantRecu\":850.00,\"statut\":\"RECU\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/biens/{b}/paiements/{p}/quittance", bienId, "2026-01")
+                        .with(bailleurJwt(kcId)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/bailleurs/export").with(bailleurJwt(kcId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quittances[0].numero").exists())
+                .andExpect(jsonPath("$.quittances[0].version").value(1))
+                .andExpect(jsonPath("$.quittances[0].statut").value("EMISE"))
+                .andExpect(jsonPath("$.quittances[0].contenu").exists())
+                .andExpect(jsonPath("$.quittances[0].contentHash").exists())
+                .andExpect(jsonPath("$.quittances[0].pdfHash").exists())
+                .andExpect(jsonPath("$.quittances[0].pdf").doesNotExist());
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.loyertracker.biens.BienDto;
 import com.loyertracker.garanties.GarantieDto;
 import com.loyertracker.garanties.GarantieMovementDto;
 import com.loyertracker.paiements.PaiementDto;
+import com.loyertracker.quittances.QuittanceExportDto;
 
 /**
  * Export RGPD complet d'un bailleur (US-70 / ENF-04 / ADR-03).
@@ -18,7 +19,8 @@ import com.loyertracker.paiements.PaiementDto;
 public record ExportBailleurDto(
         UUID bailleurId,
         OffsetDateTime dateExport,
-        List<BienExportDto> biens) {
+        List<BienExportDto> biens,
+        List<QuittanceExportDto> quittances) {
 
     public record BienExportDto(
             BienDto bien,

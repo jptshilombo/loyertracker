@@ -85,6 +85,15 @@ logging:
     com.loyertracker: INFO            # élever à DEBUG en dev via LOGGING_LEVEL_COM_LOYERTRACKER=DEBUG
     org.springframework.security: INFO
 
+# Quittances certifiées (EP-14, ADR-15). Le secret HMAC signe les tokens de vérification des QR :
+# hors dépôt (ENF-03), fourni par variable d'environnement — exigé au préflight Staging/Production
+# (sans lui, un secret éphémère est généré et les QR ne survivent pas au redémarrage). Le kid
+# permet une rotation de secret sans invalider les QR déjà imprimés.
+quittances:
+  hmac-secret: ${QUITTANCE_HMAC_SECRET:}
+  token-kid: ${QUITTANCE_TOKEN_KID:1}
+  url-base-verification: ${QUITTANCE_VERIFY_BASE_URL:https://loyertracker.loyerpro.org}
+
 app:
   cors:
     allowed-origin: ${APP_CORS_ALLOWED_ORIGIN:https://localhost}
