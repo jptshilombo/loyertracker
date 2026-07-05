@@ -15,8 +15,9 @@
 > conformes, Flyway 21/21, invariant ledger 3/3, `bailleur-test` désactivé, Prometheus 5/5,
 > Alertmanager `[]`, p99 ~61 ms, 5xx=0, site public 200 ; heartbeat backup absent **qualifié**
 > (pushgateway purgé au boot, pattern récurrent). Réserves à la clôture : RSV-S10-01 et
-> RSV-S10-02 levées ; RSV-S9-03 acceptée permanente ; **OBS-S10-01 ouverte** (cosmétique, à
-> statuer post-clôture). Détail : `plan-etape-hypercare-v1.8.0.md`.
+> RSV-S10-02 levées ; RSV-S9-03 acceptée permanente ; OBS-S10-01 ouverte à la clôture puis
+> **statuée le 2026-07-05 — ACCEPTÉE EN L'ÉTAT, CLOSE** (0 cas réel vérifié en Production,
+> garde-fous consignés — `arbitrage-obs-s10-01.md`). Détail : `plan-etape-hypercare-v1.8.0.md`.
 
 | Contrôle | Résultat |
 |---|---|
