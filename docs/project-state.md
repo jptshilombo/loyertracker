@@ -9,6 +9,17 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **OBS-S10-01 statuée — ACCEPTÉE EN L'ÉTAT, CLOSE (PO, 2026-07-05).** Assiette réelle
+> re-vérifiée en Production le jour de l'arbitrage : **0 groupe ambigu** (les 3 garanties
+> réelles ont chacune 1 seul mouvement — aucun cas de tie-break possible, ni rétroactif : le
+> backfill V20 est clos). Impact au pire cosmétique (chaque mouvement porte son `solde_apres`),
+> vecteur de croissance quasi nul (1 mouvement par transaction dans tout le code actuel), coût
+> d'un correctif disproportionné. Deux garde-fous consignés : réévaluation sur premier cas réel
+> (requête de contrôle fournie) et point de vigilance pour toute future insertion
+> multi-mouvements en une transaction (à vérifier au Gate Staging du sprint concerné). Le
+> dernier point post-clôture `1.8.0` est ainsi traité. Décision :
+> `docs/cgpa/09-production/arbitrage-obs-s10-01.md`.
+>
 > **RELEASE `1.8.0` CLÔTURÉE — CDO GO (2026-07-05 ~10:02 UTC).** Hypercare T0 PASS +
 > checkpoint combiné T+12 (rattrapage) / T+24 (anticipé ≈ T+17) PASS, aucun critère de
 > suspension atteint sur tout le cycle. Sprint 10 EP-12b (US-95/96/97, V21) + correctif
