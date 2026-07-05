@@ -9,6 +9,18 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **RELEASE `1.8.0` CLÔTURÉE — CDO GO (2026-07-05 ~10:02 UTC).** Hypercare T0 PASS +
+> checkpoint combiné T+12 (rattrapage) / T+24 (anticipé ≈ T+17) PASS, aucun critère de
+> suspension atteint sur tout le cycle. Sprint 10 EP-12b (US-95/96/97, V21) + correctif
+> RSV-S10-01 confirmés en Production sur `sha-2c5f43c7`. Réserves : RSV-S10-01 et RSV-S10-02
+> **levées** ; RSV-S9-03 acceptée permanente (héritée) ; **OBS-S10-01 reste ouverte**
+> (cosmétique — tie-break UUID intra-timestamp sur lignes backfillées V20, 0 cas en Production,
+> à statuer hors hypercare). Première release de l'historique avec smoke Production **59/0 au
+> premier passage** sans correctif préalable. Prochaines actions autorisées : statuer
+> OBS-S10-01 ; traiter les 2 alertes Dependabot sur `main` (1 modérée, 1 basse) ; puis Sprint
+> suivant du backlog PO selon le parcours gouverné. Décision :
+> `docs/cgpa/09-production/cloture-release-v1.8.0.md`.
+>
 > **Hypercare Production `1.8.0` — checkpoint combiné T+12/T+24 exécuté le 2026-07-05 à
 > 09:41 UTC (≈ T+17), PASS.** Écarts de fenêtre qualifiés PO : T+12 (~04:45 UTC) inexécutable —
 > hôte volontairement éteint la nuit, **rattrapé** au premier démarrage (boot ~09:34 UTC) ; T+24
