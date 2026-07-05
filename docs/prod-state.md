@@ -9,9 +9,13 @@
 ## 0I. Déploiement Production `1.8.0` — 2026-07-04
 
 > **`PRODUCTION_DEPLOYED` atteint le 2026-07-04 à ~16:45 UTC.** Hypercare **T0 PASS**
-> (2026-07-04 ~16:35 UTC — `plan-etape-hypercare-v1.8.0.md`) ; T+12 prévu 2026-07-05 ~04:45 UTC
-> (rattrapage qualifié attendu, hôte éteint la nuit), T+24 prévu 2026-07-05 ~16:45 UTC. Clôture
-> suspendue à la décision CDO GO après T+24.
+> (2026-07-04 ~16:35 UTC) + **checkpoint combiné T+12 (rattrapage) / T+24 (anticipé ≈ T+17)
+> PASS (2026-07-05 09:41 UTC)** — écarts de fenêtre qualifiés PO (hôte éteint la nuit, précédent
+> `1.7.0`) : 8/8 Up restart=0, digests conformes, Flyway 21/21, invariant ledger 3/3,
+> `bailleur-test` désactivé, Prometheus 5/5, Alertmanager `[]`, p99 ~61 ms, 5xx=0, site public
+> 200 ; heartbeat backup absent **qualifié** (pushgateway purgé au boot, pattern récurrent).
+> Détail : `plan-etape-hypercare-v1.8.0.md`. Surveillance planifiée close — **clôture suspendue
+> à la décision CDO GO**.
 
 | Contrôle | Résultat |
 |---|---|

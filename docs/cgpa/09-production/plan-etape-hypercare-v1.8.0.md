@@ -76,6 +76,50 @@ T+24 prévu : **2026-07-05 ~16:45 UTC** (tolérance ±30 min).
 
 ---
 
+## Checkpoint combiné T+12/T+24 — 2026-07-05 09:41 UTC (≈ T+17)
+
+**Statut : PASS**
+
+**Qualification horaire (PO, 2026-07-05)** : hôte volontairement éteint la nuit (pratique
+documentée) — la fenêtre T+12 (~04:45 UTC) était inexécutable et est **rattrapée** au premier
+démarrage de l'hôte (boot ~09:34 UTC, checkpoint ~7 min après). Le T+24 (~16:45 UTC) est
+**anticipé d'environ 7 h** sur instruction PO, en checkpoint combiné — même qualification que le
+précédent `1.7.0` (checkpoint combiné qualifié). Le présent checkpoint clôt la surveillance
+planifiée de l'hypercare ; la décision de clôture de release reste un acte CDO distinct.
+
+| Contrôle | Résultat |
+|---|---|
+| Hôte | ✅ démarré ~09:34 UTC, charge 0,03/0,32/0,24 |
+| 8/8 conteneurs Up, 4/4 `(healthy)` | ✅ PASS |
+| RestartCount = 0 (8/8, y compris depuis T0) | ✅ PASS |
+| `LOYERTRACKER_TAG=sha-2c5f43c7` dans `.env` | ✅ PASS |
+| Digest API | ✅ `sha256:bab66aa3…` — conforme au Gate Production |
+| Digest Web | ✅ `sha256:9c8915f0…` — conforme au Gate Production |
+| Actuator `{"status":"UP"}` (`/api/actuator/health`) | ✅ PASS |
+| Flyway 21/21 `success` | ✅ PASS |
+| Invariant `garantie.solde_actuel = Σ (credit−debit)` | ✅ PASS — 3/3 garanties cohérentes (2100,00 / 600,00 / 600,00) |
+| Paiements liés V21 (`garantie_movement_id`) | ✅ 0 — aucune retenue réelle depuis le déploiement (attendu, produit non annoncé) |
+| `bailleur-test` désactivé dans Keycloak | ✅ PASS (`enabled: false`) |
+| Prometheus | ✅ 5/5 cibles `up` |
+| 5xx (10 min) | ✅ 0 (aucun point de données) |
+| p99 latence (10 min) | ✅ ~61 ms |
+| Hikari pending | ✅ 0 |
+| Alertmanager | ✅ `[]` — 0 alerte active |
+| Heartbeat backup | ⚠️ métrique absente — **qualifié** : pushgateway purgé au boot + cron 02:15 UTC non joué (hôte éteint), pattern récurrent RSV-T24-01 / précédents `1.4.0`–`1.7.0`, exclu des critères de suspension par ce plan |
+| Logs API depuis boot | ✅ 0 erreur nouvelle (2 lignes WARN 23505 résiduelles du smoke du 2026-07-04 16:27 UTC, déjà qualifiées au T0) |
+| Logs nginx 5xx | ✅ aucun |
+| Site public `https://loyertracker.loyerpro.org` | ✅ HTTP 200 (~32 ms) |
+| Capacité hôte | ✅ disque 31 Gio libres (19 %), mémoire 2,1 Gio dispo |
+
+Aucun critère de suspension atteint. Aucune activité métier réelle sur les endpoints garantie
+depuis le déploiement (0 mouvement post-déploiement, 0 paiement lié) — comportement attendu tant
+que le produit n'est pas annoncé.
+
+**Décision checkpoint : PASS — hypercare `1.8.0` sans incident. Prêt pour la décision de
+clôture CDO.**
+
+---
+
 ## Post-clôture (après décision CDO GO au T+24)
 
 - Mettre à jour `docs/project-state.md` (bandeau de clôture).
