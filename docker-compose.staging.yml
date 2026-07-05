@@ -114,6 +114,13 @@ services:
       KEYCLOAK_API_CLIENT_SECRET: ${KEYCLOAK_API_CLIENT_SECRET}
       APP_CORS_ALLOWED_ORIGIN: ${APP_CORS_ALLOWED_ORIGIN:-https://localhost}
       APP_INVITATION_BASE_URL: ${APP_INVITATION_BASE_URL:-https://localhost}
+      # Quittances certifiées (EP-14, ADR-15 D3) : secret HMAC des tokens de vérification QR.
+      # À renseigner dans le .env de l'hôte AVANT le prochain déploiement (préflight Gate
+      # Staging) — vide, l'API démarre avec un secret éphémère et les QR émis ne restent pas
+      # vérifiables après redémarrage. L'URL de vérification vise le domaine public du QR.
+      QUITTANCE_HMAC_SECRET: ${QUITTANCE_HMAC_SECRET:-}
+      QUITTANCE_TOKEN_KID: ${QUITTANCE_TOKEN_KID:-1}
+      QUITTANCE_VERIFY_BASE_URL: ${QUITTANCE_VERIFY_BASE_URL:-https://loyertracker.staging.loyerpro.org}
     depends_on:
       postgres:
         condition: service_healthy

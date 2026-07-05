@@ -29,6 +29,8 @@ import com.loyertracker.garanties.GarantieMovementRepository;
 import com.loyertracker.garanties.GarantieRepository;
 import com.loyertracker.paiements.PaiementDto;
 import com.loyertracker.paiements.PaiementRepository;
+import com.loyertracker.quittances.QuittanceExportDto;
+import com.loyertracker.quittances.QuittanceRepository;
 import com.loyertracker.rgpd.ExportBailleurDto.BailExportDto;
 import com.loyertracker.rgpd.ExportBailleurDto.BienExportDto;
 import com.loyertracker.rgpd.ExportBailleurDto.GarantieExportDto;
@@ -44,12 +46,13 @@ public class RgpdService {
     private final GarantieRepository garanties;
     private final GarantieMovementRepository mouvements;
     private final AffectationRepository affectations;
+    private final QuittanceRepository quittances;
     private final AuditService audit;
 
     public RgpdService(TenantContext tenant, BienRepository biens, BailRepository baux,
             PaiementRepository paiements, GarantieRepository garanties,
             GarantieMovementRepository mouvements, AffectationRepository affectations,
-            AuditService audit) {
+            QuittanceRepository quittances, AuditService audit) {
         this.tenant = tenant;
         this.biens = biens;
         this.baux = baux;
@@ -57,6 +60,7 @@ public class RgpdService {
         this.garanties = garanties;
         this.mouvements = mouvements;
         this.affectations = affectations;
+        this.quittances = quittances;
         this.audit = audit;
     }
 
@@ -124,7 +128,13 @@ public class RgpdService {
                     return new BienExportDto(bienDto, bailExports, paiementDtos, affectationDtos);
                 }).toList();
 
-        return new ExportBailleurDto(bailleurId, OffsetDateTime.now(), bienExports);
+        // Quittances certifiées (EP-14/ADR-15 §RGPD) : métadonnées + contenu canonique certifié,
+        // jamais les octets du PDF.
+        List<QuittanceExportDto> quittanceExports = quittances.findByOrderByEmiseLeDesc()
+                .stream().map(QuittanceExportDto::from).toList();
+
+        return new ExportBailleurDto(bailleurId, OffsetDateTime.now(), bienExports,
+                quittanceExports);
     }
 
     @Transactional

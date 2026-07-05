@@ -26,8 +26,9 @@ import com.loyertracker.paiements.StatutPaiement;
 import com.loyertracker.securite.TenantContext;
 
 /**
- * Production à la volée des documents locatifs (quittance de loyer, avis d'échéance) à partir d'un
- * loyer {@code (bien, periode)}. Aucun document n'est stocké (arbitrage C).
+ * Production à la volée de l'avis d'échéance à partir d'un loyer {@code (bien, periode)}. Aucun
+ * document n'est stocké (arbitrage C — maintenu pour l'avis d'échéance ; les quittances relèvent
+ * depuis EP-14 de {@link com.loyertracker.quittances.QuittanceCertifieeService}, ADR-15 D1).
  *
  * <p>Cloisonnement RLS (ADR-01) : on positionne le contexte tenant via
  * {@link TenantContext#activerDepuisBien(UUID)} (bailleur propriétaire <em>ou</em> gestionnaire
@@ -61,11 +62,6 @@ public class QuittanceService {
     }
 
     @Transactional(readOnly = true)
-    public byte[] quittance(UUID bienId, String periode) {
-        return pdf.rendre(html.construire(assembler(bienId, periode, TypeDocument.QUITTANCE)));
-    }
-
-    @Transactional(readOnly = true)
     public byte[] avisEcheance(UUID bienId, String periode) {
         return pdf.rendre(html.construire(assembler(bienId, periode, TypeDocument.AVIS_ECHEANCE)));
     }
@@ -78,10 +74,6 @@ public class QuittanceService {
                         "Aucun loyer pour cette période."));
 
         boolean recu = paiement.getStatut() == StatutPaiement.RECU;
-        if (type == TypeDocument.QUITTANCE && !recu) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "La quittance n'est disponible que pour un loyer intégralement reçu.");
-        }
         if (type == TypeDocument.AVIS_ECHEANCE && recu) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Le loyer est soldé : aucun avis d'échéance à émettre.");

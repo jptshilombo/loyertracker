@@ -43,3 +43,7 @@ Thumbs.db
 **/*.tmp
 **/build/
 reports/
+
+# ===== Sources graphiques brutes (hors build - EP-14, le logo versionné est dans
+# backend/src/main/resources/documents/ et frontend/src/assets/) =====
+logo/

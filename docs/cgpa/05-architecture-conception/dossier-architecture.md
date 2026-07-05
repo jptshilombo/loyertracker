@@ -125,6 +125,27 @@ Les règles d'unicité métier sont garanties **au niveau base** par des **index
 
 > Toute violation d'unicité remonte en **HTTP 409** (CDC §5.1).
 
+### 3.4 Extension EP-14 — Quittances certifiées (Sprint 11, 2026-07-05, additif)
+
+> Ajout additif post-Gate 4 (ADR-15/D-QC-001, migration V22) — les sections 3.1→3.3 historiques
+> sont conservées telles quelles.
+
+```
+Bailleur (1) ───< (N) Quittance >─── (1) Paiement
+    │                  │ (0..1)
+    │                  └──> Quittance.remplacee_par (chaînage de versions)
+    │                  └───< (N) QuittanceVerificationLog (journal public, RGPD-minimal)
+    └───< (N) QuittanceNumerotation (compteur par bailleur+année, K1)
+```
+
+| Table | Rôle | Points structurants |
+|-------|------|---------------------|
+| `quittance` | Exemplaire officiel persistant (une ligne **par version**) | `numero` `QT-YYYY-NNNNNN` permanent ; `statut` `EMISE`\|`ANNULEE`\|`REMPLACEE` ; `contenu` (payload canonique exact) + `content_hash` ; `pdf` (BYTEA) + `pdf_hash` ; `empreinte_metier` (idempotence de ré-émission) ; `token_kid` (rotation HMAC) ; RLS FORCE `bailleur_id` ; `UNIQUE (bailleur_id, numero, version)` ; index partiel `uq_quittance_paiement_emise` — au plus une `EMISE` par loyer |
+| `quittance_numerotation` | Compteur strictement croissant par `(bailleur_id, annee)` | `INSERT … ON CONFLICT DO UPDATE … RETURNING` sous verrou de ligne — un numéro consommé n'est jamais réutilisé (trou assumé, logique facturier) ; RLS FORCE |
+| `quittance_verification_log` | Journal des vérifications/téléchargements publics (Sprint 12) | Ni IP ni user-agent (ADR-15 §RGPD) ; accessible uniquement via fonctions `SECURITY DEFINER` (`lire_quittance_publique`, `lire_pdf_quittance_publique`, `journaliser_evenement_quittance`) — la lecture publique s'exécute sans contexte tenant, le token HMAC est vérifié côté application avant tout appel |
+
+Détail complet des colonnes et décisions : `adr/ADR-15-quittances-certifiees.md` (D2/D3).
+
 ---
 
 ## 4. Contrats d'API

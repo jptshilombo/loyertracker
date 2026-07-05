@@ -7,6 +7,34 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Quittances certifiées : socle + redesign PDF (Sprint 11, EP-14a, US-99/100/101)
+
+> ⚠️ Lot non promouvable en Production seul : le QR imprimé pointe vers la page publique de
+> vérification livrée au Sprint 12 (EP-14b) — release unique `1.9.0` (ADR-15 K5).
+
+- **Quittance certifiée persistante (US-99)** : la quittance n'est plus générée à la volée
+  (renversement partiel et tracé de l'arbitrage C — ADR-15 D1, l'avis d'échéance reste à la
+  volée) mais devient un **exemplaire officiel stocké** (migration V22 : tables `quittance`,
+  `quittance_numerotation`, `quittance_verification_log`, RLS FORCE, fonctions SECURITY DEFINER
+  pour la vérification publique du Sprint 12). Numéro permanent `QT-YYYY-NNNNNN` par
+  bailleur+année (K1), jamais réutilisé ; ré-émission en version N+1 chaînée (`remplacee_par`,
+  statuts `EMISE`/`REMPLACEE`/`ANNULEE`) quand les données métier changent, idempotente sinon ;
+  annulation via `POST /api/quittances/{id}/annulation` (bailleur propriétaire, audit).
+  Le contrat HTTP `GET .../quittance` est inchangé.
+- **Certification vérifiable (US-100)** : payload canonique déterministe octet à octet
+  (`contenu`, format versionné `schema:1`) haché en `content_hash` (SHA-256), PDF stocké haché
+  en `pdf_hash` ; token HMAC-SHA256 (`QUITTANCE_HMAC_SECRET` hors dépôt, `token_kid` pour la
+  rotation) encodé dans un **QR de vérification** (ZXing, data-URI) pointant vers
+  `/verify/receipt/{id}` ; architecture extensible : thème injectable par bailleur
+  (`ThemeQuittanceProvider`) et scellement PAdES-ready (`ScellementQuittance`).
+- **Redesign professionnel du PDF (US-101)** : gabarit A4 dédié — logo LoyerTracker embarqué,
+  badge « DOCUMENT CERTIFIÉ », cartes bailleur/locataire, bloc location
+  (patrimoine/bien/période), tableau des montants, mode de paiement (dont « Retenue sur dépôt
+  de garantie », V21), encart QR + empreinte, cachet électronique et mentions légales.
+- **Export RGPD** : les métadonnées et le contenu canonique des quittances certifiées sont
+  inclus dans l'export bailleur (jamais les octets du PDF) — ADR-15 §RGPD ; une anonymisation
+  locataire ultérieure ne réécrit pas les documents certifiés (obligation comptable).
+
 ## [1.8.0] — 2026-07-04
 
 ### Ajouts — Garantie : usage métier du ledger (Sprint 10, EP-12b, US-95/96/97)

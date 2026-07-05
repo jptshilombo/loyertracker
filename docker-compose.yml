@@ -101,6 +101,12 @@ services:
       KEYCLOAK_API_CLIENT_SECRET: ${KEYCLOAK_API_CLIENT_SECRET}
       APP_CORS_ALLOWED_ORIGIN: ${APP_CORS_ALLOWED_ORIGIN:-https://localhost}
       APP_INVITATION_BASE_URL: ${APP_INVITATION_BASE_URL:-https://localhost}
+      # Quittances certifiées (EP-14, ADR-15 D3) : secret HMAC des tokens de vérification QR.
+      # Vide en dev = secret éphémère (WARN au démarrage) ; EXIGÉ au préflight Staging/Production
+      # (checklist Gate — sans lui les QR imprimés ne survivent pas à un redémarrage).
+      QUITTANCE_HMAC_SECRET: ${QUITTANCE_HMAC_SECRET:-}
+      QUITTANCE_TOKEN_KID: ${QUITTANCE_TOKEN_KID:-1}
+      QUITTANCE_VERIFY_BASE_URL: ${QUITTANCE_VERIFY_BASE_URL:-https://localhost}
     depends_on:
       postgres:
         condition: service_healthy
