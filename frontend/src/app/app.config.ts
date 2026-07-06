@@ -11,8 +11,11 @@ import {
 
 import { routes } from './app.routes';
 
+// Le Bearer est attaché à tous les appels /api SAUF /api/public/ : la surface publique de
+// vérification des quittances (US-102) est atteinte par des tiers non authentifiés (check-sso, sans
+// token). Sans cette exclusion, includeBearerTokenInterceptor bloquerait ces appels faute de token.
 const apiBearerCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
-  urlPattern: /^\/api(\/.*)?$/i,
+  urlPattern: /^\/api\/(?!public\/).*/i,
   bearerPrefix: 'Bearer',
 });
 
@@ -26,7 +29,11 @@ export const appConfig: ApplicationConfig = {
         clientId: 'loyertracker-spa',
       },
       initOptions: {
-        onLoad: 'login-required',
+        // check-sso (et non login-required) : l'application n'impose plus l'authentification au
+        // bootstrap. Les routes protégées restent gardées par `authGuard` (qui déclenche le login
+        // au besoin) ; la page publique de vérification `/verify/receipt/:id` (US-103) est ainsi
+        // atteignable sans compte ni formulaire de connexion.
+        onLoad: 'check-sso',
         pkceMethod: 'S256',
         checkLoginIframe: false,
         redirectUri: window.location.origin + '/',

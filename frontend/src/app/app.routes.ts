@@ -24,5 +24,15 @@ export const routes: Routes = [
         (m) => m.GestionnaireDashboardComponent,
       ),
   },
+  // Vérification publique d'une quittance certifiée (US-103) : SANS authGuard — cible du QR
+  // imprimé, atteinte par des tiers non authentifiés (locataire, CAF, banque). La page pose
+  // elle-même un `noindex`. Déclarée avant le fallback `**` pour ne pas être captée par lui.
+  {
+    path: 'verify/receipt/:id',
+    loadComponent: () =>
+      import('./public/verify-receipt/verify-receipt.component').then(
+        (m) => m.VerifyReceiptComponent,
+      ),
+  },
   { path: '**', redirectTo: 'bailleur' },
 ];

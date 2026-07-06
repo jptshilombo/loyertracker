@@ -257,6 +257,21 @@ else
   ok "ports internes non publiés (API joignable uniquement via Nginx)"
 fi
 
+note "11. Vérification publique des quittances (US-102/104) : surface non authentifiée, sans oracle"
+# L'endpoint public (permitAll ciblé, ADR-15 D5) est joignable SANS Authorization et répond
+# toujours de façon indifférenciée : un id inconnu + un token forgé donnent le même verdict
+# INVALIDE, sans divulguer aucune donnée (aucun oracle). Le parcours VALIDE, qui exige le token
+# HMAC porté par le QR du PDF, est couvert par PublicQuittanceIntegrationTest et la vérification
+# navigateur du Gate Staging (le token n'est pas récupérable via l'API — c'est voulu).
+RID="00000000-0000-0000-0000-000000000000"
+expect_status 200 "GET /api/public/receipts/{id} sans auth -> 200" \
+  "$BASE/api/public/receipts/$RID?token=faux"
+echo "$BODY" | jq -e '.resultat=="INVALIDE" and .quittance==null' >/dev/null \
+  && ok "réponse publique indifférenciée (INVALIDE, aucune donnée)" \
+  || ko "réponse publique inattendue : $(echo "$BODY" | head -c 200)"
+expect_status 404 "GET /api/public/receipts/{id}/download token invalide -> 404" \
+  "$BASE/api/public/receipts/$RID/download?token=faux"
+
 # =============================================================================
 printf '\n\033[1m== Bilan : %d PASS, %d FAIL ==\033[0m\n' "$PASS" "$FAIL"
 [[ "$FAIL" == "0" ]]
