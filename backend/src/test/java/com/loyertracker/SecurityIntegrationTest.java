@@ -86,6 +86,9 @@ class SecurityIntegrationTest {
     // Quittances certifiées (V22, EP-14) : même neutralisation.
     @MockitoBean
     QuittanceCertifieeService quittanceCertifieeService;
+    // Vérification publique (EP-14b, US-102) : dépend de l'EntityManager (JPA), neutralisée comme les autres.
+    @MockitoBean
+    com.loyertracker.quittances.VerificationQuittanceService verificationQuittanceService;
     // Patrimoine & TypeBien (V12, US-80/81) : dépendent de repositories JPA, neutralisés comme les autres.
     @MockitoBean
     PatrimoineService patrimoineService;

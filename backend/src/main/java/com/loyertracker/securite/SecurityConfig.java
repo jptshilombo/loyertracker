@@ -54,6 +54,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/actuator/prometheus").permitAll()
                 // Acceptation d'invitation via lien tokenisé : pas encore de compte → non authentifié.
                 .requestMatchers(HttpMethod.POST, "/api/invitations/*/acceptation").permitAll()
+                // Vérification publique des quittances certifiées (US-102, ADR-15 D5) : accès sans
+                // compte, autorisé par le seul token HMAC du QR (vérifié applicativement) ; GET seul,
+                // lecture via fonctions SECURITY DEFINER, réponses indifférenciées.
+                .requestMatchers(HttpMethod.GET, "/api/public/receipts/*",
+                        "/api/public/receipts/*/download").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();
