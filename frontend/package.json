@@ -20,7 +20,7 @@
     "@angular/platform-browser": "20.3.25",
     "@angular/platform-browser-dynamic": "20.3.25",
     "@angular/router": "20.3.25",
-    "keycloak-angular": "20.1.0",
+    "keycloak-angular": "22.0.0",
     "keycloak-js": "^26.2.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
