@@ -9,6 +9,15 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **`PRODUCTION_DEPLOYED` — Release `1.9.0` + hypercare T0 PASS (2026-07-06, ~17:50–17:58 UTC).**
+> Candidat `sha-75646d8f` déployé de façon ciblée (`api` + `nginx`) sur autorisation PO, après
+> merge PR #205. Digests conformes ; PostgreSQL, Keycloak et monitoring inchangés. Flyway V22
+> appliquée, 22/22 ; 8/8 actifs, 4/4 healthy, restart=0. Smoke Production **62/0 au premier
+> passage** ; nettoyage DB+KC sans résidu, `bailleur-test` redésactivé, échafaudage révoqué.
+> Invariant ledger 3/3, Prometheus 5/5, Alertmanager vide, site public 200. Rapports :
+> `deploiement-technique-v1.9.0-report.md`, `validation-finale-v1.9.0-report.md`,
+> `plan-etape-hypercare-v1.9.0.md`. **T+12 et T+24 requis avant clôture CDO distincte.**
+>
 > **Préflight Production `1.9.0` — PASS (2026-07-06, 18:13–18:16 CEST).** Production
 > `1.8.0` saine : 8/8 actifs, 4/4 healthy, restart=0, Flyway 21/21, Prometheus 5/5,
 > invariant ledger 3/3, objets V22 absents. Backup vérifié :

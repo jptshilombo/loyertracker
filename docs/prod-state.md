@@ -6,6 +6,25 @@
 
 
 
+## 0J. Déploiement Production `1.9.0` — 2026-07-06
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.9.0` — EP-14, Sprints 11–12 US-99→104 + Angular 22 |
+| Tag / digests | `sha-75646d8f` ; API `sha256:3c227910…71aff` ; Web `sha256:f0146fa6…19a04` |
+| Rollback | `sha-2c5f43c7`, V22 additive, backup Préflight vérifié |
+| Déploiement | `api` + `nginx` recréés ciblés ; PostgreSQL, Keycloak et monitoring inchangés |
+| Flyway | V22 appliquée, 22/22 ; trois tables EP-14 présentes |
+| Smoke | **62 PASS / 0 FAIL au premier passage**, nettoyage DB+KC sans résidu |
+| Données | baseline préservée ; ledger 3/3 ; 0 quittance au go-live |
+| Services | 8/8 actifs, 4/4 healthy, restart=0 |
+| Observabilité | Prometheus 5/5, Alertmanager 0 alerte, site public 200 |
+| État CGPA | **`PRODUCTION_DEPLOYED`**, T0 PASS ; T+12/T+24 et clôture CDO à venir |
+
+Rapports : `docs/cgpa/09-production/deploiement-technique-v1.9.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.9.0-report.md`,
+`docs/cgpa/09-production/plan-etape-hypercare-v1.9.0.md`.
+
 ## 0I. Déploiement Production `1.8.0` — 2026-07-04
 
 > **RELEASE `1.8.0` CLÔTURÉE — CDO GO (2026-07-05 ~10:02 UTC —
