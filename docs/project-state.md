@@ -9,6 +9,16 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Gate Production unique `1.9.0` — GO, `PRODUCTION_READY` (2026-07-06).** EP-14 complet :
+> Sprint 11 US-99/100/101 + Sprint 12 US-102/103/104 + Angular 22. Candidat exact
+> `sha-75646d8f` validé en Staging : STG-ISOL-01 PASS, Flyway 22/22, smoke 62/0 au premier
+> passage, parcours QR/PDF réel et revue sécurité PASS ; CI/CodeQL verts ; digests GHCR figés.
+> V22 additive, rollback applicatif viable vers `sha-2c5f43c7`. RSV-PROD-EP14-01/02 levées.
+> Quatre alertes npm transitives de développement sont non bloquantes, sans exposition runtime.
+> Décision : `docs/cgpa/09-production/gate-production-v1.9.0-decision.md`. **Seul le Préflight
+> Production est autorisé ; aucun déploiement sans Préflight PASS et instruction explicite
+> distincte. `PRODUCTION_DEPLOYED` non atteint.**
+
 > **Gate Staging Sprint 12 EP-14b — GO, `STAGING_DEPLOYED` (2026-07-06).** Revue sécurité dédiée
 > PASS sans réserve bloquante ; Sprint 12 US-102/103/104 formellement clôturé. Candidat
 > `sha-75646d8f` (merge PR #202 `75646d8`) déployé de façon ciblée sur `ai-test-server` après

@@ -1,7 +1,7 @@
 # Release Notes — LoyerTracker v1.9.0
 
-> Document de release (CGPA v5.4.1, Release Governance). **Projet — à finaliser avant le Gate
-> Production** (candidat, digests d'images et date de go-live renseignés au Gate). Release
+> Document de release (CGPA v5.4.1, Release Governance). **Candidat validé par le Gate
+> Production du 2026-07-06 ; go-live non autorisé à ce stade.** Release
 > **unique** couvrant les Sprints 11 (EP-14a) et 12 (EP-14b) : le QR imprimé par le Sprint 11
 > n'est vérifiable qu'avec la surface publique du Sprint 12 — les deux sont indissociables en
 > Production (ADR-15 K5).
@@ -11,10 +11,11 @@
 | Champ | Valeur |
 |---|---|
 | **Version** | `1.9.0` (Semantic Versioning) |
-| **Date** | _à renseigner au Gate Production_ |
-| **Commit / artefact** | merge de la release sur `main` → images GHCR `loyertracker-{api,web}` au tag immuable `sha-<8>` produit par la CI |
+| **Date du Gate** | 2026-07-06 — date de go-live à renseigner après déploiement effectif |
+| **Commit / artefact** | `75646d8ff8ea789b3c67f7977a8852c50cf68119` — images GHCR `loyertracker-{api,web}:sha-75646d8f` |
+| **Digests** | API `sha256:3c227910…71aff` ; Web `sha256:f0146fa6…19a04` |
 | **Périmètre fonctionnel** | Quittances certifiées, vérifiables et infalsifiables (EP-14) : persistance/numérotation/versions/QR signé (Sprint 11), **vérification publique + observabilité** (Sprint 12) |
-| **Environnement cible** | Production (`https://loyertracker.loyerpro.org`) — **non déployée** tant que le Gate Production `1.9.0` n'est pas GO |
+| **Environnement cible** | Production (`https://loyertracker.loyerpro.org`) — **non déployée** ; Gate GO, Préflight PASS et autorisation distincte requis |
 | **Responsable de validation** | PO `jptshilombo@gmail.com` |
 
 ## 2. Contenu
@@ -54,7 +55,7 @@ Cf. `CHANGELOG.md` (section [Non publié], blocs EP-14a et EP-14b) pour le déta
 
 ## 5. Réserves / suites
 
-- Promotion Production subordonnée au **Gate Production `1.9.0`** (checklist habituelle : préflight
+- Gate Production `1.9.0` GO ; déploiement subordonné au **Préflight PASS et à une autorisation distincte** (checklist habituelle : préflight
   backup, digests, déploiement ciblé, smoke prod, hypercare T0/T+12/T+24).
-- `RSV-PROD-EP14-02` (le Sprint Angular 20→22 mergé après le Sprint 11 hérite de cette release
-  unique) : arbitrage PO tranché à la promotion.
+- `RSV-PROD-EP14-02` **levée** : option A exécutée, Angular 22 est inclus dans la release
+  unique avec les Sprints 11 et 12.
