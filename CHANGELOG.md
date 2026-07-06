@@ -5,7 +5,7 @@ Toutes les évolutions notables de ce projet sont consignées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet adhère au
 [Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.3).
 
-## [Non publié]
+## [1.9.0] — 2026-07-06
 
 ### Ajouts — Quittances certifiées : socle + redesign PDF (Sprint 11, EP-14a, US-99/100/101)
 

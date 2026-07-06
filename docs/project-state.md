@@ -9,6 +9,16 @@ framework:
   # Lignee de migration : 3.0.1 -> 5.0.1 (2026-06-13) -> 5.2 (2026-06-16, additive, sans rejeu de gate) -> 5.3 (2026-06-23, additive, Release Management + UX/UI Governance) -> 5.4 (2026-06-24, additive, gouvernance Staging partagee + STG-ISOL-01) -> 5.4.1 (2026-06-24, normalisation des preuves STG-ISOL-01)
 ```
 
+> **Préflight Production `1.9.0` — PASS (2026-07-06, 18:13–18:16 CEST).** Production
+> `1.8.0` saine : 8/8 actifs, 4/4 healthy, restart=0, Flyway 21/21, Prometheus 5/5,
+> invariant ledger 3/3, objets V22 absents. Backup vérifié :
+> `loyertracker-20260706-181545.dump` (325755 octets, 742 entrées, SHA-256 `a017b81f…`) +
+> globals (1108 octets, SHA-256 `c07cd206…`), modes 600. HMAC Production distinct persisté
+> sans exposition, KID=1 et URL confirmés ; `.env.bak-pre-1.9.0` créé, tag inchangé.
+> Rollback `sha-2c5f43c7` confirmé. Rapport :
+> `docs/cgpa/09-production/preflight-backup-v1.9.0-report.md`. **Aucun pull, redémarrage ou
+> déploiement. Autorisation explicite distincte requise ; `PRODUCTION_DEPLOYED` non atteint.**
+>
 > **Gate Production unique `1.9.0` — GO, `PRODUCTION_READY` (2026-07-06).** EP-14 complet :
 > Sprint 11 US-99/100/101 + Sprint 12 US-102/103/104 + Angular 22. Candidat exact
 > `sha-75646d8f` validé en Staging : STG-ISOL-01 PASS, Flyway 22/22, smoke 62/0 au premier
