@@ -35,6 +35,32 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
   inclus dans l'export bailleur (jamais les octets du PDF) — ADR-15 §RGPD ; une anonymisation
   locataire ultérieure ne réécrit pas les documents certifiés (obligation comptable).
 
+### Ajouts — Quittances certifiées : vérification publique + observabilité (Sprint 12, EP-14b, US-102/103/104)
+
+> Complète le Sprint 11 : le QR imprimé devient vérifiable. Ensemble ils forment la release
+> unique `1.9.0` (ADR-15 K5) — la promotion Production reste subordonnée à son Gate.
+
+- **API publique de vérification (US-102)** : `GET /api/public/receipts/{id}?token=…` renvoie un
+  **contrat public strict (K2)** — numéro, bailleur, patrimoine, bien, locataire, période,
+  montants+devise, date d'émission, statut, empreinte — reconstruit à partir du contenu certifié,
+  **sans jamais** le mode de paiement ni la garantie retenue (test de non-fuite). Toute cause
+  d'échec (id inconnu, token forgé/tronqué/d'une autre quittance/version décalée) produit une
+  réponse **indifférenciée** `INVALIDE` (aucun oracle). `GET …/{id}/download?token=…` ne sert
+  l'exemplaire officiel qu'après **re-vérification du `pdf_hash`** (défense contre une altération
+  en base). Lecture via les fonctions `SECURITY DEFINER` de V22 (jamais de désactivation RLS) ;
+  accès non authentifié autorisé par le seul token HMAC (`SecurityConfig` `permitAll` ciblé).
+- **Page publique de vérification (US-103)** : route Angular `/verify/receipt/:id` **sans
+  `authGuard`** et `noindex` — cible du QR, atteinte sans compte. Verdict lisible ✓ Authentique /
+  ❌ Quittance non authentifiée, champs K2, statut temps réel (« remplacée par QT-… », annulée),
+  bouton de téléchargement du PDF officiel. Le bootstrap Keycloak passe en `check-sso` (plus de
+  `login-required`) ; l'intercepteur Bearer exclut `/api/public/` ; les routes métier restent
+  gardées (test de non-régression).
+- **Observabilité & anti-fraude (US-104)** : métriques Prometheus
+  `quittance_verifications_total{resultat}`, `quittance_telechargements_total`,
+  `quittance_qr_invalides_total` ; journal `quittance_verification_log` **RGPD-minimal** (ni IP ni
+  user-agent) ; compteurs par quittance exposés au bailleur via l'export RGPD ; rate-limit nginx
+  (`limit_req` 60 r/min/IP, `429`) sur `/api/public/` et `/verify/`.
+
 ## [1.8.0] — 2026-07-04
 
 ### Ajouts — Garantie : usage métier du ledger (Sprint 10, EP-12b, US-95/96/97)
