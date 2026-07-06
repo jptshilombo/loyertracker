@@ -32,6 +32,12 @@ public class VerificationQuittanceService {
     private static final String TYPE_TELECHARGEMENT = "TELECHARGEMENT";
     private static final String RESULTAT_VALIDE = "VALIDE";
     private static final String RESULTAT_INVALIDE = "INVALIDE";
+    private static final String JOURNALISER_QUITTANCE_CONNUE = """
+            SELECT journaliser_evenement_quittance(CAST(:id AS uuid), :type, :resultat)
+            """;
+    private static final String JOURNALISER_QUITTANCE_INCONNUE = """
+            SELECT journaliser_evenement_quittance(CAST(NULL AS uuid), :type, :resultat)
+            """;
 
     private final EntityManager em;
     private final TokenQuittanceService tokens;
@@ -151,9 +157,9 @@ public class VerificationQuittanceService {
     }
 
     private void journaliser(UUID quittanceOuNull, String type, String resultat) {
-        String cible = quittanceOuNull == null ? "NULL" : "CAST(:id AS uuid)";
-        var query = em.createNativeQuery(
-                "SELECT journaliser_evenement_quittance(" + cible + ", :type, :resultat)")
+        var query = em.createNativeQuery(quittanceOuNull == null
+                        ? JOURNALISER_QUITTANCE_INCONNUE
+                        : JOURNALISER_QUITTANCE_CONNUE)
                 .setParameter("type", type)
                 .setParameter("resultat", resultat);
         if (quittanceOuNull != null) {

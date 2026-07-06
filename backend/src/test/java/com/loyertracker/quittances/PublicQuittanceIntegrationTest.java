@@ -127,6 +127,10 @@ class PublicQuittanceIntegrationTest {
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM quittance_verification_log WHERE resultat = 'INVALIDE'",
                 Integer.class)).isEqualTo(4);
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM quittance_verification_log
+                WHERE resultat = 'INVALIDE' AND quittance_id IS NULL
+                """, Integer.class)).isEqualTo(1);
     }
 
     @Test
