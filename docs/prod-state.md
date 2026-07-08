@@ -8,6 +8,17 @@
 
 ## 0J. Déploiement Production `1.9.0` — 2026-07-06
 
+> **RELEASE `1.9.0` CLÔTURÉE — CDO GO (2026-07-08 ~14:36 UTC —
+> `cloture-release-v1.9.0.md`).** Hypercare T0 PASS (2026-07-06 ~17:58 UTC) + checkpoint
+> combiné T+12/T+24 en rattrapage PASS sous surveillance (2026-07-08 ~14:36 UTC, ≈ T+45) —
+> écarts de fenêtre qualifiés PO (hôte volontairement éteint durant les deux fenêtres cibles,
+> produit non annoncé publiquement, pattern récurrent `1.4.0`→`1.8.0`) : 8/8 Up restart=0
+> depuis le dernier redémarrage hôte, digests conformes, Flyway 22/22, invariant ledger 3/3,
+> `bailleur-test` désactivé (`directAccessGrantsEnabled=false`), Prometheus 5/5, Alertmanager
+> `[]`, 5xx=0, pool Hikari pending=0, site public 200. Réserves à la clôture :
+> RSV-PROD-EP14-01/02 levées au Gate ; `RSV-STG-01` (héritée) maintenue, sans rapport avec
+> `1.9.0`. Détail : `plan-etape-hypercare-v1.9.0.md`.
+
 | Contrôle | Résultat |
 |---|---|
 | Release | `1.9.0` — EP-14, Sprints 11–12 US-99→104 + Angular 22 |
@@ -19,11 +30,16 @@
 | Données | baseline préservée ; ledger 3/3 ; 0 quittance au go-live |
 | Services | 8/8 actifs, 4/4 healthy, restart=0 |
 | Observabilité | Prometheus 5/5, Alertmanager 0 alerte, site public 200 |
-| État CGPA | **`PRODUCTION_DEPLOYED`**, T0 PASS ; T+12/T+24 et clôture CDO à venir |
+| État CGPA | **RELEASE CLÔTURÉE — CDO GO (2026-07-08)** |
 
 Rapports : `docs/cgpa/09-production/deploiement-technique-v1.9.0-report.md`,
 `docs/cgpa/09-production/validation-finale-v1.9.0-report.md`,
-`docs/cgpa/09-production/plan-etape-hypercare-v1.9.0.md`.
+`docs/cgpa/09-production/plan-etape-hypercare-v1.9.0.md`,
+`docs/cgpa/09-production/cloture-release-v1.9.0.md`.
+
+Réserves ouvertes après ce déploiement : **RSV-STG-01** (héritée, sans rapport avec `1.9.0`, à
+reconfirmer au prochain déploiement Staging mutualisé). RSV-PROD-EP14-01/02 levées avant ce
+déploiement (Gate `1.9.0`).
 
 ## 0I. Déploiement Production `1.8.0` — 2026-07-04
 
