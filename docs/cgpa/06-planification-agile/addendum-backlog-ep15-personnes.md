@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |-------|--------|
 | Document de référence | `product-backlog.md`, `addendum-patrimoine-backlog.md`, `addendum-backlog-ep10-ep12.md`, `addendum-backlog-ep14.md` — **non modifiés** |
-| Statut | **Proposé** — cadrage documentaire ; kickoff K1 (ADR-16) à trancher par le PO avant Sprint A |
+| Statut | **Proposé** — cadrage documentaire ; kickoff clos (K1 tranché par le PO le 2026-07-08) ; GO explicite du PO sur le Plan d'Exécution requis avant Sprint A |
 | Date | 2026-07-08 |
 | Décisions liées | ADR-16 (D-PERS-001) |
 | Plan d'exécution | `plan-execution-ep15-personnes.md` (Sprints A/B/C) |
@@ -31,10 +31,10 @@ bien.
 | Champ | Détail |
 |-------|--------|
 | Critères d'acceptation (GWT) | **G** un Gestionnaire lié par invitation à ce bailleur **W** le bailleur complète/modifie son profil (téléphone, photo, observations) **T** les champs sont persistés sur le compte **global** (partagé, ADR-16 D1), une entrée `audit_log` (`MODIFIER_GESTIONNAIRE`) est créée. **G** un Gestionnaire `ACTIVE` **W** le bailleur le suspend **T** statut `SUSPENDU` immédiat sans pré-condition, compte Keycloak `enabled=false`, audit `SUSPENDRE_GESTIONNAIRE`. **G** un Gestionnaire `SUSPENDU` **W** le bailleur le réactive **T** statut `ACTIVE`, Keycloak `enabled=true`, audit `REACTIVER_GESTIONNAIRE`. **G** un Gestionnaire **W** un autre Gestionnaire tente une de ces actions **T** 403 (seul `BAILLEUR` administre, RM-107). |
-| Dépendances | ADR-16 acceptée ; K1 tranché (sémantique « créer » = profil sur compte existant) |
+| Dépendances | ADR-16 acceptée ; K1 tranché ✅ (2026-07-08, sémantique « créer » = profil sur compte existant) |
 | Priorité | Must |
 | Points | 5 |
-| Risques | K1 non tranché avant le sprint bloquerait le périmètre exact de « créer » ; profil partagé mutable par tout bailleur en relation (RSV-EP15-01) |
+| Risques | Profil partagé mutable par tout bailleur en relation (RSV-EP15-01) |
 | Source | Besoin PO ; ADR-16 D1 ; EF-97 |
 
 ### US-106 — Archivage et restauration du Gestionnaire (contrainte cross-tenant)
@@ -181,8 +181,9 @@ historique de baux **afin de** répondre correctement au droit à l'effacement.
 
 ## Dépendances & risques (synthèse)
 
-- **K1 (ADR-16)** doit être tranché par le PO **avant Sprint A** : sémantique de « créer » un
-  Gestionnaire (profil sur compte existant, proposition par défaut).
+- **K1 (ADR-16)** ✅ tranché par le PO le 2026-07-08 : « créer » un Gestionnaire = profil sur
+  compte existant. Seul le GO explicite du PO sur le Plan d'Exécution reste requis avant
+  Sprint A.
 - **RSV-EP15-01** (portée globale du statut Gestionnaire, risque cross-bailleur) : accepté par
   le PO, mitigé par l'audit (US-105/106) et le scope restreint de l'historique (US-108).
 - **RSV-EP15-02** (parsing nom/prénom imprécis à la migration) : accepté, correction manuelle

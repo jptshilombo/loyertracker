@@ -5,20 +5,22 @@
 | Date | 2026-07-08 |
 | Origine | Instruction PO du 2026-07-08 (« Introduire EP-14 — Gestion des personnes » — renuméroté **EP-15**, EP-14 étant déjà pris par les Quittances certifiées release `1.9.0`, EP-13 réservé « Fin de bail ») |
 | Backlog couvert | EP-15 — US-105 → US-114 (`addendum-backlog-ep15-personnes.md`) |
-| ADR | **ADR-16** (D-PERS-001) — statut global Gestionnaire, RLS Locataire, fonction `SECURITY DEFINER` cross-tenant, bytea photo, décisions D1/D3/D5/D8 déjà tranchées par le PO ; **point K1 restant ouvert** |
+| ADR | **ADR-16** (D-PERS-001, acceptée — kickoff clos) — statut global Gestionnaire, RLS Locataire, fonction `SECURITY DEFINER` cross-tenant, bytea photo, décisions D1/D3/D5/D8/K1 tranchées par le PO |
 | Release cible | À déterminer au kickoff (ce plan ne préjuge pas d'un numéro — dépend du rythme d'exécution ; **aucune promotion Production du Sprint C seul sans Sprint B stabilisé**, cf. §Ce que ce plan n'autorise pas) |
 | Prérequis | Release `1.9.0` clôturée (CDO GO 2026-07-08) ✅ — aucun sprint en cours |
 
-## Kickoff — point à trancher avant Sprint A
+## Kickoff — clos
 
-| # | Question | Proposition par défaut | Statut |
+| # | Question | Décision PO | Statut |
 |---|---|---|---|
-| K1 | Sémantique de « créer » un Gestionnaire : aucun flux de création directe n'existe aujourd'hui (seule l'invitation crée le compte Keycloak, `AcceptationService`). Introduire un flux administratif en contournement, ou « créer » = compléter pour la première fois le profil métier d'un compte déjà créé par invitation ? | **Profil sur compte existant** — l'invitation reste l'unique voie de création technique du compte | 🔶 **À trancher par le PO avant Sprint A** |
+| K1 | Sémantique de « créer » un Gestionnaire : aucun flux de création directe n'existe aujourd'hui (seule l'invitation crée le compte Keycloak, `AcceptationService`). Introduire un flux administratif en contournement, ou « créer » = compléter pour la première fois le profil métier d'un compte déjà créé par invitation ? | **Profil sur compte existant** — l'invitation reste l'unique voie de création technique du compte | ✅ **Tranché par le PO le 2026-07-08** |
 
-Décisions déjà tranchées par le PO le 2026-07-08 (ADR-16) — **non rejouées ici** :
-statut Gestionnaire global (D1) ; migration 1 Locataire par bail historique, sans
-déduplication automatique (D3) ; suppression des colonnes texte libre `bail.locataire_nom`/
-`locataire_email` après bascule (D3) ; photo en `bytea` PostgreSQL (D5).
+Décisions tranchées par le PO le 2026-07-08 (ADR-16) — **non rejouées ici** : statut
+Gestionnaire global (D1) ; migration 1 Locataire par bail historique, sans déduplication
+automatique (D3) ; suppression des colonnes texte libre `bail.locataire_nom`/
+`locataire_email` après bascule (D3) ; photo en `bytea` PostgreSQL (D5) ; K1 (profil sur
+compte existant, ci-dessus). **Kickoff clos — seul le GO explicite du PO sur ce Plan
+d'Exécution reste requis avant le démarrage du Sprint A.**
 
 ## Vue d'ensemble et séquencement
 
@@ -49,7 +51,7 @@ déjà pratiquée sur ce projet.
 | Stories | **US-105** (profil + suspendre/réactiver), **US-106** (archivage conditionné cross-tenant + restauration), **US-107** (recherche + doublons), **US-108** (historique) |
 | Livrables | Migration **V23** (partie Gestionnaire uniquement : colonnes `statut`/`telephone`/`photo`/`date_creation`/`date_suspension`/`date_archivage`/`observations`) ; fonction SQL `SECURITY DEFINER gestionnaire_a_affectation_active(gestionnaire_id)` (booléen uniquement, ADR-16 D4) ; nouveau `GestionnaireController` (profil, suspension, réactivation, archivage, restauration, recherche, doublons, historique) ; nouveaux points d'audit (`CREER_GESTIONNAIRE_PROFIL`, `MODIFIER_GESTIONNAIRE`, `SUSPENDRE_GESTIONNAIRE`, `REACTIVER_GESTIONNAIRE`, `ARCHIVER_GESTIONNAIRE`, `RESTAURER_GESTIONNAIRE`) ; désactivation/réactivation Keycloak (`enabled`) pilotée par l'application (première fois que ce mécanisme est déclenché applicativement, jusqu'ici manuel en exploitation) ; tests unitaires + intégration (cycle de vie, cross-tenant, RBAC « un Gestionnaire n'administre jamais un autre Gestionnaire ») |
 | Hors périmètre | Locataire (Sprint B), bascule `Bail` (Sprint C) |
-| Dépendances | Kickoff K1 tranché |
+| Dépendances | Kickoff K1 tranché ✅ (2026-07-08) ; GO explicite du PO sur ce Plan d'Exécution |
 | Risques | Fonction `SECURITY DEFINER` mal bornée (revue sécurité dédiée avant Gate Staging) ; profil partagé mutable cross-bailleur (RSV-EP15-01, accepté) |
 | Critères GO (fin de sprint) | ✅ `mvn verify`/`ng test` verts sans régression ✅ RBAC : un Gestionnaire ne peut agir sur aucun autre Gestionnaire (test dédié) ✅ archivage bloqué si affectation active chez un tiers (test cross-tenant) ✅ V23 (partie Gestionnaire) rollback applicatif viable ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) — **pas de promotion Production isolée avant Sprint B** (cohérence produit : les deux entités du même Epic) |
 
@@ -81,7 +83,7 @@ déjà pratiquée sur ce projet.
 
 | Artefact | Échéance |
 |---|---|
-| ADR-16 acceptée (D1/D3/D5/D8 tranchés) ; K1 tranché | Avant kickoff Sprint A |
+| ADR-16 acceptée (D1/D3/D5/D8/K1 tranchés) | ✅ 2026-07-08 |
 | Addendum backlog EP-15 (US-105→114) | Produit avec ce plan |
 | `CHANGELOG.md` `[Non publié]` au fil des sprints | Chaque fusion `main` |
 | `docs/project-state.md` / `staging-state.md` / `prod-state.md` | Chaque Gate |
@@ -95,7 +97,7 @@ déjà pratiquée sur ce projet.
 - [x] Aucune décision, Gate ou risque historique supprimé ou réécrit
 - [x] Numérotation vérifiée sans collision (EP-15, US-105→114, ADR-16, EF-97→107, RM-100→107, ENF-91/92, V23/V24)
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade ; `docs/prod-state.md` vérifié sans modification requise)
-- [ ] Kickoff K1 tranché par le PO
+- [x] Kickoff K1 tranché par le PO (2026-07-08 — profil sur compte existant)
 - [ ] Plan d'Exécution approuvé (GO explicite du PO) — **condition requise avant tout codage, CLAUDE.md**
 - [ ] Sprint A/B/C instruits un par un, chacun avec son propre Gate Staging et sa propre décision Gate Production
 

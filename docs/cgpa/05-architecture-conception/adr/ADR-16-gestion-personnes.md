@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Code de décision | **D-PERS-001** |
-| Statut | **Acceptée** — décisions D1/D3/D5/D8 tranchées par le PO le 2026-07-08 ; point K1 (sémantique « créer » un Gestionnaire) **ouvert**, à trancher au kickoff du Plan d'Exécution avant Sprint 1 |
+| Statut | **Acceptée — kickoff clos** : décisions D1/D3/D5/D8 et point K1 tranchés par le PO le 2026-07-08 (K1 le 2026-07-08). Reste requis avant Sprint A : GO explicite du PO sur `plan-execution-ep15-personnes.md` |
 | Date | 2026-07-08 |
 | Phase | 05 — Architecture (cadrage post-`1.9.0`, avant tout codage) |
 | Documents liés | `addendum-personnes.md` (EB), `addendum-personnes.md` (CDC), `addendum-backlog-ep15-personnes.md`, `plan-execution-ep15-personnes.md`, ADR-01 (cloisonnement multi-tenant), ADR-02 (RBAC/ReBAC), ADR-03 (RGPD by design), ADR-10 (intégration IdP gestionnaire), ADR-15 (précédent SECURITY DEFINER / bytea) |
@@ -237,11 +237,11 @@ biens). Volumétrie `bytea` (photos) faible pour un usage PME, même profil que 
 | RSV-EP15-03 | V24 (suppression de `bail.locataire_nom`/`locataire_email`) n'est **pas** un rollback applicatif viable — seule une restauration de backup permet un retour arrière | **Accepté** — même profil que `RSV-S9-03` (V20) ; Préflight de la release concernée doit vérifier un backup post-migration immédiatement disponible |
 | RSV-EP15-04 | `BienService.archiver()` ne vérifie aujourd'hui aucune affectation/bail actif avant archivage (asymétrie avec `PatrimoineService.archiver()`) — découverte pendant l'exploration de ce cadrage | **Hors périmètre EP-15** — consigné comme dette technique existante, à corriger dans un lot dédié si le PO le priorise, **non traité silencieusement ici** |
 
-## Point de kickoff restant ouvert (à trancher par le PO avant Sprint 1, cf. Plan d'Exécution)
+## Points tranchés au kickoff (PO, 2026-07-08) — aucune décision implicite
 
-| # | Question | Proposition par défaut |
+| # | Question | Décision PO |
 |---|---|---|
-| K1 | Sémantique de « créer » un Gestionnaire : aucun flux de création directe n'existe aujourd'hui (seule l'invitation crée le compte technique lié à Keycloak, `AcceptationService`). Introduire un flux de création administrative en contournement de l'invitation, ou « créer » = compléter pour la première fois le profil métier (téléphone/photo/observations) d'un compte déjà créé par invitation ? | **Profil uniquement** — l'invitation reste l'unique voie de création du compte technique ; « créer » un Gestionnaire au sens de cet Epic = enrichir le profil d'un compte déjà existant. Pas de nouveau flux admin en contournement, sauf arbitrage contraire explicite du PO |
+| K1 | Sémantique de « créer » un Gestionnaire : aucun flux de création directe n'existe aujourd'hui (seule l'invitation crée le compte technique lié à Keycloak, `AcceptationService`). Introduire un flux de création administrative en contournement de l'invitation, ou « créer » = compléter pour la première fois le profil métier (téléphone/photo/observations) d'un compte déjà créé par invitation ? | ✅ **Profil sur compte existant** — l'invitation reste l'unique voie de création du compte technique ; « créer » un Gestionnaire au sens de cet Epic = enrichir le profil d'un compte déjà existant. Aucun nouveau flux admin en contournement |
 
 ## Compatibilité et migration
 

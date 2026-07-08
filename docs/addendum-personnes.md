@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date | 2026-07-08 |
-| Statut | **Cadrage documentaire proposé** — aucun code, aucune migration exécutée. Point de kickoff **K1** à trancher par le PO avant tout Sprint |
+| Statut | **Cadrage documentaire proposé, kickoff clos** (K1 tranché par le PO le 2026-07-08) — aucun code, aucune migration exécutée. GO explicite du PO sur le Plan d'Exécution requis avant tout Sprint |
 | Epic | **EP-15** (renuméroté depuis la demande initiale « EP-14 », déjà pris par les Quittances certifiées, release `1.9.0` ; EP-13 réservé « Fin de bail ») |
 | Décision d'architecture | `docs/cgpa/05-architecture-conception/adr/ADR-16-gestion-personnes.md` (D-PERS-001) |
 | Portée | Rendre les **Gestionnaires** et les **Locataires** des entités métier durables (statuts, historique, audit, anti-doublons), indépendantes des `Bail`/`Affectation` |
@@ -56,10 +56,10 @@ Sans ADR-16, ces quatre décisions auraient été prises implicitement au fil du
 
 ## 4. Ce qui reste ouvert avant tout Sprint
 
-- **K1** (ADR-16, `plan-execution-ep15-personnes.md`) : sémantique de « créer » un Gestionnaire
-  — proposition par défaut documentée, décision PO explicite requise.
-- **Approbation du Plan d'Exécution** par le PO (GO explicite), conformément à CLAUDE.md — condition
-  bloquante avant tout codage.
+- ~~**K1**~~ ✅ **Tranché par le PO le 2026-07-08** : « créer » un Gestionnaire = profil sur
+  compte existant (l'invitation reste l'unique voie de création technique).
+- **Approbation du Plan d'Exécution** par le PO (GO explicite), conformément à CLAUDE.md — seule
+  condition bloquante restante avant tout codage.
 
 ## 5. Checklist de validation CGPA globale
 
@@ -73,10 +73,10 @@ Sans ADR-16, ces quatre décisions auraient été prises implicitement au fil du
       section existante altérée, tableau ADR §7 non touché — cohérent avec le traitement déjà
       réservé aux ADR-09→15)
 - [x] Impact Production vérifié : aucun (documentaire uniquement)
-- [ ] Kickoff K1 tranché par le PO
+- [x] Kickoff K1 tranché par le PO (2026-07-08 — profil sur compte existant)
 - [ ] GO explicite du PO sur le Plan d'Exécution avant tout codage
 
 ## 6. Prochaine étape
 
-Soumettre ce cadrage (ADR-16, addenda EB/CDC/Backlog, Plan d'Exécution) à validation du PO :
-trancher K1, puis GO explicite sur le Plan d'Exécution avant le démarrage du Sprint A.
+Le kickoff est clos. Il ne reste que le **GO explicite du PO sur `plan-execution-ep15-personnes.md`**
+avant le démarrage du Sprint A.

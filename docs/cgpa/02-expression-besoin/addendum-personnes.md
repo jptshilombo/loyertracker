@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |-------|--------|
 | Document de référence | `expression-besoin.md` v1.2 (✅ Validé — Gate 1 Go, 2026-06-04) — **non modifié** |
-| Statut de l'addendum | **Proposé** — cadrage documentaire (analyse d'impact) ; aucun codage engagé. Point de kickoff K1 (ADR-16) à trancher au Plan d'Exécution avant Sprint 1 |
+| Statut de l'addendum | **Proposé** — cadrage documentaire (analyse d'impact) ; aucun codage engagé. Kickoff clos (K1 tranché par le PO le 2026-07-08) ; GO explicite du PO sur le Plan d'Exécution requis avant Sprint A |
 | Date | 2026-07-08 |
 | Décision liée | D-PERS-001 (`docs/cgpa/05-architecture-conception/adr/ADR-16-gestion-personnes.md`) |
 | Principe | Additif — n'invalide, ne rejoue ni ne modifie le Gate 1 Go déjà statué |
@@ -67,12 +67,11 @@ Le périmètre inclus s'enrichit de :
 
 ## 5. Hypothèses à valider (complète EB §9)
 
-- [ ] La portée **globale** du statut Gestionnaire (D1, ADR-16) est un choix PO assumé : tout
+- [x] La portée **globale** du statut Gestionnaire (D1, ADR-16) est un choix PO assumé : tout
   bailleur ayant une relation avec un Gestionnaire partagé peut le suspendre/archiver, avec
-  effet pour les autres bailleurs qui l'emploient. **Déjà tranché par le PO le 2026-07-08.**
-- [ ] Sémantique de « créer » un Gestionnaire (K1, ADR-16) : profil sur compte existant
-  (proposition par défaut) ou nouveau flux administratif — **à trancher au kickoff du Plan
-  d'Exécution avant Sprint 1.**
+  effet pour les autres bailleurs qui l'emploient. **Tranché par le PO le 2026-07-08.**
+- [x] Sémantique de « créer » un Gestionnaire (K1, ADR-16) : **profil sur compte existant** —
+  tranché par le PO le 2026-07-08 ; l'invitation reste l'unique voie de création technique.
 - [ ] La détection de doublons est un **avertissement non bloquant** (BF-100) : à confirmer
   qu'aucun cas ne doit être un rejet strict (ex. deux Locataires avec exactement le même numéro
   de pièce d'identité chez le même bailleur) — proposition par défaut : avertissement partout,
