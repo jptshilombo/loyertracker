@@ -61,7 +61,8 @@ class SchemaMigrationTest {
         // + V20 (garantie_movement ledger + bail.depot_garantie supprimée — Sprint 9, US-94).
         // + V21 (paiement.garantie_movement_id — Sprint 10, US-95).
         // + V22 (quittances certifiées : quittance + numérotation + journal — Sprint 11, US-99).
-        assertThat(result.migrationsExecuted).isEqualTo(22);
+        // + V23 (cycle de vie Gestionnaire : statut global + fonctions cross-tenant — EP-15 Sprint A).
+        assertThat(result.migrationsExecuted).isEqualTo(23);
         assertThat(result.success).isTrue();
     }
 

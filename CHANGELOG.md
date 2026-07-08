@@ -5,6 +5,27 @@ Toutes les évolutions notables de ce projet sont consignées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet adhère au
 [Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.3).
 
+## [Non publié]
+
+### Ajouts — Cycle de vie du Gestionnaire (Sprint A, EP-15, US-105→108)
+
+- **Statut global du compte Gestionnaire** (`ACTIVE`/`SUSPENDU`/`ARCHIVE`, migration V23) :
+  profil enrichi (téléphone, photo, observations), suspension immédiate sans pré-condition
+  (désactivation Keycloak), réactivation, archivage conditionné à l'absence de toute
+  `Affectation` `ACTIVE` **tous bailleurs confondus** (fonction `SECURITY DEFINER`
+  `gestionnaire_a_affectation_active`, traverse la RLS d'`affectation`), restauration.
+  Nouveau `GestionnaireController`/`GestionnaireService` ; réservé au rôle `BAILLEUR` ayant
+  une relation d'affectation avec le gestionnaire (`gestionnaire_a_relation`, RM-107 : un
+  Gestionnaire n'administre jamais un autre Gestionnaire).
+- **Recherche multicritère et détection de doublons** (nom/téléphone/email) parmi les
+  gestionnaires en relation avec le bailleur courant.
+- **Historique Gestionnaire** : profil, affectations et audit du bailleur courant (aucune
+  fuite d'information sur les relations avec d'autres bailleurs).
+- **Audit** : nouveaux points `MODIFIER_GESTIONNAIRE`/`SUSPENDRE_GESTIONNAIRE`/
+  `REACTIVER_GESTIONNAIRE`/`ARCHIVER_GESTIONNAIRE`/`RESTAURER_GESTIONNAIRE`.
+- Décisions et risques : `docs/cgpa/05-architecture-conception/adr/ADR-16-gestion-personnes.md`
+  (D1 statut global, D4 fonction cross-tenant, RSV-EP15-01 risque accepté).
+
 ## [1.9.0] — 2026-07-06
 
 ### Ajouts — Quittances certifiées : socle + redesign PDF (Sprint 11, EP-14a, US-99/100/101)

@@ -45,6 +45,10 @@ déjà pratiquée sur ce projet.
 
 ## Sprint A — Gestionnaire : statut global, cycle de vie
 
+> **Codé et vert le 2026-07-08** — `mvn verify` 168/168, aucune régression. Reste à instruire :
+> Gate Staging du Sprint A (dont `STG-ISOL-01`). Voir `CHANGELOG.md` `[Non publié]` et
+> `docs/project-state.md` §11/§14 pour le détail.
+
 | Champ | Valeur |
 |---|---|
 | Objectif | Le Gestionnaire gagne un profil enrichi et un cycle de vie de compte (suspension/réactivation/archivage/restauration), sans toucher au mécanisme d'affectation existant |
@@ -98,7 +102,7 @@ déjà pratiquée sur ce projet.
 - [x] Numérotation vérifiée sans collision (EP-15, US-105→114, ADR-16, EF-97→107, RM-100→107, ENF-91/92, V23/V24)
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade ; `docs/prod-state.md` vérifié sans modification requise)
 - [x] Kickoff K1 tranché par le PO (2026-07-08 — profil sur compte existant)
-- [ ] Plan d'Exécution approuvé (GO explicite du PO) — **condition requise avant tout codage, CLAUDE.md**
+- [x] Plan d'Exécution approuvé (GO explicite du PO le 2026-07-08) — **Sprint A démarré**
 - [ ] Sprint A/B/C instruits un par un, chacun avec son propre Gate Staging et sa propre décision Gate Production
 
 ## Ce que ce plan n'autorise pas

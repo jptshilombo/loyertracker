@@ -50,6 +50,31 @@ public class AuthorizationService {
         return false;
     }
 
+    /**
+     * Vrai si le bailleur courant a (ou a eu) une relation d'affectation avec ce gestionnaire
+     * (EP-15, ADR-16) — fail-closed (seul BAILLEUR administre un profil/statut Gestionnaire,
+     * jamais un autre Gestionnaire, RM-107).
+     */
+    @Transactional(readOnly = true)
+    public boolean peutAccederGestionnaire(java.util.UUID gestionnaireId, Authentication authentication) {
+        if (gestionnaireId == null || authentication == null
+                || !(authentication.getPrincipal() instanceof Jwt jwt)
+                || !aRole(authentication, "ROLE_BAILLEUR")) {
+            return false;
+        }
+        UUID bailleurId = resoudreBailleur(jwt.getSubject());
+        return bailleurId != null && gestionnaireARelation(gestionnaireId, bailleurId);
+    }
+
+    /** Vrai si ce bailleur a une relation (affectation active ou passée) avec ce gestionnaire (V23). */
+    public boolean gestionnaireARelation(UUID gestionnaireId, UUID bailleurId) {
+        return (Boolean) em.createNativeQuery(
+                        "SELECT gestionnaire_a_relation(CAST(:g AS uuid), CAST(:o AS uuid))")
+                .setParameter("g", gestionnaireId.toString())
+                .setParameter("o", bailleurId.toString())
+                .getSingleResult();
+    }
+
     /** Propriété bailleur sur un patrimoine ; fail-closed (seul BAILLEUR accède à Patrimoine). */
     @Transactional(readOnly = true)
     public boolean peutAccederPatrimoine(UUID patrimoineId, Authentication authentication) {

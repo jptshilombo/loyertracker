@@ -22,6 +22,7 @@ import com.loyertracker.batch.GenerationEcheancesService;
 import com.loyertracker.baux.BailService;
 import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
+import com.loyertracker.comptes.GestionnaireService;
 import com.loyertracker.comptes.InvitationService;
 import com.loyertracker.documents.QuittanceService;
 import com.loyertracker.quittances.QuittanceCertifieeService;
@@ -62,6 +63,9 @@ class SecurityIntegrationTest {
     InvitationService invitationService;
     @MockitoBean
     AcceptationService acceptationService;
+    // Cycle de vie Gestionnaire (V23, EP-15) : dépend de repositories JPA, neutralisé comme les autres.
+    @MockitoBean
+    GestionnaireService gestionnaireService;
     @MockitoBean
     TenantContext tenantContext;
     @MockitoBean

@@ -17,4 +17,16 @@ public interface GestionnaireIdentityProvider {
      * @return l'identité IdP (avec le {@code keycloakId}) et l'indication créé/réutilisé
      */
     GestionnaireIdentity creerOuRecuperer(String email, String nom, String prenom, String motDePasse);
+
+    /**
+     * Active ou désactive le compte dans l'IdP (EP-15, ADR-16 D1) : {@code SUSPENDU}/{@code
+     * ARCHIVE} désactivent la connexion (statut GLOBAL, tous bailleurs), {@code RESTAURER}/
+     * {@code REACTIVER} la rétablissent.
+     *
+     * <p>Méthode {@code default} pour ne pas casser les doubles de test existants (lambdas à une
+     * seule méthode abstraite) qui n'ont pas besoin de ce comportement.</p>
+     */
+    default void definirActivation(String keycloakId, boolean actif) {
+        // no-op par défaut ; l'adaptateur Keycloak et les tests dédiés au cycle de vie l'implémentent.
+    }
 }
