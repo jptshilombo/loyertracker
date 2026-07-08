@@ -146,6 +146,30 @@ Bailleur (1) ───< (N) Quittance >─── (1) Paiement
 
 Détail complet des colonnes et décisions : `adr/ADR-15-quittances-certifiees.md` (D2/D3).
 
+### 3.5 Extension EP-15 — Gestion des personnes (cadrage 2026-07-08, additif)
+
+> Ajout additif post-Gate 4 (ADR-16/D-PERS-001, migrations V23 additive + V24 non additive) —
+> les sections 3.1→3.4 historiques sont conservées telles quelles. Cadrage documentaire :
+> aucun code ni migration produit à ce stade.
+
+```
+Bailleur (1) ───< (N) Locataire (RLS bailleur_id) ───< (N) Bail [locataire_id FK]
+Gestionnaire (global, hors RLS, statut ACTIVE|SUSPENDU|ARCHIVE) ───< (N) Affectation >─── (N) Bailleur
+```
+
+| Table | Rôle | Points structurants |
+|-------|------|---------------------|
+| `locataire` *(nouvelle, V23)* | Entité de domaine indépendante du `Bail` | `bailleur_id NOT NULL`, RLS `bailleur_isolation` FORCE (pattern ADR-01) ; statut `ACTIVE`\|`ARCHIVE` ; `photo` en BYTEA (précédent `quittance.pdf`, ADR-15) ; ne porte **aucune** identité Keycloak (reste un sujet de données, pas un compte, ADR-16 D2) |
+| `gestionnaire` *(étendue, V23)* | Compte technique global, statut de cycle de vie ajouté | Nouvelles colonnes `statut` (`ACTIVE`\|`SUSPENDU`\|`ARCHIVE`, **global**, partagé entre bailleurs), `telephone`, `photo`, `observations`, `date_creation`, `date_suspension`, `date_archivage` — toujours **sans RLS** (inchangé, ADR-01) |
+| `bail` *(bascule V24, non additive)* | `locataire_id` remplace `locataire_nom`/`locataire_email` | Colonnes texte libre supprimées après backfill 1:1 ; rollback applicatif non viable pour cette étape (restauration de backup requise, même profil que V20) |
+
+Vérification cross-tenant de l'archivage Gestionnaire (aucune `Affectation` `ACTIVE` nulle part,
+malgré la RLS `bailleur_isolation` sur `affectation`) : fonction `SECURITY DEFINER` étroite
+(booléen uniquement), même patron que les fonctions publiques de lecture de quittance (V22).
+
+Détail complet des colonnes et décisions : `adr/ADR-16-gestion-personnes.md` (D1-D8),
+`docs/cgpa/04-cahier-des-charges/addendum-personnes.md` (§4).
+
 ---
 
 ## 4. Contrats d'API
