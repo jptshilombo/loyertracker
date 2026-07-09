@@ -27,16 +27,20 @@ d'Exécution reste requis avant le démarrage du Sprint A.**
 ```
 Sprint A                      Sprint B                        Sprint C
 Gestionnaire (statut    →     Locataire (nouvelle       →     Bascule Bail→Locataire
-global, cycle de vie)         entité, V23 additive)            (V24 non additive) + RGPD
-US-105→108                    US-109→112                       US-113→114
+global, cycle de vie)         entité, V24 additive)            (V25 non additive) + RGPD
+US-105→108 (V23, livrée)      US-109→112                       US-113→114
         └────────── Gate Staging par sprint ──────────┘
                               Sprint B doit tenir en Production ≥ 1 cycle de release complet
-                              avant que Sprint C ne soit instruit (rollback V24 = backup seul)
+                              avant que Sprint C ne soit instruit (rollback V25 = backup seul)
 ```
+
+> **Renumérotation actée au Sprint B (2026-07-08)** : V23 ayant été intégralement consommée
+> par le Gestionnaire seul (Sprint A, livrée), Locataire est porté par **V24** et la bascule
+> par **V25** — aucune décision de fond changée, cf. ADR-16 D3.
 
 **Pourquoi ce découpage** : le Gestionnaire (statut global, hors RLS) et le Locataire (nouvelle
 entité RLS-scopée) sont indépendants l'un de l'autre — aucune raison de les coupler dans un
-même sprint. La bascule `Bail → Locataire` (V24) est en revanche **non additive** (suppression
+même sprint. La bascule `Bail → Locataire` (V25) est en revanche **non additive** (suppression
 de colonnes, rollback applicatif non viable, ADR-16 D3/RSV-EP15-03) : elle est isolée dans un
 sprint C distinct, instruit seulement après que le Sprint B (création de l'entité Locataire,
 additive) a tourné sans anomalie en Production pendant au moins un cycle de release complet —
@@ -59,25 +63,25 @@ déjà pratiquée sur ce projet.
 | Risques | Fonction `SECURITY DEFINER` mal bornée (revue sécurité dédiée avant Gate Staging) ; profil partagé mutable cross-bailleur (RSV-EP15-01, accepté) |
 | Critères GO (fin de sprint) | ✅ `mvn verify`/`ng test` verts sans régression ✅ RBAC : un Gestionnaire ne peut agir sur aucun autre Gestionnaire (test dédié) ✅ archivage bloqué si affectation active chez un tiers (test cross-tenant) ✅ V23 (partie Gestionnaire) rollback applicatif viable ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) — **pas de promotion Production isolée avant Sprint B** (cohérence produit : les deux entités du même Epic) |
 
-## Sprint B — Locataire : nouvelle entité (V23 additive)
+## Sprint B — Locataire : nouvelle entité (V24 additive)
 
 | Champ | Valeur |
 |---|---|
 | Objectif | Le Locataire devient une entité de domaine persistante, cloisonnée par bailleur (RLS), avec cycle de vie, recherche et historique — sans encore être référencé par `Bail` |
 | Stories | **US-109** (création/modification), **US-110** (archivage/restauration), **US-111** (recherche + doublons), **US-112** (historique) |
-| Livrables | Migration **V23** (partie Locataire : table `locataire` complète, RLS `ENABLE`+`FORCE` policy `bailleur_isolation`, index `locataire(bailleur_id)`/`locataire(bailleur_id, statut)`) ; `bail.locataire_id` ajouté **nullable** (préparation Sprint C, aucun usage applicatif dans ce sprint) ; nouveau `LocataireController` (CRUD, archivage, restauration, recherche, doublons, historique) ; audit (`CREER_LOCATAIRE`, `MODIFIER_LOCATAIRE`, `ARCHIVER_LOCATAIRE`, `RESTAURER_LOCATAIRE`) ; tests unitaires + intégration (RLS cross-tenant, cycle de vie, recherche/doublons) |
+| Livrables | Migration **V24** (table `locataire` complète, RLS `ENABLE`+`FORCE` policy `bailleur_isolation`, index `locataire(bailleur_id)`/`locataire(bailleur_id, statut)`) ; `bail.locataire_id` ajouté **nullable** (préparation Sprint C, aucun usage applicatif dans ce sprint) ; nouveau `LocataireController` (CRUD, archivage, restauration, recherche, doublons, historique) ; audit (`CREER_LOCATAIRE`, `MODIFIER_LOCATAIRE`, `ARCHIVER_LOCATAIRE`, `RESTAURER_LOCATAIRE`) ; tests unitaires + intégration (RLS cross-tenant, cycle de vie, recherche/doublons) |
 | Hors périmètre | Aucun rattachement de `Bail` à `Locataire` (Sprint C) ; RGPD toujours ciblé sur `Bail` dans ce sprint (inchangé, Sprint C l'adapte) |
 | Dépendances | Aucune (indépendant du Sprint A) |
 | Risques | Volumétrie `photo` (bytea) à surveiller au préflight (précédent `quittance.pdf`, sans incident connu) |
-| Critères GO (fin de sprint) | ✅ tests verts sans régression ✅ RLS cross-tenant prouvée (aucune fuite) ✅ V23 (partie Locataire) additive, rollback applicatif viable ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) → **Gate Production possible pour Sprints A+B combinés** (statuts Gestionnaire + entité Locataire, sans bascule `Bail` encore active) |
+| Critères GO (fin de sprint) | ✅ tests verts sans régression ✅ RLS cross-tenant prouvée (aucune fuite) ✅ V24 additive, rollback applicatif viable ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) → **Gate Production possible pour Sprints A+B combinés** (statuts Gestionnaire + entité Locataire, sans bascule `Bail` encore active) |
 
-## Sprint C — Bascule `Bail → Locataire` (V24 non additive) & adaptation RGPD
+## Sprint C — Bascule `Bail → Locataire` (V25 non additive) & adaptation RGPD
 
 | Champ | Valeur |
 |---|---|
 | Objectif | Chaque bail référence un `Locataire` structuré ; l'effacement RGPD cible la personne plutôt qu'un bail isolé |
-| Stories | **US-113** (migration V24 : backfill + `NOT NULL` + suppression `locataire_nom`/`locataire_email`), **US-114** (adaptation `RgpdService`/`Bail.anonymiserLocataire()` vers `Locataire`) |
-| Livrables | Migration **V24** (backfill 1 `Locataire` par bail historique sans déduplication, `bail.locataire_id NOT NULL`, `DROP COLUMN locataire_nom, locataire_email`) ; extension des endpoints existants de création/modification de bail (`locataireId` obligatoire, validations 404/403/409) ; réécriture ciblée de `RgpdService.anonymiserLocataire()` (cible `Locataire`) ; suite de tests RGPD existante rejouée sans régression ; documentation de la rupture de contrat HTTP de `Bail` (release notes) |
+| Stories | **US-113** (migration V25 : backfill + `NOT NULL` + suppression `locataire_nom`/`locataire_email`), **US-114** (adaptation `RgpdService`/`Bail.anonymiserLocataire()` vers `Locataire`) |
+| Livrables | Migration **V25** (backfill 1 `Locataire` par bail historique sans déduplication, `bail.locataire_id NOT NULL`, `DROP COLUMN locataire_nom, locataire_email`) ; extension des endpoints existants de création/modification de bail (`locataireId` obligatoire, validations 404/403/409) ; réécriture ciblée de `RgpdService.anonymiserLocataire()` (cible `Locataire`) ; suite de tests RGPD existante rejouée sans régression ; documentation de la rupture de contrat HTTP de `Bail` (release notes) |
 | Hors périmètre | Aucune nouvelle fonctionnalité Gestionnaire/Locataire — uniquement la bascule et l'adaptation RGPD |
 | Dépendances | **Sprint B stabilisé en Production depuis au moins un cycle de release complet, sans anomalie remontée** (condition de démarrage explicite, cf. séquencement) |
 | Risques | RSV-EP15-02 (parsing nom/prénom imprécis, accepté) ; **RSV-EP15-03 (rollback applicatif non viable, restauration de backup requise)** — Préflight de cette release doit vérifier un backup post-migration immédiatement disponible avant tout arrêt, conformément à la discipline déjà pratiquée pour V20 |
@@ -99,7 +103,7 @@ déjà pratiquée sur ce projet.
 
 - [x] `docs/project-state.md` lu, phase courante identifiée (CGPA v5.4.1, post-clôture `1.9.0`)
 - [x] Aucune décision, Gate ou risque historique supprimé ou réécrit
-- [x] Numérotation vérifiée sans collision (EP-15, US-105→114, ADR-16, EF-97→107, RM-100→107, ENF-91/92, V23/V24)
+- [x] Numérotation vérifiée sans collision (EP-15, US-105→114, ADR-16, EF-97→107, RM-100→107, ENF-91/92, V23/V24/V25)
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade ; `docs/prod-state.md` vérifié sans modification requise)
 - [x] Kickoff K1 tranché par le PO (2026-07-08 — profil sur compte existant)
 - [x] Plan d'Exécution approuvé (GO explicite du PO le 2026-07-08) — **Sprint A démarré**

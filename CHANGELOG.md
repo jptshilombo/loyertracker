@@ -7,6 +7,23 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Entité Locataire (Sprint B, EP-15, US-109→112)
+
+- **Locataire, entité de domaine persistante** (migration V24, additive) : table `locataire`
+  cloisonnée par bailleur (RLS `ENABLE`+`FORCE`, policy `bailleur_isolation`), statut
+  `ACTIVE`/`ARCHIVE`. Contrairement au Gestionnaire, le Locataire n'est **pas** un compte
+  utilisateur (aucune identité Keycloak, aucun rôle RBAC) — le cloisonnement repose entièrement
+  sur la RLS, sans fonction `SECURITY DEFINER` cross-tenant. Nouveau
+  `LocataireController`/`LocataireService` (`/api/locataires`, rôle `BAILLEUR`) : création,
+  modification, archivage (sans pré-condition), restauration, recherche, détection de doublons
+  (email/téléphone/numéro de pièce d'identité), historique (audit RLS-scopé).
+- `bail.locataire_id` ajoutée **nullable**, sans aucun usage applicatif dans ce sprint —
+  préparation de la bascule V25 (Sprint C).
+- **Audit** : nouveaux points `CREER_LOCATAIRE`/`MODIFIER_LOCATAIRE`/`ARCHIVER_LOCATAIRE`/
+  `RESTAURER_LOCATAIRE`.
+- Décisions et risques : `docs/cgpa/05-architecture-conception/adr/ADR-16-gestion-personnes.md`
+  (D2 Locataire lié à un seul bailleur, D3 préparation `bail.locataire_id`).
+
 ### Ajouts — Cycle de vie du Gestionnaire (Sprint A, EP-15, US-105→108)
 
 - **Statut global du compte Gestionnaire** (`ACTIVE`/`SUSPENDU`/`ARCHIVE`, migration V23) :

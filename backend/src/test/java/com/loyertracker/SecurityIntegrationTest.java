@@ -101,6 +101,9 @@ class SecurityIntegrationTest {
     // RGPD (US-70) : dépend de repositories JPA, neutralisé pour ce test de contrat sans BDD.
     @MockitoBean
     com.loyertracker.rgpd.RgpdService rgpdService;
+    // Entité Locataire (V24, EP-15 Sprint B) : dépend de repositories JPA, neutralisée comme les autres.
+    @MockitoBean
+    com.loyertracker.locataires.LocataireService locataireService;
 
     @Test
     void health_estPublic() throws Exception {

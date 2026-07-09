@@ -148,9 +148,10 @@ Détail complet des colonnes et décisions : `adr/ADR-15-quittances-certifiees.m
 
 ### 3.5 Extension EP-15 — Gestion des personnes (cadrage 2026-07-08, additif)
 
-> Ajout additif post-Gate 4 (ADR-16/D-PERS-001, migrations V23 additive + V24 non additive) —
-> les sections 3.1→3.4 historiques sont conservées telles quelles. Cadrage documentaire :
-> aucun code ni migration produit à ce stade.
+> Ajout additif post-Gate 4 (ADR-16/D-PERS-001, migrations V23/V24 additives + V25 non
+> additive — Locataire porté sur V24 après renumérotation actée au Sprint B, V23 ayant déjà
+> été consommée par le seul Gestionnaire au Sprint A) — les sections 3.1→3.4 historiques sont
+> conservées telles quelles.
 
 ```
 Bailleur (1) ───< (N) Locataire (RLS bailleur_id) ───< (N) Bail [locataire_id FK]
@@ -159,9 +160,9 @@ Gestionnaire (global, hors RLS, statut ACTIVE|SUSPENDU|ARCHIVE) ───< (N) A
 
 | Table | Rôle | Points structurants |
 |-------|------|---------------------|
-| `locataire` *(nouvelle, V23)* | Entité de domaine indépendante du `Bail` | `bailleur_id NOT NULL`, RLS `bailleur_isolation` FORCE (pattern ADR-01) ; statut `ACTIVE`\|`ARCHIVE` ; `photo` en BYTEA (précédent `quittance.pdf`, ADR-15) ; ne porte **aucune** identité Keycloak (reste un sujet de données, pas un compte, ADR-16 D2) |
-| `gestionnaire` *(étendue, V23)* | Compte technique global, statut de cycle de vie ajouté | Nouvelles colonnes `statut` (`ACTIVE`\|`SUSPENDU`\|`ARCHIVE`, **global**, partagé entre bailleurs), `telephone`, `photo`, `observations`, `date_creation`, `date_suspension`, `date_archivage` — toujours **sans RLS** (inchangé, ADR-01) |
-| `bail` *(bascule V24, non additive)* | `locataire_id` remplace `locataire_nom`/`locataire_email` | Colonnes texte libre supprimées après backfill 1:1 ; rollback applicatif non viable pour cette étape (restauration de backup requise, même profil que V20) |
+| `locataire` *(nouvelle, V24)* | Entité de domaine indépendante du `Bail` | `bailleur_id NOT NULL`, RLS `bailleur_isolation` FORCE (pattern ADR-01) ; statut `ACTIVE`\|`ARCHIVE` ; `photo` en BYTEA (précédent `quittance.pdf`, ADR-15) ; ne porte **aucune** identité Keycloak (reste un sujet de données, pas un compte, ADR-16 D2) |
+| `gestionnaire` *(étendue, V23, livrée Sprint A)* | Compte technique global, statut de cycle de vie ajouté | Nouvelles colonnes `statut` (`ACTIVE`\|`SUSPENDU`\|`ARCHIVE`, **global**, partagé entre bailleurs), `telephone`, `photo`, `observations`, `date_creation`, `date_suspension`, `date_archivage` — toujours **sans RLS** (inchangé, ADR-01) |
+| `bail` *(bascule V25, non additive, Sprint C)* | `locataire_id` remplace `locataire_nom`/`locataire_email` | Colonnes texte libre supprimées après backfill 1:1 ; rollback applicatif non viable pour cette étape (restauration de backup requise, même profil que V20) |
 
 Vérification cross-tenant de l'archivage Gestionnaire (aucune `Affectation` `ACTIVE` nulle part,
 malgré la RLS `bailleur_isolation` sur `affectation`) : fonction `SECURITY DEFINER` étroite

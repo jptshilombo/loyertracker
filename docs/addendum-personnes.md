@@ -46,7 +46,7 @@ Sans ADR-16, ces quatre décisions auraient été prises implicitement au fil du
 | Domaine | Impact | Régression ? |
 |---|---|---|
 | Patrimoine, Bien, Affectation, Garantie, Paiements, Honoraires, Alertes, Dashboard, Ledger, Money, Documents PDF, QR Code | **Aucun changement de code envisagé** dans ces modules | Non — aucun endpoint ni migration de ces modules n'est touché |
-| Bail | `locataireNom`/`locataireEmail` (texte) remplacés par `locataireId` (FK) — **rupture de contrat HTTP** à la bascule (Sprint C, V24) | Changement assumé et documenté (ADR-16), à communiquer explicitement dans les release notes du sprint concerné |
+| Bail | `locataireNom`/`locataireEmail` (texte) remplacés par `locataireId` (FK) — **rupture de contrat HTTP** à la bascule (Sprint C, V25) | Changement assumé et documenté (ADR-16), à communiquer explicitement dans les release notes du sprint concerné |
 | RGPD (ADR-03) | Cible de l'anonymisation déplacée de `Bail` vers `Locataire` — amélioration (couvre tout l'historique d'une personne en une opération) | Non-régression exigée sur les tests RGPD existants (US-114) |
 | RBAC (ADR-02) | Aucun nouveau rôle ; toutes les actions restent réservées à `BAILLEUR` ; un Gestionnaire n'administre jamais un autre Gestionnaire (RM-107, inchangé) | Non |
 | Sécurité multi-tenant (ADR-01) | Le Gestionnaire reste hors RLS (inchangé) ; le Locataire rejoint le pattern RLS standard ; nouvelle fonction `SECURITY DEFINER` à surface minimale (booléen) | Revue sécurité dédiée requise avant Gate Staging du Sprint A (nouveau patron cross-tenant) |
@@ -66,7 +66,7 @@ Sans ADR-16, ces quatre décisions auraient été prises implicitement au fil du
 - [x] `docs/project-state.md` consulté avant toute rédaction (phase CGPA v5.4.1, post-clôture `1.9.0`)
 - [x] Aucune décision, Gate, ADR ou risque historique supprimé, réécrit ou rejoué
 - [x] Numérotation vérifiée sans collision : Epic **EP-15** (EP-13/14 exclus), US **105→114**,
-      ADR **16**, EF **97→107**, RM **100→107**, ENF **91/92**, Flyway **V23/V24**
+      ADR **16**, EF **97→107**, RM **100→107**, ENF **91/92**, Flyway **V23/V24/V25**
 - [x] Seuls des addenda ont été produits ; `fiche-idee.md`, `expression-besoin.md`,
       `cahier-des-charges.md`, `product-backlog.md` **non modifiés en place**
 - [x] `dossier-architecture.md` étendu de façon strictement additive (§3.5 nouveau, aucune
