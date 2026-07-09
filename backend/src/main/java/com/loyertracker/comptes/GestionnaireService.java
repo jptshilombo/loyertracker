@@ -29,6 +29,8 @@ import jakarta.persistence.EntityManager;
 @Service
 public class GestionnaireService {
 
+    private static final String ENTITY_TYPE = "gestionnaire";
+
     private final GestionnaireRepository gestionnaires;
     private final AffectationRepository affectations;
     private final AuditLogRepository auditLog;
@@ -84,7 +86,7 @@ public class GestionnaireService {
         Gestionnaire g = trouver(id);
         byte[] photo = decoderPhoto(requete.photoBase64());
         g.modifierProfil(requete.telephone(), photo, requete.observations());
-        audit.enregistrer(authentication, bailleurId, "MODIFIER_GESTIONNAIRE", "gestionnaire", id);
+        audit.enregistrer(authentication, bailleurId, "MODIFIER_GESTIONNAIRE", ENTITY_TYPE, id);
         return GestionnaireDto.from(g);
     }
 
@@ -95,7 +97,7 @@ public class GestionnaireService {
         Gestionnaire g = trouver(id);
         g.suspendre();
         idp.definirActivation(g.getKeycloakId(), false);
-        audit.enregistrer(authentication, bailleurId, "SUSPENDRE_GESTIONNAIRE", "gestionnaire", id);
+        audit.enregistrer(authentication, bailleurId, "SUSPENDRE_GESTIONNAIRE", ENTITY_TYPE, id);
         return GestionnaireDto.from(g);
     }
 
@@ -106,7 +108,7 @@ public class GestionnaireService {
         Gestionnaire g = trouver(id);
         g.reactiver();
         idp.definirActivation(g.getKeycloakId(), true);
-        audit.enregistrer(authentication, bailleurId, "REACTIVER_GESTIONNAIRE", "gestionnaire", id);
+        audit.enregistrer(authentication, bailleurId, "REACTIVER_GESTIONNAIRE", ENTITY_TYPE, id);
         return GestionnaireDto.from(g);
     }
 
@@ -121,7 +123,7 @@ public class GestionnaireService {
         }
         g.archiver();
         idp.definirActivation(g.getKeycloakId(), false);
-        audit.enregistrer(authentication, bailleurId, "ARCHIVER_GESTIONNAIRE", "gestionnaire", id);
+        audit.enregistrer(authentication, bailleurId, "ARCHIVER_GESTIONNAIRE", ENTITY_TYPE, id);
         return GestionnaireDto.from(g);
     }
 
@@ -132,7 +134,7 @@ public class GestionnaireService {
         Gestionnaire g = trouver(id);
         g.restaurer();
         idp.definirActivation(g.getKeycloakId(), true);
-        audit.enregistrer(authentication, bailleurId, "RESTAURER_GESTIONNAIRE", "gestionnaire", id);
+        audit.enregistrer(authentication, bailleurId, "RESTAURER_GESTIONNAIRE", ENTITY_TYPE, id);
         return GestionnaireDto.from(g);
     }
 
@@ -146,7 +148,7 @@ public class GestionnaireService {
         Gestionnaire g = trouver(id);
         List<AffectationDto> affectationsDto = affectations.findByGestionnaireIdOrderByDateDebutDesc(id)
                 .stream().map(AffectationDto::from).toList();
-        List<AuditDto> auditDto = auditLog.findByEntityTypeAndEntityIdOrderByHorodatageDesc("gestionnaire", id)
+        List<AuditDto> auditDto = auditLog.findByEntityTypeAndEntityIdOrderByHorodatageDesc(ENTITY_TYPE, id)
                 .stream().map(AuditDto::from).toList();
         return new GestionnaireHistoriqueDto(GestionnaireDto.from(g), affectationsDto, auditDto);
     }

@@ -23,6 +23,8 @@ import com.loyertracker.securite.TenantContext;
 @Service
 public class LocataireService {
 
+    private static final String ENTITY_TYPE = "locataire";
+
     private final LocataireRepository locataires;
     private final AuditLogRepository auditLog;
     private final AuditService audit;
@@ -71,7 +73,7 @@ public class LocataireService {
         UUID bailleurId = tenant.activerDepuisKeycloak(sub(authentication));
         Locataire l = new Locataire(UUID.randomUUID(), bailleurId, requete);
         locataires.saveAndFlush(l);
-        audit.enregistrer(authentication, bailleurId, "CREER_LOCATAIRE", "locataire", l.getId());
+        audit.enregistrer(authentication, bailleurId, "CREER_LOCATAIRE", ENTITY_TYPE, l.getId());
         return LocataireDto.from(l);
     }
 
@@ -80,7 +82,7 @@ public class LocataireService {
         UUID bailleurId = tenant.activerDepuisKeycloak(sub(authentication));
         Locataire l = trouver(id);
         l.modifier(requete);
-        audit.enregistrer(authentication, bailleurId, "MODIFIER_LOCATAIRE", "locataire", id);
+        audit.enregistrer(authentication, bailleurId, "MODIFIER_LOCATAIRE", ENTITY_TYPE, id);
         return LocataireDto.from(l);
     }
 
@@ -89,7 +91,7 @@ public class LocataireService {
         UUID bailleurId = tenant.activerDepuisKeycloak(sub(authentication));
         Locataire l = trouver(id);
         l.archiver();
-        audit.enregistrer(authentication, bailleurId, "ARCHIVER_LOCATAIRE", "locataire", id);
+        audit.enregistrer(authentication, bailleurId, "ARCHIVER_LOCATAIRE", ENTITY_TYPE, id);
         return LocataireDto.from(l);
     }
 
@@ -98,7 +100,7 @@ public class LocataireService {
         UUID bailleurId = tenant.activerDepuisKeycloak(sub(authentication));
         Locataire l = trouver(id);
         l.restaurer();
-        audit.enregistrer(authentication, bailleurId, "RESTAURER_LOCATAIRE", "locataire", id);
+        audit.enregistrer(authentication, bailleurId, "RESTAURER_LOCATAIRE", ENTITY_TYPE, id);
         return LocataireDto.from(l);
     }
 
@@ -106,7 +108,7 @@ public class LocataireService {
     public LocataireHistoriqueDto historique(UUID id, Authentication authentication) {
         tenant.activerDepuisKeycloak(sub(authentication));
         Locataire l = trouver(id);
-        List<AuditDto> auditDto = auditLog.findByEntityTypeAndEntityIdOrderByHorodatageDesc("locataire", id)
+        List<AuditDto> auditDto = auditLog.findByEntityTypeAndEntityIdOrderByHorodatageDesc(ENTITY_TYPE, id)
                 .stream().map(AuditDto::from).toList();
         return new LocataireHistoriqueDto(LocataireDto.from(l), auditDto);
     }

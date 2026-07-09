@@ -26,6 +26,8 @@ import jakarta.persistence.EntityManager;
 @Service("authz")
 public class AuthorizationService {
 
+    private static final String ROLE_BAILLEUR = "ROLE_BAILLEUR";
+
     private final EntityManager em;
 
     public AuthorizationService(EntityManager em) {
@@ -39,7 +41,7 @@ public class AuthorizationService {
                 || !(authentication.getPrincipal() instanceof Jwt jwt)) {
             return false;
         }
-        if (aRole(authentication, "ROLE_BAILLEUR")) {
+        if (aRole(authentication, ROLE_BAILLEUR)) {
             UUID bailleurId = resoudreBailleur(jwt.getSubject());
             return bailleurId != null && estBailleurProprietaire(bienId, bailleurId);
         }
@@ -59,7 +61,7 @@ public class AuthorizationService {
     public boolean peutAccederGestionnaire(java.util.UUID gestionnaireId, Authentication authentication) {
         if (gestionnaireId == null || authentication == null
                 || !(authentication.getPrincipal() instanceof Jwt jwt)
-                || !aRole(authentication, "ROLE_BAILLEUR")) {
+                || !aRole(authentication, ROLE_BAILLEUR)) {
             return false;
         }
         UUID bailleurId = resoudreBailleur(jwt.getSubject());
@@ -80,7 +82,7 @@ public class AuthorizationService {
     public boolean peutAccederPatrimoine(UUID patrimoineId, Authentication authentication) {
         if (patrimoineId == null || authentication == null
                 || !(authentication.getPrincipal() instanceof Jwt jwt)
-                || !aRole(authentication, "ROLE_BAILLEUR")) {
+                || !aRole(authentication, ROLE_BAILLEUR)) {
             return false;
         }
         UUID bailleurId = resoudreBailleur(jwt.getSubject());
