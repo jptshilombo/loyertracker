@@ -6,6 +6,36 @@
 
 
 
+## 0K. Déploiement Production `1.10.0` — 2026-07-15
+
+> **`PRODUCTION_DEPLOYED` atteint le 2026-07-15 (~13:41 UTC).** Gate Production GO (PR #219),
+> Préflight PASS (PR #220), déploiement technique PASS (PR #221), validation finale (smoke
+> Production **62 PASS / 0 FAIL au premier passage**) toutes complétées dans la même session.
+> Hypercare (T0/T+12/T+24) et clôture de release restent des étapes distinctes, non encore
+> instruites.
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.10.0` — EP-15, Sprints A+B (Gestionnaire cycle de vie US-105→108, Locataire US-109→112) |
+| Tag / digests | `sha-c9200a51` ; API `sha256:37de87e86dfe99d0483ef6ac1934384e773f858822ab53bbe29432e7d6858db9` ; Web `sha256:7ade9816f3844f10d2e8a9f63491380546d6c68370011d38fc04368ee5e51052` |
+| Rollback | `sha-75646d8f` (`1.9.0`), V23/V24 additives, backup Préflight vérifié |
+| Déploiement | `api` + `nginx` recréés ciblés ; PostgreSQL, Keycloak et monitoring inchangés |
+| Flyway | V23+V24 appliquées, 24/24 ; table `locataire`, colonne `gestionnaire.statut`, 2 fonctions `SECURITY DEFINER` confirmées |
+| Smoke | **62 PASS / 0 FAIL au premier passage**, nettoyage transactionnel sans résidu |
+| Données | baseline identique au Préflight : 3 bailleurs, 2 patrimoines, 8 biens, 8 baux, 8 garanties, 1 gestionnaire, 6 quittances ; invariant ledger 8/8 |
+| Services | 8/8 actifs, 4/4 healthy, restart=0 |
+| Observabilité | Prometheus 5/5 ; Alertmanager 1 alerte `BackupHeartbeatMissing` (pattern récurrent post-redémarrage hôte, sans rapport avec ce déploiement) ; 0 ligne 5xx ; site public 200 |
+| État CGPA | **`PRODUCTION_DEPLOYED` — hypercare et clôture de release restants** |
+
+Rapports : `docs/cgpa/09-production/gate-production-v1.10.0-decision.md`,
+`docs/cgpa/09-production/preflight-backup-v1.10.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.10.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.10.0-report.md`.
+
+Réserves ouvertes après ce déploiement : **`RSV-STG-01`** (héritée, sans rapport avec `1.10.0`).
+Risques EP-15 (`RSV-EP15-01`→`04`) déjà tranchés par le PO ou hors périmètre — aucun n'est
+bloquant. `bailleur-test@test.local` redésactivé, `directAccessGrantsEnabled=false` confirmé.
+
 ## 0J. Déploiement Production `1.9.0` — 2026-07-06
 
 > **RELEASE `1.9.0` CLÔTURÉE — CDO GO (2026-07-08 ~14:36 UTC —
