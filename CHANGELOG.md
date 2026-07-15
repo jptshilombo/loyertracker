@@ -7,6 +7,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.10.0] — 2026-07-15
+
 ### Ajouts — Entité Locataire (Sprint B, EP-15, US-109→112)
 
 - **Locataire, entité de domaine persistante** (migration V24, additive) : table `locataire`
