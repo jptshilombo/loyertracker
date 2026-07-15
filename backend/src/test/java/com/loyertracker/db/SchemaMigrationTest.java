@@ -61,7 +61,9 @@ class SchemaMigrationTest {
         // + V20 (garantie_movement ledger + bail.depot_garantie supprimée — Sprint 9, US-94).
         // + V21 (paiement.garantie_movement_id — Sprint 10, US-95).
         // + V22 (quittances certifiées : quittance + numérotation + journal — Sprint 11, US-99).
-        assertThat(result.migrationsExecuted).isEqualTo(22);
+        // + V23 (cycle de vie Gestionnaire : statut global + fonctions cross-tenant — EP-15 Sprint A).
+        // + V24 (entité Locataire + bail.locataire_id préparatoire — EP-15 Sprint B).
+        assertThat(result.migrationsExecuted).isEqualTo(24);
         assertThat(result.success).isTrue();
     }
 
@@ -76,7 +78,7 @@ class SchemaMigrationTest {
             "bailleur", "gestionnaire", "invitation", "bien", "bail", "affectation",
             "paiement", "garantie", "honoraire", "alerte", "audit_log", "patrimoine", "type_bien",
             "quittance", "quittance_numerotation", "quittance_verification_log",
-            "flyway_schema_history"
+            "locataire", "flyway_schema_history"
         };
         try (Connection c = connect()) {
             for (String table : tables) {

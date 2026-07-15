@@ -22,6 +22,7 @@ import com.loyertracker.batch.GenerationEcheancesService;
 import com.loyertracker.baux.BailService;
 import com.loyertracker.biens.BienService;
 import com.loyertracker.comptes.AcceptationService;
+import com.loyertracker.comptes.GestionnaireService;
 import com.loyertracker.comptes.InvitationService;
 import com.loyertracker.documents.QuittanceService;
 import com.loyertracker.quittances.QuittanceCertifieeService;
@@ -62,6 +63,9 @@ class SecurityIntegrationTest {
     InvitationService invitationService;
     @MockitoBean
     AcceptationService acceptationService;
+    // Cycle de vie Gestionnaire (V23, EP-15) : dépend de repositories JPA, neutralisé comme les autres.
+    @MockitoBean
+    GestionnaireService gestionnaireService;
     @MockitoBean
     TenantContext tenantContext;
     @MockitoBean
@@ -97,6 +101,9 @@ class SecurityIntegrationTest {
     // RGPD (US-70) : dépend de repositories JPA, neutralisé pour ce test de contrat sans BDD.
     @MockitoBean
     com.loyertracker.rgpd.RgpdService rgpdService;
+    // Entité Locataire (V24, EP-15 Sprint B) : dépend de repositories JPA, neutralisée comme les autres.
+    @MockitoBean
+    com.loyertracker.locataires.LocataireService locataireService;
 
     @Test
     void health_estPublic() throws Exception {

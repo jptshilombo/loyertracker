@@ -68,6 +68,25 @@ public class KeycloakGestionnaireIdentityProvider implements GestionnaireIdentit
         }
     }
 
+    @Override
+    public void definirActivation(String keycloakId, boolean actif) {
+        try {
+            String token = jetonAdmin();
+            http.put()
+                    .uri("/admin/realms/{realm}/users/{id}", realm, keycloakId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("enabled", actif))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Le fournisseur d'identité est indisponible.", e);
+        }
+    }
+
     private String jetonAdmin() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "client_credentials");

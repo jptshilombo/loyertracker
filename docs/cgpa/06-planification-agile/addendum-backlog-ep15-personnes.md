@@ -80,17 +80,17 @@ probable **afin d'** éviter les fiches redondantes.
 | Risques | Fuite d'information sur les relations d'un Gestionnaire avec d'autres bailleurs — test de non-fuite dédié |
 | Source | Besoin PO ; EF-104 |
 
-### Sprint B — Locataire (nouvelle entité, V23 additive)
+### Sprint B — Locataire (nouvelle entité, V24 additive)
 
-### US-109 — Entité Locataire : création, modification (V23)
+### US-109 — Entité Locataire : création, modification (V24)
 
 **En tant que** bailleur, **je veux** créer et modifier des fiches Locataire indépendantes du
 bail **afin de** conserver leur identité au-delà d'un contrat unique.
 
 | Champ | Détail |
 |-------|--------|
-| Critères d'acceptation (GWT) | **G** un bailleur authentifié **W** il crée un Locataire (nom, prénom, téléphone, email, profession, date de naissance, type/numéro de pièce d'identité, photo optionnelle, contact d'urgence, observations) **T** l'entité est persistée avec `bailleur_id`, RLS `bailleur_isolation` (V23), statut `ACTIVE` par défaut, audit `CREER_LOCATAIRE`. **G** un Locataire de ce bailleur **W** modification **T** champs mis à jour, audit `MODIFIER_LOCATAIRE`. **G** un autre bailleur **W** tente de lire/modifier **T** RLS bloque (test cross-tenant). |
-| Dépendances | Migration V23 (ADR-16 D3) |
+| Critères d'acceptation (GWT) | **G** un bailleur authentifié **W** il crée un Locataire (nom, prénom, téléphone, email, profession, date de naissance, type/numéro de pièce d'identité, photo optionnelle, contact d'urgence, observations) **T** l'entité est persistée avec `bailleur_id`, RLS `bailleur_isolation` (V24), statut `ACTIVE` par défaut, audit `CREER_LOCATAIRE`. **G** un Locataire de ce bailleur **W** modification **T** champs mis à jour, audit `MODIFIER_LOCATAIRE`. **G** un autre bailleur **W** tente de lire/modifier **T** RLS bloque (test cross-tenant). |
+| Dépendances | Migration V24 (ADR-16 D3) |
 | Priorité | Must |
 | Points | 8 |
 | Risques | Aucune régression attendue (additif) ; volumétrie `photo` bytea à surveiller au préflight (précédent `quittance.pdf`) |
@@ -138,17 +138,17 @@ de** retrouver tous ses baux, paiements, garanties et quittances.
 | Risques | Aucun (lecture agrégée sur des données déjà RLS-scopées) |
 | Source | Besoin PO ; EF-105 |
 
-### Sprint C — Bascule Bail → Locataire (V24 non additive) & RGPD
+### Sprint C — Bascule Bail → Locataire (V25 non additive) & RGPD
 
-### US-113 — Bascule Bail → Locataire (migration V24)
+### US-113 — Bascule Bail → Locataire (migration V25)
 
 **En tant que** bailleur, **je veux** que chaque bail référence un Locataire structuré au lieu
 d'un champ texte libre **afin d'** avoir une donnée fiable et exploitable.
 
 | Champ | Détail |
 |-------|--------|
-| Critères d'acceptation (GWT) | **G** tous les baux existants **W** la migration V24 s'exécute **T** un `Locataire` est créé par bail historique (`nom` = valeur intégrale de `locataire_nom`, `prenom` vide — aucun découpage automatique, RSV-EP15-02), `bail.locataire_id` peuplé à 100 %, puis rendu `NOT NULL` et `locataire_nom`/`locataire_email` supprimés. **G** un nouveau bail **W** créé/modifié **T** exige un `locataireId` existant de ce bailleur, non archivé (404/403/409 selon le cas). **G** cette migration **W** exécutée en Production **T** un backup post-migration est vérifié disponible avant tout arrêt (RSV-EP15-03, rollback applicatif non viable pour cette étape). |
-| Dépendances | US-109 ; bake-in de V23 en Staging puis Production avant ce sprint |
+| Critères d'acceptation (GWT) | **G** tous les baux existants **W** la migration V25 s'exécute **T** un `Locataire` est créé par bail historique (`nom` = valeur intégrale de `locataire_nom`, `prenom` vide — aucun découpage automatique, RSV-EP15-02), `bail.locataire_id` peuplé à 100 %, puis rendu `NOT NULL` et `locataire_nom`/`locataire_email` supprimés. **G** un nouveau bail **W** créé/modifié **T** exige un `locataireId` existant de ce bailleur, non archivé (404/403/409 selon le cas). **G** cette migration **W** exécutée en Production **T** un backup post-migration est vérifié disponible avant tout arrêt (RSV-EP15-03, rollback applicatif non viable pour cette étape). |
+| Dépendances | US-109 ; bake-in de V24 en Staging puis Production avant ce sprint |
 | Priorité | Must |
 | Points | 8 |
 | Risques | RSV-EP15-02 (parsing nom/prénom imprécis, accepté) ; RSV-EP15-03 (migration non additive, rollback par backup uniquement) ; rupture du contrat HTTP existant de `Bail` à documenter/communiquer |
@@ -175,8 +175,8 @@ historique de baux **afin de** répondre correctement au droit à l'effacement.
 | Sprint | Stories | Points | Priorité dominante |
 |--------|---------|--------|---------------------|
 | A — Gestionnaire | US-105, US-106, US-107, US-108 | 19 | Must (105/106), Should (107/108) |
-| B — Locataire (V23 additive) | US-109, US-110, US-111, US-112 | 19 | Must (109/110), Should (111/112) |
-| C — Bascule (V24) & RGPD | US-113, US-114 | 13 | Must |
+| B — Locataire (V24 additive) | US-109, US-110, US-111, US-112 | 19 | Must (109/110), Should (111/112) |
+| C — Bascule (V25) & RGPD | US-113, US-114 | 13 | Must |
 | **Total EP-15** | 10 US | **51** | — |
 
 ## Dépendances & risques (synthèse)
@@ -188,9 +188,9 @@ historique de baux **afin de** répondre correctement au droit à l'effacement.
   le PO, mitigé par l'audit (US-105/106) et le scope restreint de l'historique (US-108).
 - **RSV-EP15-02** (parsing nom/prénom imprécis à la migration) : accepté, correction manuelle
   possible a posteriori, sans impact fonctionnel bloquant.
-- **RSV-EP15-03** (V24 non additive, rollback par backup uniquement) : Sprint C isolé
-  délibérément après bake-in de V23, Préflight renforcé exigé.
+- **RSV-EP15-03** (V25 non additive, rollback par backup uniquement) : Sprint C isolé
+  délibérément après bake-in de V24, Préflight renforcé exigé.
 - **RSV-EP15-04** (asymétrie `BienService.archiver()`) : hors périmètre EP-15, non traitée ici.
-- Sprint C ne peut démarrer qu'après confirmation que V23 (Sprint B) est stable en Production
+- Sprint C ne peut démarrer qu'après confirmation que V24 (Sprint B) est stable en Production
   depuis au moins un cycle de release complet (aucune anomalie remontée) — critère GO explicite
   au Plan d'Exécution.

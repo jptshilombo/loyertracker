@@ -26,7 +26,7 @@
 | ID | Exigence | Critère d'acceptation | Priorité | Source |
 |----|----------|------------------------|----------|--------|
 | EF-100 | Gestion du Locataire (CRUD + cycle de vie) | ED un bailleur authentifié · Q il crée/modifie/archive/restaure un Locataire · A l'entité est persistée, rattachée à son `bailleurId`, visible uniquement par lui (RLS, ADR-01) ; un Locataire `ARCHIVE` **ne peut plus être sélectionné** pour un nouveau bail mais reste consultable avec tout son historique (baux, paiements, garanties, quittances, audits). | Must | BF-98 |
-| EF-101 | Rattachement du Bail à un Locataire (remplace le texte libre) | ED un bailleur · Q il crée ou modifie un bail · A le bail référence un `locataireId` existant de ce bailleur (FK, remplace `locataire_nom`/`locataire_email` en texte libre — bascule V24) ; un `locataireId` d'un autre bailleur est rejeté (404/403), un Locataire `ARCHIVE` est rejeté (409). Un même Locataire peut avoir plusieurs baux successifs ; jamais plusieurs baux actifs simultanés sur le même bien (déjà garanti par `uq_bail_actif`, EF-12 — aucune action requise). | Must | BF-98 |
+| EF-101 | Rattachement du Bail à un Locataire (remplace le texte libre) | ED un bailleur · Q il crée ou modifie un bail · A le bail référence un `locataireId` existant de ce bailleur (FK, remplace `locataire_nom`/`locataire_email` en texte libre — bascule V25) ; un `locataireId` d'un autre bailleur est rejeté (404/403), un Locataire `ARCHIVE` est rejeté (409). Un même Locataire peut avoir plusieurs baux successifs ; jamais plusieurs baux actifs simultanés sur le même bien (déjà garanti par `uq_bail_actif`, EF-12 — aucune action requise). | Must | BF-98 |
 
 ### 1.3 Recherche & anti-doublons *(nouveau, transverse)*
 
@@ -102,7 +102,7 @@ Gestionnaire (global, hors RLS) ───< (N) Affectation >─── (N) Baille
 | `Locataire` *(nouvelle)* | Entité complète | `id` (UUID), `bailleurId` (UUID NOT NULL — RLS), `nom`, `prenom`, `telephone`, `email`, `profession`, `dateNaissance`, `typePieceIdentite`, `numeroPieceIdentite`, `photo` (bytea, nullable), `contactUrgence`, `observations`, `statut` (`ACTIVE`\|`ARCHIVE`), `dateCreation`, `dateArchivage` (nullable) |
 | `Gestionnaire` | `statut` *(nouveau)* | `ACTIVE`\|`SUSPENDU`\|`ARCHIVE`, `DEFAULT ACTIVE` — global, sans `bailleurId` (inchangé) |
 | `Gestionnaire` | `telephone`, `photo`, `observations`, `dateCreation`, `dateSuspension`, `dateArchivage` *(nouveaux)* | Profil enrichi, partagé entre bailleurs (cf. RSV-EP15-01) |
-| `Bail` | `locataireId` *(nouveau, FK)* | Remplace `locataireNom`/`locataireEmail` (texte libre) après bascule V24 |
+| `Bail` | `locataireId` *(nouveau, FK)* | Remplace `locataireNom`/`locataireEmail` (texte libre) après bascule V25 |
 
 ### 4.3 Cardinalités & contraintes d'intégrité (conceptuelles)
 
@@ -112,7 +112,7 @@ Gestionnaire (global, hors RLS) ───< (N) Affectation >─── (N) Baille
 | RM-104 (= EF-12 existant) | Inchangé : `CREATE UNIQUE INDEX uq_bail_actif ON bail (bien_id) WHERE statut = 'ACTIF';` — aucune contrainte supplémentaire requise, la FK `locataire_id` n'affecte pas cette cardinalité |
 | RM-101 | Vérifiée applicativement via la fonction `SECURITY DEFINER gestionnaire_a_affectation_active(gestionnaire_id)` (ADR-16 D4), pas par une contrainte SQL déclarative (la vérification traverse la RLS d'`affectation`, ce qu'une contrainte `CHECK`/FK ne peut pas faire) |
 | RM-105 | Application-level : le endpoint de création de bail rejette (409) un `locataireId` au statut `ARCHIVE` |
-| Bascule Bail | `bail.locataire_id` nullable en V23 (transition), `NOT NULL` en V24 après backfill à 100 % |
+| Bascule Bail | `bail.locataire_id` nullable en V24 (transition), `NOT NULL` en V25 après backfill à 100 % |
 
 ### 4.4 Index de performance (proposition)
 
@@ -122,15 +122,21 @@ jointure supplémentaire `bail → locataire`.
 
 ### 4.5 Impact migration base de données *(narratif — détail complet ADR-16 D3)*
 
-1. **V23 (additive)** : table `locataire` + RLS ; colonnes `gestionnaire.statut`/`telephone`/
-   `photo`/`date_creation`/`date_suspension`/`date_archivage`/`observations` ; `bail.locataire_id`
-   nullable. Rollback applicatif seul viable.
-2. **V24 (non additive, sprint séparé après bake-in de V23)** : backfill 1 `Locataire` par
-   `bail` historique (`nom = locataire_nom`, `prenom` vide — pas de découpage automatique fiable
-   depuis un champ unique historique) ; `bail.locataire_id NOT NULL` ; suppression de
-   `bail.locataire_nom`/`locataire_email`. **Rollback applicatif non viable** — restauration de
-   backup requise (RSV-EP15-03, même profil que V20/RSV-S9-03). Préflight de cette release à
-   renforcer en conséquence (backup post-migration vérifié disponible avant tout arrêt).
+> **Renumérotation actée au Sprint B (2026-07-08)** : V23 a été consommée par le seul
+> Gestionnaire (Sprint A, livrée) ; Locataire est donc porté par **V24**, et la bascule par
+> **V25**.
+
+1. **V23 (additive, Sprint A, livrée)** : colonnes `gestionnaire.statut`/`telephone`/`photo`/
+   `date_creation`/`date_suspension`/`date_archivage`/`observations`.
+2. **V24 (additive, Sprint B)** : table `locataire` + RLS ; `bail.locataire_id` nullable.
+   Rollback applicatif seul viable.
+3. **V25 (non additive, Sprint C, sprint séparé après bake-in de V24)** : backfill 1
+   `Locataire` par `bail` historique (`nom = locataire_nom`, `prenom` vide — pas de découpage
+   automatique fiable depuis un champ unique historique) ; `bail.locataire_id NOT NULL` ;
+   suppression de `bail.locataire_nom`/`locataire_email`. **Rollback applicatif non viable** —
+   restauration de backup requise (RSV-EP15-03, même profil que V20/RSV-S9-03). Préflight de
+   cette release à renforcer en conséquence (backup post-migration vérifié disponible avant
+   tout arrêt).
 
 ---
 
@@ -152,7 +158,7 @@ jointure supplémentaire `bail → locataire`.
 | `/api/locataires/{id}/restauration` | POST | Restaurer depuis `ARCHIVE` | BAILLEUR seul |
 | `/api/locataires/{id}/historique` | GET | Chronologie (baux, paiements, garanties, quittances) | BAILLEUR seul |
 | `/api/locataires/verification-doublon` | GET | Correspondances potentielles (email/téléphone/pièce d'identité) | BAILLEUR |
-| `/api/biens/{id}/baux` *(existant, étendu)* | POST/PUT | Création/modification d'un bail | Ajoute `locataireId` obligatoire (V24), remplace `locataireNom`/`locataireEmail` |
+| `/api/biens/{id}/baux` *(existant, étendu)* | POST/PUT | Création/modification d'un bail | Ajoute `locataireId` obligatoire (V25), remplace `locataireNom`/`locataireEmail` |
 | `/api/rgpd/locataires/{id}` *(existant, sémantique étendue)* | DELETE | Effacement RGPD — cible désormais l'entité `Locataire` (tous ses baux) au lieu d'un `Bail` unique | BAILLEUR seul |
 
 > Contrats détaillés (schémas req/resp) à figer en OpenAPI au début de l'implémentation, après
