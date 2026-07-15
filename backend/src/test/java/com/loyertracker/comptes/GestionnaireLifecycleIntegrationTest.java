@@ -133,6 +133,41 @@ class GestionnaireLifecycleIntegrationTest {
     }
 
     @Test
+    void photoConserveeLorsDUneModificationPartielleDuProfil() throws Exception {
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String patrimoine = creerPatrimoine(bailleur, "Patrimoine A");
+        String bien = creerBien(bailleur, patrimoine, "1 rue A");
+        UUID gestionnaire = insererGestionnaire("kc-g-" + UUID.randomUUID(), "photo@test.local");
+        creerAffectationBien(bailleur, bien, gestionnaire);
+
+        mockMvc.perform(put("/api/gestionnaires/{id}", gestionnaire)
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"telephone\":\"+243900000000\",\"photoBase64\":\"aGVsbG8=\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.photoPresente").value(true));
+
+        // Une modification qui ne renvoie pas photoBase64 ne doit pas effacer la photo existante
+        // (champ partagé entre bailleurs, ADR-16 D1).
+        mockMvc.perform(put("/api/gestionnaires/{id}", gestionnaire)
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"telephone\":\"+243900000001\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.telephone").value("+243900000001"))
+                .andExpect(jsonPath("$.photoPresente").value(true));
+
+        // photoBase64 explicitement vide efface la photo (distinct de l'absence du champ).
+        mockMvc.perform(put("/api/gestionnaires/{id}", gestionnaire)
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"telephone\":\"+243900000001\",\"photoBase64\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.photoPresente").value(false));
+    }
+
+    @Test
     void suspensionImmediateEtReactivation() throws Exception {
         String bailleur = "kc-" + UUID.randomUUID();
         inscrireBailleur(bailleur);

@@ -84,7 +84,9 @@ public class GestionnaireService {
     public GestionnaireDto modifierProfil(UUID id, GestionnaireProfilRequest requete, Authentication authentication) {
         UUID bailleurId = tenant.activerDepuisKeycloak(sub(authentication));
         Gestionnaire g = trouver(id);
-        byte[] photo = decoderPhoto(requete.photoBase64());
+        // photoBase64 absent (null) : on conserve la photo existante plutôt que de l'effacer
+        // (champ partagé entre bailleurs, ADR-16 D1 — cf. Locataire.modifier() pour le même garde-fou).
+        byte[] photo = requete.photoBase64() == null ? g.getPhoto() : decoderPhoto(requete.photoBase64());
         g.modifierProfil(requete.telephone(), photo, requete.observations());
         audit.enregistrer(authentication, bailleurId, "MODIFIER_GESTIONNAIRE", ENTITY_TYPE, id);
         return GestionnaireDto.from(g);

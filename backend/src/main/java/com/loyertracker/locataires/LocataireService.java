@@ -15,6 +15,8 @@ import com.loyertracker.audit.AuditLogRepository;
 import com.loyertracker.audit.AuditService;
 import com.loyertracker.securite.TenantContext;
 
+import jakarta.persistence.EntityManager;
+
 /**
  * CRUD et cycle de vie du Locataire (EP-15, ADR-16 D2). Entité RLS-scopée au bailleur courant —
  * contrairement au Gestionnaire, aucune garde cross-tenant n'est nécessaire pour l'archivage
@@ -29,13 +31,15 @@ public class LocataireService {
     private final AuditLogRepository auditLog;
     private final AuditService audit;
     private final TenantContext tenant;
+    private final EntityManager em;
 
     public LocataireService(LocataireRepository locataires, AuditLogRepository auditLog,
-            AuditService audit, TenantContext tenant) {
+            AuditService audit, TenantContext tenant, EntityManager em) {
         this.locataires = locataires;
         this.auditLog = auditLog;
         this.audit = audit;
         this.tenant = tenant;
+        this.em = em;
     }
 
     /** Recherche multicritère (EF-102) : nom/prénom/téléphone/email/numéro de pièce d'identité. */
@@ -72,7 +76,12 @@ public class LocataireService {
     public LocataireDto creer(LocataireRequest requete, Authentication authentication) {
         UUID bailleurId = tenant.activerDepuisKeycloak(sub(authentication));
         Locataire l = new Locataire(UUID.randomUUID(), bailleurId, requete);
-        locataires.saveAndFlush(l);
+        // saveAndFlush() fait un merge() (id assigné côté client, pas de @GeneratedValue) : la
+        // référence retournée est l'instance managée, distincte de `l` — c'est elle qu'il faut
+        // rafraîchir. dateCreation est insertable=false (valeur par défaut posée par la BDD,
+        // V24) : sans ce rafraîchissement, la réponse renverrait dateCreation=null.
+        l = locataires.saveAndFlush(l);
+        em.refresh(l);
         audit.enregistrer(authentication, bailleurId, "CREER_LOCATAIRE", ENTITY_TYPE, l.getId());
         return LocataireDto.from(l);
     }

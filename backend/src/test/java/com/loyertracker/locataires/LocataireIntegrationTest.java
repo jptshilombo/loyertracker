@@ -78,6 +78,7 @@ class LocataireIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nom").value("Kabongo"))
                 .andExpect(jsonPath("$.statut").value("ACTIVE"))
+                .andExpect(jsonPath("$.dateCreation").isNotEmpty())
                 .andReturn().getResponse().getContentAsString(), "$.id");
 
         mockMvc.perform(put("/api/locataires/{id}", id)
