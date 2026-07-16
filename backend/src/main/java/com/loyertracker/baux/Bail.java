@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,6 +50,9 @@ public class Bail {
     @Column(name = "date_fin")
     private LocalDate dateFin;
 
+    @Column(name = "date_cloture_effective")
+    private LocalDate dateClotureEffective;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutBail statut;
@@ -83,6 +89,26 @@ public class Bail {
         this.locataireEmail = null;
     }
 
+    /** Clôture manuelle (ACTIF -> CLOS, US-115, ADR-17 K1/K2). dateFin (contractuelle) inchangée. */
+    public void cloturer(LocalDate dateClotureEffective) {
+        if (this.statut == StatutBail.CLOS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce bail est déjà clos.");
+        }
+        this.statut = StatutBail.CLOS;
+        this.dateClotureEffective = dateClotureEffective;
+    }
+
+    /** Réouverture d'un bail clos par erreur (US-116, ADR-17 K5). Le contrôle uq_bail_actif est
+     *  fait par le service (BailService.rouvrir), pas ici — même séparation que BailService.creer. */
+    public void rouvrir() {
+        if (this.statut != StatutBail.CLOS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Seul un bail clos peut être rouvert.");
+        }
+        this.statut = StatutBail.ACTIF;
+        this.dateClotureEffective = null;
+    }
+
     public UUID getId() { return id; }
     public UUID getBailleurId() { return bailleurId; }
     public UUID getBienId() { return bienId; }
@@ -95,6 +121,7 @@ public class Bail {
     // `bail`, il est dérivé du ledger de garantie (voir BailDto.from(Bail, BigDecimal)).
     public LocalDate getDateDebut() { return dateDebut; }
     public LocalDate getDateFin() { return dateFin; }
+    public LocalDate getDateClotureEffective() { return dateClotureEffective; }
     public StatutBail getStatut() { return statut; }
     public Devise getDevise() { return devise; }
 }

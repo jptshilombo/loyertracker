@@ -7,6 +7,25 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Fin de bail (EP-13, US-115→118)
+
+- **Clôture manuelle d'un `Bail`** (`POST /api/biens/{bienId}/baux/{bailId}/cloture`, migration V25
+  additive) : `statut: ACTIF -> CLOS`, nouvelle colonne `bail.date_cloture_effective` (nullable,
+  distincte de `dateFin` contractuelle, jamais réécrite). Une garantie non intégralement
+  restituée et/ou des paiements `IMPAYE`/`EN_RETARD`/`PARTIEL` en cours ne bloquent jamais la
+  clôture (200) : signalés via un nouveau champ `avertissements` (`ClotureBailDto`) — aucun
+  couplage transactionnel nouveau entre `Bail`, `Garantie` et `Paiement` (ADR-17).
+- **Réouverture** (`POST /api/biens/{bienId}/baux/{bailId}/reouverture`) : `CLOS -> ACTIF`,
+  `dateClotureEffective` remise à `null` ; rejet 409 si un autre bail `ACTIF` existe déjà sur le
+  même bien (contrainte `uq_bail_actif`, EF-12, inchangée).
+- **Purge de l'échéancier futur à la clôture** : les paiements `A_VENIR` de période strictement
+  postérieure à `dateClotureEffective` sont supprimés dans la même transaction ; les paiements
+  `RECU`/`PARTIEL`/`EN_RETARD`/`IMPAYE` (faits historiques) ne sont jamais retouchés.
+- **Non-régression des alertes** : `generer_alertes()` (V25) restreint désormais `LOYER_EN_RETARD`
+  aux baux `ACTIF`, comme c'était déjà le cas pour `FIN_BAIL`/`PREAVIS`.
+- **Audit** : nouveaux points `CLOTURER_BAIL`/`ROUVRIR_BAIL`.
+- Décisions : `docs/cgpa/05-architecture-conception/adr/ADR-17-fin-de-bail.md` (K1→K6).
+
 ## [1.10.0] — 2026-07-15
 
 ### Ajouts — Entité Locataire (Sprint B, EP-15, US-109→112)

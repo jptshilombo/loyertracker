@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,5 +37,19 @@ public class BailController {
     @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
     public List<BailDto> historique(@PathVariable UUID bienId) {
         return bailService.historique(bienId);
+    }
+
+    @PostMapping("/{bailId}/cloture")
+    @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
+    public ClotureBailDto cloturer(@PathVariable UUID bienId, @PathVariable UUID bailId,
+            @RequestBody(required = false) ClotureRequest requete, Authentication authentication) {
+        return bailService.cloturer(bienId, bailId, requete, authentication);
+    }
+
+    @PostMapping("/{bailId}/reouverture")
+    @PreAuthorize("hasAnyRole('BAILLEUR', 'GESTIONNAIRE') and @authz.peutAccederBien(#bienId, authentication)")
+    public BailDto rouvrir(@PathVariable UUID bienId, @PathVariable UUID bailId,
+            Authentication authentication) {
+        return bailService.rouvrir(bienId, bailId, authentication);
     }
 }

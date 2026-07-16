@@ -63,7 +63,8 @@ class SchemaMigrationTest {
         // + V22 (quittances certifiées : quittance + numérotation + journal — Sprint 11, US-99).
         // + V23 (cycle de vie Gestionnaire : statut global + fonctions cross-tenant — EP-15 Sprint A).
         // + V24 (entité Locataire + bail.locataire_id préparatoire — EP-15 Sprint B).
-        assertThat(result.migrationsExecuted).isEqualTo(24);
+        // + V25 (clôture/réouverture de bail, purge échéancier, non-régression alertes — EP-13).
+        assertThat(result.migrationsExecuted).isEqualTo(25);
         assertThat(result.success).isTrue();
     }
 
