@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Date | 2026-07-16 |
-| Statut | **Proposé — non approuvé.** Kickoff K1→K6 (ADR-17) clos (PO, 2026-07-16) ; GO explicite du PO sur ce Plan d'Exécution requis avant tout codage |
+| Statut | **Approuvé — GO explicite du PO le 2026-07-16.** Kickoff K1→K6 (ADR-17) clos ; Sprint unique autorisé à démarrer |
 | Origine | Instruction PO du 2026-07-16 (« cadrer EP-13 fin de bail ») ; identifiant réservé depuis le cadrage EP-10→13 du 2026-07-01 |
 | Backlog couvert | EP-13 — US-115 → US-118 (`addendum-backlog-ep13-fin-de-bail.md`) |
 | ADR | **ADR-17** (Proposée — kickoff K1→K6 clos, 2026-07-16) |
@@ -67,16 +67,17 @@ Clôture (US-115) → Réouverture (US-116) → Purge échéancier (US-117) → 
 - [x] Numérotation vérifiée sans collision (EP-13, US-115→118, ADR-17, EF-108→112, RM-108→113, ENF-93)
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade)
 - [x] Kickoff K1→K6 tranché par le PO (2026-07-16)
-- [ ] Plan d'Exécution approuvé (GO explicite du PO)
+- [x] Plan d'Exécution approuvé (GO explicite du PO, 2026-07-16)
 - [ ] Sprint instruit avec son propre Gate Staging (dont `STG-ISOL-01`) et sa propre décision Gate Production
 
-## Ce que ce plan n'autorise pas
+## Ce que ce plan autorise désormais
 
-- Aucun codage avant approbation explicite de ce Plan d'Exécution par le PO (CLAUDE.md) — le
-  kickoff K1→K6 est désormais clos, mais ne vaut pas GO sur le Plan lui-même.
+- Le codage du Sprint unique (US-115→118), dans le périmètre exact défini ci-dessus.
 - Aucun développement de `ClotureBailService` orchestrant Garantie+Paiements+Bail en une seule
-  transaction — explicitement hors périmètre (ADR-17 §Alternatives écartées).
+  transaction — explicitement hors périmètre (ADR-17 §Alternatives écartées), GO ne couvre pas
+  cette extension.
 - Aucune modification du module Garantie ou Paiements eux-mêmes.
-- Aucune promotion Staging/Production sans son Gate (dont `STG-ISOL-01`).
+- Aucune promotion Staging/Production sans son Gate (dont `STG-ISOL-01`) — le GO sur le Plan
+  d'Exécution n'est pas un GO sur un déploiement.
 - Aucune modification des décisions historiques (ADR-01/EF-12 restent vrais pour la contrainte
   d'unicité `uq_bail_actif`, réutilisée telle quelle par la réouverture).

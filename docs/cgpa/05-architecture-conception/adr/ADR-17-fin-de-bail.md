@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **Proposée — kickoff K1→K6 clos** (2026-07-16, PO). GO explicite du PO sur le Plan d'Exécution requis avant tout codage |
+| Statut | **Acceptée — kickoff K1→K6 clos et GO explicite du PO sur `plan-execution-ep13-fin-de-bail.md`** (2026-07-16). Sprint unique autorisé à démarrer |
 | Date | 2026-07-16 |
 | Origine | Instruction PO du 2026-07-16 (« cadrer EP-13 fin de bail ») ; identifiant EP-13 réservé depuis le cadrage EP-10→13 du 2026-07-01 (`analyse-impact-evolutions-ep10-ep13.md` §4, Évolution 7) |
 | Principe | Additif — n'invalide, ne rejoue ni ne modifie aucun Gate, décision ou risque déjà statué |
@@ -49,8 +49,9 @@ ce cadrage, en couvrant :
 > **Le PO a tranché K1→K6 le 2026-07-16 : les six propositions par défaut sont toutes validées
 > sans modification**, y compris K3 et K6 qui appelaient une attention particulière (K3 :
 > obligation légale/financière envers le locataire sortant ; K6 : suppression de données). Les
-> six décisions ci-dessous sont donc désormais actées. Seul le **GO explicite du PO sur
-> `plan-execution-ep13-fin-de-bail.md`** reste requis avant tout codage.
+> six décisions ci-dessous sont donc désormais actées. **Le PO a également donné son GO explicite
+> sur `plan-execution-ep13-fin-de-bail.md` le 2026-07-16 : le Sprint unique est autorisé à
+> démarrer.**
 
 ### K1 — Déclenchement : manuel, jamais automatique — **Tranché (PO, 2026-07-16) : manuel**
 
@@ -129,8 +130,8 @@ confirmation (suppression de données) et **explicitement confirmé par le PO le
   migration additive uniquement, aucune suppression de colonne (contrairement à V25/Sprint C
   EP-15).
 - ✅ Six décisions kickoff (K1→K6) tranchées par le PO le 2026-07-16 (toutes conformes aux
-  propositions par défaut) — le GO explicite sur le Plan d'Exécution reste la seule étape
-  restante avant tout codage.
+  propositions par défaut) et GO explicite du PO reçu le même jour sur le Plan d'Exécution — le
+  Sprint unique est autorisé à démarrer.
 
 ## Impacts sécurité
 
@@ -172,9 +173,9 @@ existants.
 | K6 | Purge des échéances `A_VENIR` futures au-delà de la clôture ? | Oui | ✅ Tranché |
 
 Les six propositions par défaut ont été validées sans modification, y compris K3 et K6 qui
-appelaient une attention particulière. **Le kickoff K1→K6 est clos.** Seul le **GO explicite du
-PO sur `plan-execution-ep13-fin-de-bail.md`** reste requis avant tout codage, migration ou
-ouverture de Sprint.
+appelaient une attention particulière. **Le kickoff K1→K6 est clos et le PO a donné son GO
+explicite sur `plan-execution-ep13-fin-de-bail.md` le 2026-07-16 : le Sprint unique est
+autorisé à démarrer.**
 
 ## Compatibilité et migration
 
