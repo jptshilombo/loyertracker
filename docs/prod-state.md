@@ -11,8 +11,10 @@
 > **`PRODUCTION_DEPLOYED` atteint le 2026-07-15 (~13:41 UTC).** Gate Production GO (PR #219),
 > Préflight PASS (PR #220), déploiement technique PASS (PR #221), validation finale (smoke
 > Production **62 PASS / 0 FAIL au premier passage**) toutes complétées dans la même session.
-> Hypercare (T0/T+12/T+24) et clôture de release restent des étapes distinctes, non encore
-> instruites.
+> **Hypercare complète : T0 PASS (2026-07-15), T+12 PASS rattrapage (2026-07-16 ~10:57 UTC), T+24
+> PASS rattrapage (2026-07-16 ~16:02 UTC)** — hôte resté allumé en continu tout du long,
+> `restart=0` sur les huit conteneurs. Détail : `plan-etape-hypercare-v1.10.0.md`. La clôture de
+> release (décision CDO) reste une étape distincte, non encore instruite.
 
 | Contrôle | Résultat |
 |---|---|
@@ -25,7 +27,7 @@
 | Données | baseline identique au Préflight : 3 bailleurs, 2 patrimoines, 8 biens, 8 baux, 8 garanties, 1 gestionnaire, 6 quittances ; invariant ledger 8/8 |
 | Services | 8/8 actifs, 4/4 healthy, restart=0 |
 | Observabilité | Prometheus 5/5 ; Alertmanager 1 alerte `BackupHeartbeatMissing` (pattern récurrent post-redémarrage hôte, sans rapport avec ce déploiement) ; 0 ligne 5xx ; site public 200 |
-| État CGPA | **`PRODUCTION_DEPLOYED` — hypercare et clôture de release restants** |
+| État CGPA | **`PRODUCTION_DEPLOYED` — hypercare complète (T0/T+12/T+24 PASS), clôture de release restante** |
 
 Rapports : `docs/cgpa/09-production/gate-production-v1.10.0-decision.md`,
 `docs/cgpa/09-production/preflight-backup-v1.10.0-report.md`,

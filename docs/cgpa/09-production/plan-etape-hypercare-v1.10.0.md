@@ -5,7 +5,7 @@
 | `PRODUCTION_DEPLOYED` | 2026-07-15 ~12:39 UTC |
 | T0 | 2026-07-15 ~13:26 UTC — **PASS** |
 | T+12 | 2026-07-16 ~00:39 UTC ± 30 min — **PASS (rattrapage ~10:57 UTC)** |
-| T+24 | 2026-07-16 ~12:39 UTC ± 30 min — **restant à instruire** |
+| T+24 | 2026-07-16 ~12:39 UTC ± 30 min — **PASS (rattrapage ~16:02 UTC)** |
 | Tag surveillé | `sha-c9200a51` |
 | Rollback | `sha-75646d8f` via `.env.bak-pre-1.10.0` ; V23/V24 additives |
 
@@ -68,6 +68,31 @@ la période, y compris la fenêtre T+12 cible.
 rattrapage plutôt qu'à l'heure cible) qualifié sans impact — l'hôte étant resté actif en continu,
 `restart=0` démontre l'absence d'incident pendant la fenêtre cible elle-même.
 
-## Checkpoint T+24 — cible 2026-07-16 ~12:39 UTC
+## Checkpoint T+24 — rattrapage 2026-07-16 ~16:02 UTC (cible 2026-07-16 ~12:39 UTC)
 
-**Restant à instruire.**
+**Statut : PASS**
+
+Comme au T+12, contrôle exécuté en rattrapage (~3 h 20 après la fenêtre cible) plutôt qu'à
+l'heure exacte. L'hôte `loyertracker-prod-server` est resté **allumé en continu** depuis avant le
+déploiement (`uptime` : 1 j 5 h 19 min au moment du contrôle, soit un démarrage ~2026-07-15
+10:43 UTC) ; `restart=0` sur les huit conteneurs depuis le déploiement couvre rétroactivement
+toute la fenêtre T+24 cible, y compris l'intervalle sans contrôle live.
+
+| Contrôle | Résultat |
+|---|---|
+| Stack | 8/8 actifs, 4/4 healthy, restart=0 sur tous les conteneurs depuis le déploiement |
+| Tag / digests | `sha-c9200a51` inchangé ; API `sha256:37de87e8…`, Web `sha256:7ade9816…` — zéro dérive |
+| Flyway | 24/24, aucun échec |
+| Invariant ledger (garantie) | 8/8 PASS (`solde_actuel` aligné sur le dernier mouvement du ledger de chaque garantie, rôle bypass-RLS `loyertracker`) — première formule de contrôle testée (`montant - montant_retenu`) donnait un faux positif 1/8 sur une garantie ayant subi deux `RETENUE_LOYER` : comportement voulu (`Garantie.retenirSurLoyer` ne met à jour que `soldeActuel`, `montantRetenu` n'étant renseigné qu'à la restitution), pas une anomalie |
+| Keycloak | `bailleur-test@test.local` `enabled=false` ; `directAccessGrantsEnabled=false` sur les clients applicatifs (`loyertracker-spa`/`-admin`/`-api`) |
+| Santé | `/healthz` 200, site public 200 |
+| Prometheus | 5/5 cibles `up` |
+| Alertmanager | 0 alerte active (le `BackupHeartbeatMissing` du Préflight/T0 reste absent, comme au T+12) |
+| Pool Hikari | `hikaricp_connections_pending` = 0 |
+| Logs Nginx (depuis T+12, ~5 h) | 0 ligne 5xx |
+| Logs API (depuis T+12, ~5 h) | 0 entrée `ERROR` |
+| Capacité | disque 31 Gio libres (20 %) ; mémoire ~1,7 Gio disponible ; charge 0,00/0,03/0,00 |
+
+**Verdict T+24 : PASS.** Aucun critère de suspension atteint. **Hypercare `1.10.0` complète : T0,
+T+12 et T+24 tous PASS.** La clôture de release (décision CDO) reste une étape distincte, non
+encore instruite.
