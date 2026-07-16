@@ -7,6 +7,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+## [1.11.0] — 2026-07-16
+
 ### Ajouts — Fin de bail (EP-13, US-115→118)
 
 - **Clôture manuelle d'un `Bail`** (`POST /api/biens/{bienId}/baux/{bailId}/cloture`, migration V25
