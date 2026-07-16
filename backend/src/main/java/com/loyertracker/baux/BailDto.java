@@ -11,13 +11,15 @@ import java.util.UUID;
  */
 public record BailDto(UUID id, UUID bienId, String locataireNom, String locataireEmail,
         BigDecimal loyerHc, BigDecimal provisionCharges, BigDecimal loyerCc,
-        BigDecimal depotGarantie, LocalDate dateDebut, LocalDate dateFin, String statut, String devise) {
+        BigDecimal depotGarantie, LocalDate dateDebut, LocalDate dateFin,
+        LocalDate dateClotureEffective, String statut, String devise) {
 
     public static BailDto from(Bail bail, BigDecimal montantDepose) {
         return new BailDto(bail.getId(), bail.getBienId(), bail.getLocataireNom(),
                 bail.getLocataireEmail(), bail.getLoyerHc(), bail.getProvisionCharges(),
                 bail.getLoyerCc(), montantDepose,
-                bail.getDateDebut(), bail.getDateFin(), bail.getStatut().name(),
+                bail.getDateDebut(), bail.getDateFin(), bail.getDateClotureEffective(),
+                bail.getStatut().name(),
                 bail.getDevise() != null ? bail.getDevise().name() : Devise.EUR.name());
     }
 }

@@ -128,6 +128,28 @@ class S04AlertesAuditIntegrationTest {
     }
 
     @Test
+    void loyerEnRetardNonGenereApresClotureDuBail() throws Exception {
+        // US-118/ADR-17 : la CTE LOYER_EN_RETARD de generer_alertes() (V25) rejoint désormais
+        // `bail` et exige statut = 'ACTIF' — un bail CLOS ne doit plus jamais déclencher cette
+        // alerte, même si un paiement EN_RETARD subsiste (US-117 ne purge que les A_VENIR).
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "9 rue Cloture");
+        String bailId = creerBail(bailleur, bienId, "2026-01-01", "2026-03-31");
+        genererEcheances(bailleur); // 3 EN_RETARD + 1 FIN_BAIL potentiel, comme le test ci-dessus
+
+        jdbc.update("UPDATE bail SET statut = 'CLOS', date_cloture_effective = CURRENT_DATE WHERE id = ?",
+                UUID.fromString(bailId));
+
+        mockMvc.perform(post("/api/batch/alertes").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alertesCreees").value(0));
+        mockMvc.perform(get("/api/alertes").with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void preavisGenereDansLaBandeExclusifDeFinBailEtAntiDoublon() throws Exception {
         String bailleur = "kc-" + UUID.randomUUID();
         inscrireBailleur(bailleur);
