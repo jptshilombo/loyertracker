@@ -39,8 +39,9 @@ class BailClotureReouvertureTest {
     void cloturerUnBailDejaClosLeve409() {
         Bail b = bail();
         b.cloturer(LocalDate.of(2026, 6, 15));
+        LocalDate autreDate = LocalDate.of(2026, 7, 1);
 
-        assertThatThrownBy(() -> b.cloturer(LocalDate.of(2026, 7, 1)))
+        assertThatThrownBy(() -> b.cloturer(autreDate))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting("statusCode").isEqualTo(org.springframework.http.HttpStatus.CONFLICT);
     }
