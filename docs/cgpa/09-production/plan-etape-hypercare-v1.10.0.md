@@ -5,7 +5,7 @@
 | `PRODUCTION_DEPLOYED` | 2026-07-15 ~12:39 UTC |
 | T0 | 2026-07-15 ~13:26 UTC — **PASS** |
 | T+12 | 2026-07-16 ~00:39 UTC ± 30 min — **PASS (rattrapage ~10:57 UTC)** |
-| T+24 | 2026-07-16 ~12:39 UTC ± 30 min — **PASS (rattrapage ~16:02 UTC)** |
+| T+24 | 2026-07-16 ~12:39 UTC ± 30 min — **PASS (rattrapage ~15:01 UTC)** |
 | Tag surveillé | `sha-c9200a51` |
 | Rollback | `sha-75646d8f` via `.env.bak-pre-1.10.0` ; V23/V24 additives |
 
@@ -68,15 +68,22 @@ la période, y compris la fenêtre T+12 cible.
 rattrapage plutôt qu'à l'heure cible) qualifié sans impact — l'hôte étant resté actif en continu,
 `restart=0` démontre l'absence d'incident pendant la fenêtre cible elle-même.
 
-## Checkpoint T+24 — rattrapage 2026-07-16 ~16:02 UTC (cible 2026-07-16 ~12:39 UTC)
+## Checkpoint T+24 — rattrapage 2026-07-16 ~15:01 UTC (cible 2026-07-16 ~12:39 UTC)
 
 **Statut : PASS**
 
-Comme au T+12, contrôle exécuté en rattrapage (~3 h 20 après la fenêtre cible) plutôt qu'à
+Comme au T+12, contrôle exécuté en rattrapage (~2 h 22 après la fenêtre cible) plutôt qu'à
 l'heure exacte. L'hôte `loyertracker-prod-server` est resté **allumé en continu** depuis avant le
-déploiement (`uptime` : 1 j 5 h 19 min au moment du contrôle, soit un démarrage ~2026-07-15
-10:43 UTC) ; `restart=0` sur les huit conteneurs depuis le déploiement couvre rétroactivement
+déploiement (`uptime` : 1 j 5 h 17 min au moment du contrôle, soit un démarrage ~2026-07-15
+09:43 UTC) ; `restart=0` sur les huit conteneurs depuis le déploiement couvre rétroactivement
 toute la fenêtre T+24 cible, y compris l'intervalle sans contrôle live.
+
+> **Correction méthodologique** : le premier horodatage rédigé pour ce checkpoint (« ~16:02
+> UTC ») provenait de la sortie `uptime`, qui affiche l'heure **locale** de l'hôte
+> (`Africa/Kinshasa`, WAT = UTC+1), et non l'UTC malgré le nom de la commande de contrôle. Vérifié
+> via `timedatectl` : `date -u` donnait effectivement ~15:01 UTC au même instant. Aucun horodatage
+> UTC de ce document ne doit désormais être tiré de `uptime` seul — toujours confirmer avec
+> `date -u`.
 
 | Contrôle | Résultat |
 |---|---|

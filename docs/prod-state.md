@@ -12,7 +12,7 @@
 > Préflight PASS (PR #220), déploiement technique PASS (PR #221), validation finale (smoke
 > Production **62 PASS / 0 FAIL au premier passage**) toutes complétées dans la même session.
 > **Hypercare complète : T0 PASS (2026-07-15), T+12 PASS rattrapage (2026-07-16 ~10:57 UTC), T+24
-> PASS rattrapage (2026-07-16 ~16:02 UTC)** — hôte resté allumé en continu tout du long,
+> PASS rattrapage (2026-07-16 ~15:01 UTC)** — hôte resté allumé en continu tout du long,
 > `restart=0` sur les huit conteneurs. Détail : `plan-etape-hypercare-v1.10.0.md`. La clôture de
 > release (décision CDO) reste une étape distincte, non encore instruite.
 
