@@ -3,26 +3,27 @@
 | Champ | Valeur |
 |---|---|
 | Date | 2026-07-16 |
-| Statut | **Proposé — non approuvé.** Kickoff K1→K6 (ADR-17) entièrement ouvert ; aucun codage autorisé |
+| Statut | **Proposé — non approuvé.** Kickoff K1→K6 (ADR-17) clos (PO, 2026-07-16) ; GO explicite du PO sur ce Plan d'Exécution requis avant tout codage |
 | Origine | Instruction PO du 2026-07-16 (« cadrer EP-13 fin de bail ») ; identifiant réservé depuis le cadrage EP-10→13 du 2026-07-01 |
 | Backlog couvert | EP-13 — US-115 → US-118 (`addendum-backlog-ep13-fin-de-bail.md`) |
-| ADR | **ADR-17** (Proposée — kickoff K1→K6 non tranché) |
-| Release cible | À déterminer après kickoff — indépendant du Sprint C d'EP-15 (aucune dépendance technique directe, cf. RSV-EP13-04) ; coordination de séquencement Production à arbitrer si les deux lots sont conduits en parallèle |
-| Prérequis | Release `1.10.0` clôturée (CDO GO) — **non encore atteint à la date de ce document** (hypercare `1.10.0` en cours, T+24 restant, cf. `docs/project-state.md`) |
+| ADR | **ADR-17** (Proposée — kickoff K1→K6 clos, 2026-07-16) |
+| Release cible | À déterminer après GO — indépendant du Sprint C d'EP-15 (aucune dépendance technique directe, cf. RSV-EP13-04) ; coordination de séquencement Production à arbitrer si les deux lots sont conduits en parallèle |
+| Prérequis | Release `1.10.0` clôturée (CDO GO) — **atteint le 2026-07-16** (`docs/cgpa/09-production/cloture-release-v1.10.0.md`) |
 
-## Kickoff — ouvert (aucune décision rendue)
+## Kickoff — clos le 2026-07-16 (PO)
 
-| # | Question | Proposition par défaut | Statut |
+| # | Question | Décision | Statut |
 |---|---|---|---|
-| K1 | Déclenchement de la clôture : manuel uniquement, jamais de batch automatique sur `dateFin` dépassée ? | Oui | ⏳ Ouvert |
-| K2 | Ajouter `bail.date_cloture_effective`, distincte de `dateFin` (contractuelle) ? | Oui | ⏳ Ouvert |
-| K3 | Garantie non totalement restituée à la clôture : avertissement ou blocage (409) ? | Avertissement | ⏳ Ouvert — **attention particulière demandée** (obligation légale/financière envers le locataire sortant) |
-| K4 | Impayés/loyers en retard à la clôture : avertissement ou blocage (409) ? | Avertissement | ⏳ Ouvert |
-| K5 | Réouverture d'un bail clos par erreur autorisée (sous réserve `uq_bail_actif`) ? | Oui | ⏳ Ouvert |
-| K6 | Purge des échéances `A_VENIR` futures au-delà de la clôture ? | Oui | ⏳ Ouvert |
+| K1 | Déclenchement de la clôture : manuel uniquement, jamais de batch automatique sur `dateFin` dépassée ? | Oui | ✅ Tranché |
+| K2 | Ajouter `bail.date_cloture_effective`, distincte de `dateFin` (contractuelle) ? | Oui | ✅ Tranché |
+| K3 | Garantie non totalement restituée à la clôture : avertissement ou blocage (409) ? | Avertissement | ✅ Tranché — confirmé malgré l'attention particulière demandée (obligation légale/financière envers le locataire sortant) |
+| K4 | Impayés/loyers en retard à la clôture : avertissement ou blocage (409) ? | Avertissement | ✅ Tranché |
+| K5 | Réouverture d'un bail clos par erreur autorisée (sous réserve `uq_bail_actif`) ? | Oui | ✅ Tranché |
+| K6 | Purge des échéances `A_VENIR` futures au-delà de la clôture ? | Oui | ✅ Tranché |
 
-**Aucun démarrage de sprint n'est possible avant que le PO ait tranché K1→K6** — contrairement à
-EP-15 qui n'avait qu'un point ouvert (K1) au moment de son Plan d'Exécution.
+**Le kickoff K1→K6 est clos — les six propositions par défaut de l'ADR-17 ont été validées sans
+modification.** Seul un **GO explicite du PO sur ce Plan d'Exécution** reste requis avant tout
+démarrage de sprint.
 
 ## Vue d'ensemble
 
@@ -61,18 +62,18 @@ Clôture (US-115) → Réouverture (US-116) → Purge échéancier (US-117) → 
 
 ## Checklist de validation CGPA (avant tout codage)
 
-- [x] `docs/project-state.md` lu, phase courante identifiée (CGPA v5.4.1, hypercare `1.10.0` en cours)
+- [x] `docs/project-state.md` lu, phase courante identifiée (CGPA v5.4.1, release `1.10.0` clôturée le 2026-07-16 — CDO GO)
 - [x] Aucune décision, Gate ou risque historique supprimé ou réécrit
 - [x] Numérotation vérifiée sans collision (EP-13, US-115→118, ADR-17, EF-108→112, RM-108→113, ENF-93)
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade)
-- [ ] Kickoff K1→K6 tranché par le PO
+- [x] Kickoff K1→K6 tranché par le PO (2026-07-16)
 - [ ] Plan d'Exécution approuvé (GO explicite du PO)
 - [ ] Sprint instruit avec son propre Gate Staging (dont `STG-ISOL-01`) et sa propre décision Gate Production
 
 ## Ce que ce plan n'autorise pas
 
-- Aucun codage avant tranchage explicite de K1→K6 **et** approbation explicite de ce Plan
-  d'Exécution par le PO (CLAUDE.md).
+- Aucun codage avant approbation explicite de ce Plan d'Exécution par le PO (CLAUDE.md) — le
+  kickoff K1→K6 est désormais clos, mais ne vaut pas GO sur le Plan lui-même.
 - Aucun développement de `ClotureBailService` orchestrant Garantie+Paiements+Bail en une seule
   transaction — explicitement hors périmètre (ADR-17 §Alternatives écartées).
 - Aucune modification du module Garantie ou Paiements eux-mêmes.
