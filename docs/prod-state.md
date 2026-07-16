@@ -8,11 +8,16 @@
 
 ## 0K. Déploiement Production `1.10.0` — 2026-07-15
 
-> **`PRODUCTION_DEPLOYED` atteint le 2026-07-15 (~13:41 UTC).** Gate Production GO (PR #219),
-> Préflight PASS (PR #220), déploiement technique PASS (PR #221), validation finale (smoke
-> Production **62 PASS / 0 FAIL au premier passage**) toutes complétées dans la même session.
-> Hypercare (T0/T+12/T+24) et clôture de release restent des étapes distinctes, non encore
-> instruites.
+> **RELEASE `1.10.0` CLÔTURÉE — CDO GO (2026-07-16 ~15:20 UTC —
+> `cloture-release-v1.10.0.md`).** `PRODUCTION_DEPLOYED` atteint le 2026-07-15 (~13:41 UTC).
+> Gate Production GO (PR #219), Préflight PASS (PR #220), déploiement technique PASS (PR #221),
+> validation finale (smoke Production **62 PASS / 0 FAIL au premier passage**) toutes complétées
+> dans la même session. **Hypercare complète : T0 PASS (2026-07-15), T+12 PASS rattrapage
+> (2026-07-16 ~10:57 UTC), T+24 PASS rattrapage (2026-07-16 ~15:01 UTC)** — hôte resté allumé en
+> continu tout du long, `restart=0` sur les huit conteneurs, aucun critère de suspension atteint.
+> Réserves à la clôture : RSV-EP15-01→04 non bloquantes (tranchées au cadrage) ; `RSV-STG-01`
+> (héritée) maintenue, sans rapport avec `1.10.0`. Détail : `plan-etape-hypercare-v1.10.0.md`,
+> `cloture-release-v1.10.0.md`.
 
 | Contrôle | Résultat |
 |---|---|
@@ -23,14 +28,18 @@
 | Flyway | V23+V24 appliquées, 24/24 ; table `locataire`, colonne `gestionnaire.statut`, 2 fonctions `SECURITY DEFINER` confirmées |
 | Smoke | **62 PASS / 0 FAIL au premier passage**, nettoyage transactionnel sans résidu |
 | Données | baseline identique au Préflight : 3 bailleurs, 2 patrimoines, 8 biens, 8 baux, 8 garanties, 1 gestionnaire, 6 quittances ; invariant ledger 8/8 |
-| Services | 8/8 actifs, 4/4 healthy, restart=0 |
-| Observabilité | Prometheus 5/5 ; Alertmanager 1 alerte `BackupHeartbeatMissing` (pattern récurrent post-redémarrage hôte, sans rapport avec ce déploiement) ; 0 ligne 5xx ; site public 200 |
-| État CGPA | **`PRODUCTION_DEPLOYED` — hypercare et clôture de release restants** |
+| Services | 8/8 actifs, 4/4 healthy, restart=0 (~27 h sans incident au moment de la clôture) |
+| Observabilité | Prometheus 5/5 ; Alertmanager 0 alerte à la clôture (le `BackupHeartbeatMissing` du Préflight/T0 a disparu dès T+12) ; 0 ligne 5xx ; site public 200 |
+| État CGPA | **RELEASE CLÔTURÉE — CDO GO (2026-07-16)** |
 
 Rapports : `docs/cgpa/09-production/gate-production-v1.10.0-decision.md`,
 `docs/cgpa/09-production/preflight-backup-v1.10.0-report.md`,
 `docs/cgpa/09-production/deploiement-technique-v1.10.0-report.md`,
-`docs/cgpa/09-production/validation-finale-v1.10.0-report.md`.
+`docs/cgpa/09-production/validation-finale-v1.10.0-report.md`,
+`docs/cgpa/09-production/plan-etape-hypercare-v1.10.0.md`,
+`docs/cgpa/09-production/cloture-release-v1.10.0.md`.
+
+Réserves ouvertes après cette clôture : **`RSV-STG-01`** (héritée, sans rapport avec `1.10.0`).
 
 Réserves ouvertes après ce déploiement : **`RSV-STG-01`** (héritée, sans rapport avec `1.10.0`).
 Risques EP-15 (`RSV-EP15-01`→`04`) déjà tranchés par le PO ou hors périmètre — aucun n'est
