@@ -33,12 +33,14 @@ public class RgpdController {
         return rgpdService.exporter(authentication);
     }
 
-    /** Anonymisation des données personnelles du locataire sur un bail (droits RGPD — droit à l'effacement). */
-    @DeleteMapping("/biens/{bienId}/baux/{bailId}/locataire")
+    /**
+     * Anonymisation des données personnelles d'un locataire (droits RGPD — droit à l'effacement,
+     * US-114) : couvre en une seule opération tout son historique de baux rattaché (V26).
+     */
+    @DeleteMapping("/locataires/{locataireId}/effacement")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('BAILLEUR')")
-    public void anonymiserLocataire(@PathVariable UUID bienId, @PathVariable UUID bailId,
-            Authentication authentication) {
-        rgpdService.anonymiserLocataire(bienId, bailId, authentication);
+    public void anonymiserLocataire(@PathVariable UUID locataireId, Authentication authentication) {
+        rgpdService.anonymiserLocataire(locataireId, authentication);
     }
 }

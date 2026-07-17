@@ -13,6 +13,7 @@ import {
   Bien,
   BienPayload,
   Devise,
+  Locataire,
   Patrimoine,
   PatrimoinePayload,
   S02ApiService,
@@ -199,12 +200,33 @@ import { BailleurInscriptionService } from '../inscription/bailleur-inscription.
           <h2>Bail · {{ bien.adresse }}</h2>
           <label>
             Locataire
-            <input type="text" formControlName="locataireNom" />
+            <select formControlName="locataireId">
+              <option value="" disabled>Choisir un locataire</option>
+              @for (locataire of locataires(); track locataire.id) {
+                <option [value]="locataire.id">
+                  {{ locataire.nom }}{{ locataire.prenom ? ' ' + locataire.prenom : '' }}
+                </option>
+              }
+            </select>
           </label>
-          <label>
-            Email
-            <input type="email" formControlName="locataireEmail" />
-          </label>
+          <button type="button" (click)="locataireRapideOuvert.set(!locataireRapideOuvert())">
+            {{ locataireRapideOuvert() ? 'Annuler' : '+ Nouveau locataire' }}
+          </button>
+          @if (locataireRapideOuvert()) {
+            <div class="fields" [formGroup]="locataireRapideForm">
+              <label>
+                Nom
+                <input type="text" formControlName="nom" />
+              </label>
+              <label>
+                Email
+                <input type="email" formControlName="email" />
+              </label>
+              <button type="button" [disabled]="locataireRapideForm.invalid" (click)="creerLocataireRapide()">
+                Créer
+              </button>
+            </div>
+          }
           <div class="fields">
             <label>
               Loyer hors charges
@@ -628,6 +650,8 @@ export class BailleurDashboardComponent implements OnInit {
     return this.typesBiens().filter((t) => t.actif || t.code === selectionne);
   });
   readonly baux = signal<Bail[]>([]);
+  readonly locataires = signal<Locataire[]>([]);
+  readonly locataireRapideOuvert = signal(false);
   readonly affectations = signal<Affectation[]>([]);
   readonly bienSelectionne = signal<Bien | null>(null);
   readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
@@ -660,13 +684,17 @@ export class BailleurDashboardComponent implements OnInit {
   });
 
   readonly bailForm = new FormGroup({
-    locataireNom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    locataireEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
+    locataireId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     loyerHc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     provisionCharges: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dateFin: new FormControl('', { nonNullable: true }),
     devise: new FormControl<Devise>('EUR', { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  readonly locataireRapideForm = new FormGroup({
+    nom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    email: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
   });
 
   readonly affectationForm = new FormGroup({
@@ -743,6 +771,27 @@ export class BailleurDashboardComponent implements OnInit {
       },
     });
     this.api.listerTypesBiens().subscribe({ next: (typesBiens) => this.typesBiens.set(typesBiens) });
+    this.api.listerLocataires().subscribe({ next: (locataires) => this.locataires.set(locataires) });
+  }
+
+  creerLocataireRapide(): void {
+    if (this.locataireRapideForm.invalid) {
+      return;
+    }
+    const form = this.locataireRapideForm.getRawValue();
+    this.executer('Création du locataire', () =>
+      this.api.creerLocataire({ nom: form.nom, email: form.email || null }).subscribe({
+        next: (locataire) => {
+          this.locataires.set([...this.locataires(), locataire]);
+          this.bailForm.patchValue({ locataireId: locataire.id });
+          this.locataireRapideForm.reset({ nom: '', email: '' });
+          this.locataireRapideOuvert.set(false);
+          this.message.set('Locataire créé');
+        },
+        error: (err: unknown) => this.signalerErreur(err),
+        complete: () => this.chargement.set(false),
+      }),
+    );
   }
 
   private chargerAffectationsPatrimoine(patrimoines: Patrimoine[] = this.patrimoines()): void {
@@ -856,8 +905,7 @@ export class BailleurDashboardComponent implements OnInit {
         next: () => {
           this.message.set('Bail créé');
           this.bailForm.reset({
-            locataireNom: '',
-            locataireEmail: '',
+            locataireId: '',
             loyerHc: 0,
             provisionCharges: 0,
             dateDebut: '',
@@ -1097,7 +1145,6 @@ export class BailleurDashboardComponent implements OnInit {
     const form = this.bailForm.getRawValue();
     return {
       ...form,
-      locataireEmail: form.locataireEmail || null,
       dateFin: form.dateFin || null,
     };
   }

@@ -2,12 +2,10 @@ package com.loyertracker.baux;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 /**
  * Création d'un bail. Depuis V11, le loyer est ventilé : {@code loyerHc} (hors charges) et
@@ -18,10 +16,14 @@ import jakarta.validation.constraints.Size;
  * {@code Garantie} n'existe encore à cet instant, donc la valeur serait nécessairement incohérente
  * avec le ledger. Il se déclare via le flux « Ajouter garantie » existant
  * ({@code POST .../garanties}), après la création du bail.</p>
+ *
+ * <p>Depuis V26 (EP-15 Sprint C, US-113), le locataire n'est plus du texte libre :
+ * {@code locataireId} doit référencer un {@code Locataire} existant, appartenant au même
+ * bailleur et non archivé (404/409 sinon) — rupture de contrat HTTP intentionnelle, cf. ADR-16
+ * §Conséquences. La lecture (`BailDto`) reste, elle, inchangée.</p>
  */
 public record BailRequest(
-        @NotBlank @Size(max = 255) String locataireNom,
-        @Email @Size(max = 320) String locataireEmail,
+        @NotNull UUID locataireId,
         @NotNull @DecimalMin("0.00") BigDecimal loyerHc,
         @NotNull @DecimalMin("0.00") BigDecimal provisionCharges,
         @NotNull LocalDate dateDebut,

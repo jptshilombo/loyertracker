@@ -77,15 +77,33 @@ export interface Bail {
  * `Garantie` n'existe encore à cet instant. Le dépôt se déclare via le flux « Ajouter garantie »
  * existant, après la création du bail. `Bail.depotGarantie` (lecture) reste exposé par l'API,
  * désormais calculé côté backend.
+ *
+ * Depuis V26 (EP-15 Sprint C), le locataire n'est plus du texte libre : `locataireId` doit
+ * référencer un `Locataire` existant, non archivé. La lecture (`Bail.locataireNom/Email`) reste
+ * inchangée, dérivée du `Locataire` lié.
  */
 export interface BailPayload {
-  locataireNom: string;
-  locataireEmail: string | null;
+  locataireId: string;
   loyerHc: number;
   provisionCharges: number;
   dateDebut: string;
   dateFin: string | null;
   devise: Devise;
+}
+
+/** Vue minimale d'un Locataire pour le sélecteur de création de bail (EP-15 Sprint C). */
+export interface Locataire {
+  id: string;
+  nom: string;
+  prenom: string | null;
+  email: string | null;
+  statut: string;
+}
+
+export interface LocataireQuickAddPayload {
+  nom: string;
+  prenom?: string | null;
+  email?: string | null;
 }
 
 export interface Affectation {
@@ -147,6 +165,24 @@ export class S02ApiService {
 
   listerBaux(bienId: string): Observable<Bail[]> {
     return this.http.get<Bail[]>(`${API_BASE_URL}/biens/${bienId}/baux`);
+  }
+
+  /** Locataires du bailleur (BAILLEUR uniquement) — sélecteur de création de bail. */
+  listerLocataires(): Observable<Locataire[]> {
+    return this.http.get<Locataire[]>(`${API_BASE_URL}/locataires`);
+  }
+
+  /** Création rapide d'un Locataire (BAILLEUR uniquement) depuis le formulaire de bail. */
+  creerLocataire(payload: LocataireQuickAddPayload): Observable<Locataire> {
+    return this.http.post<Locataire>(`${API_BASE_URL}/locataires`, payload);
+  }
+
+  /**
+   * Locataires ACTIVE du bailleur propriétaire d'un bien — lecture seule, ouverte au
+   * GESTIONNAIRE affecté (contrairement à `listerLocataires`, réservé BAILLEUR).
+   */
+  listerLocatairesDuBien(bienId: string): Observable<Locataire[]> {
+    return this.http.get<Locataire[]>(`${API_BASE_URL}/biens/${bienId}/locataires`);
   }
 
   creerAffectation(payload: AffectationPayload): Observable<Affectation> {

@@ -27,6 +27,8 @@ import com.loyertracker.garanties.GarantieDto;
 import com.loyertracker.garanties.GarantieMovementDto;
 import com.loyertracker.garanties.GarantieMovementRepository;
 import com.loyertracker.garanties.GarantieRepository;
+import com.loyertracker.locataires.Locataire;
+import com.loyertracker.locataires.LocataireRepository;
 import com.loyertracker.paiements.PaiementDto;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.quittances.QuittanceExportDto;
@@ -47,12 +49,13 @@ public class RgpdService {
     private final GarantieMovementRepository mouvements;
     private final AffectationRepository affectations;
     private final QuittanceRepository quittances;
+    private final LocataireRepository locataires;
     private final AuditService audit;
 
     public RgpdService(TenantContext tenant, BienRepository biens, BailRepository baux,
             PaiementRepository paiements, GarantieRepository garanties,
             GarantieMovementRepository mouvements, AffectationRepository affectations,
-            QuittanceRepository quittances, AuditService audit) {
+            QuittanceRepository quittances, LocataireRepository locataires, AuditService audit) {
         this.tenant = tenant;
         this.biens = biens;
         this.baux = baux;
@@ -61,6 +64,7 @@ public class RgpdService {
         this.mouvements = mouvements;
         this.affectations = affectations;
         this.quittances = quittances;
+        this.locataires = locataires;
         this.audit = audit;
     }
 
@@ -74,6 +78,12 @@ public class RgpdService {
                     BienDto bienDto = BienDto.from(bien);
 
                     List<Bail> bauxDuBien = baux.findByBienIdOrderByDateDebutDesc(bien.getId());
+
+                    // Locataires liés (V26) chargés par lot (pas de N+1) : BailDto.from lit
+                    // désormais locataireNom/locataireEmail depuis Locataire, pas depuis Bail.
+                    Map<UUID, Locataire> locatairesParBail = locataires
+                            .findAllById(bauxDuBien.stream().map(Bail::getLocataireId).distinct().toList())
+                            .stream().collect(Collectors.toMap(Locataire::getId, l -> l));
 
                     // Garanties de chaque bail du bien, avec leur historique de mouvements
                     // (Sprint 10, US-97/RGPD) chargé par lot (pas de N+1 par garantie).
@@ -107,7 +117,9 @@ public class RgpdService {
                                                 || m.type().equals("COMPLEMENT"))
                                         .map(GarantieMovementDto::credit)
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                                return new BailExportDto(BailDto.from(bail, montantDepose),
+                                return new BailExportDto(
+                                        BailDto.from(bail, montantDepose,
+                                                locatairesParBail.get(bail.getLocataireId())),
                                         garantieExports);
                             }).toList();
 
@@ -137,21 +149,24 @@ public class RgpdService {
                 quittanceExports);
     }
 
+    /**
+     * Anonymise un {@code Locataire} (US-114, ADR-16 D6) : une seule opération couvre désormais
+     * tout son historique de baux rattaché, puisque {@code bail.locataire_id} est une FK réelle
+     * (V26) — chaque lecture via {@code BailDto} (historique, export) reflète immédiatement
+     * l'anonymisation. RLS positionnée depuis l'identité du caller (JWT) : un {@code locataireId}
+     * d'un autre bailleur est invisible -> 404 (cloisonnement cross-bailleur).
+     */
     @Transactional
-    public void anonymiserLocataire(UUID bienId, UUID bailId, Authentication authentication) {
-        // Active RLS depuis l'identité du caller (JWT), pas depuis le bien :
-        // garantit que le tenant est celui du bailleur appelant, et non celui du propriétaire
-        // du bien. Sous cette RLS, findByIdAndBienId retourne vide si le bien n'appartient pas
-        // à ce bailleur (cloisonnement cross-bailleur).
+    public void anonymiserLocataire(UUID locataireId, Authentication authentication) {
         String sub = ((Jwt) authentication.getPrincipal()).getSubject();
         UUID bailleurId = tenant.activerDepuisKeycloak(sub);
 
-        Bail bail = baux.findByIdAndBienId(bailId, bienId)
+        Locataire locataire = locataires.findById(locataireId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Bail introuvable sur ce bien."));
+                        "Locataire introuvable."));
 
-        bail.anonymiserLocataire();
+        locataire.anonymiser();
 
-        audit.enregistrer(authentication, bailleurId, "EFFACEMENT_LOCATAIRE", "bail", bailId);
+        audit.enregistrer(authentication, bailleurId, "EFFACEMENT_LOCATAIRE", "locataire", locataireId);
     }
 }

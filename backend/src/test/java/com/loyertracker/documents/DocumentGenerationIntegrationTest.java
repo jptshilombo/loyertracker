@@ -56,8 +56,8 @@ class DocumentGenerationIntegrationTest {
     @BeforeEach
     void nettoyerBase() {
         jdbc.execute("""
-                TRUNCATE audit_log, garantie, paiement, affectation, bail, bien, patrimoine,
-                         invitation, bailleur, gestionnaire
+                TRUNCATE audit_log, garantie, paiement, affectation, bail, locataire, bien,
+                         patrimoine, invitation, bailleur, gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -186,13 +186,22 @@ class DocumentGenerationIntegrationTest {
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }
 
+    private String creerLocataire(String keycloakId) throws Exception {
+        return JsonPath.read(mockMvc.perform(post("/api/locataires").with(bailleurJwt(keycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Locataire\",\"email\":\"loc@test.local\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
     private void creerBail(String keycloakId, String bienId, String debut, String fin)
             throws Exception {
+        String locataireId = creerLocataire(keycloakId);
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
-                                + "\"loyerHc\":800.00,\"provisionCharges\":50.00,"
+                        .content("{\"locataireId\":\"" + locataireId
+                                + "\",\"loyerHc\":800.00,\"provisionCharges\":50.00,"
                                 + "\"dateDebut\":\"" + debut + "\",\"dateFin\":\"" + fin + "\"}"))
                 .andExpect(status().isCreated());
     }

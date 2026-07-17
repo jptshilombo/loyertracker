@@ -75,16 +75,21 @@ déjà pratiquée sur ce projet.
 | Risques | Volumétrie `photo` (bytea) à surveiller au préflight (précédent `quittance.pdf`, sans incident connu) |
 | Critères GO (fin de sprint) | ✅ tests verts sans régression ✅ RLS cross-tenant prouvée (aucune fuite) ✅ V24 additive, rollback applicatif viable ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) → **Gate Production possible pour Sprints A+B combinés** (statuts Gestionnaire + entité Locataire, sans bascule `Bail` encore active) |
 
-## Sprint C — Bascule `Bail → Locataire` (V25 non additive) & adaptation RGPD
+## Sprint C — Bascule `Bail → Locataire` (V26 non additive) & adaptation RGPD
+
+> **Renumérotation actée au GO Sprint C (2026-07-17)** : cette bascule était désignée « V25 » au
+> moment de ce plan. V25 a entretemps été consommée par une migration EP-13 (« fin de bail »,
+> sans rapport, déjà en Production `1.11.0`). Elle porte donc désormais le numéro **V26** —
+> aucune décision de fond modifiée, cf. `cadrage-sprint-c-ep15.md` §6.
 
 | Champ | Valeur |
 |---|---|
 | Objectif | Chaque bail référence un `Locataire` structuré ; l'effacement RGPD cible la personne plutôt qu'un bail isolé |
-| Stories | **US-113** (migration V25 : backfill + `NOT NULL` + suppression `locataire_nom`/`locataire_email`), **US-114** (adaptation `RgpdService`/`Bail.anonymiserLocataire()` vers `Locataire`) |
-| Livrables | Migration **V25** (backfill 1 `Locataire` par bail historique sans déduplication, `bail.locataire_id NOT NULL`, `DROP COLUMN locataire_nom, locataire_email`) ; extension des endpoints existants de création/modification de bail (`locataireId` obligatoire, validations 404/403/409) ; réécriture ciblée de `RgpdService.anonymiserLocataire()` (cible `Locataire`) ; suite de tests RGPD existante rejouée sans régression ; documentation de la rupture de contrat HTTP de `Bail` (release notes) |
+| Stories | **US-113** (migration V26 : backfill + `NOT NULL` + suppression `locataire_nom`/`locataire_email`), **US-114** (adaptation `RgpdService`/`Bail.anonymiserLocataire()` vers `Locataire`) |
+| Livrables | Migration **V26** (backfill 1 `Locataire` par bail historique sans déduplication, `bail.locataire_id NOT NULL`, `DROP COLUMN locataire_nom, locataire_email`) ; extension des endpoints existants de création/modification de bail (`locataireId` obligatoire, validations 404/403/409) ; réécriture ciblée de `RgpdService.anonymiserLocataire()` (cible `Locataire`) ; suite de tests RGPD existante rejouée sans régression ; documentation de la rupture de contrat HTTP de `Bail` (release notes) |
 | Hors périmètre | Aucune nouvelle fonctionnalité Gestionnaire/Locataire — uniquement la bascule et l'adaptation RGPD |
 | Dépendances | **Sprint B stabilisé en Production depuis au moins un cycle de release complet, sans anomalie remontée** (condition de démarrage explicite, cf. séquencement) |
-| Risques | RSV-EP15-02 (parsing nom/prénom imprécis, accepté) ; **RSV-EP15-03 (rollback applicatif non viable, restauration de backup requise)** — Préflight de cette release doit vérifier un backup post-migration immédiatement disponible avant tout arrêt, conformément à la discipline déjà pratiquée pour V20 |
+| Risques | RSV-EP15-02 (parsing nom/prénom imprécis, accepté) ; **RSV-EP15-03 (rollback applicatif non viable, restauration de backup requise)** — Préflight de cette release doit vérifier un backup post-migration immédiatement disponible avant tout arrêt, conformément à la discipline déjà pratiquée pour V20 (même risque, migration désormais V26) |
 | Critères GO (fin de sprint) | ✅ backfill à 100 % (0 bail sans `locataire_id`) ✅ tests RGPD existants verts sans régression ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`, avec vérification explicite du backfill en conditions réelles) → **Gate Production distinct**, checklist habituelle renforcée (préflight backup **avant et après** migration, la restauration étant le seul chemin de rollback) |
 
 ## Gouvernance transverse
