@@ -62,6 +62,10 @@ public class Bail {
         // requis par JPA
     }
 
+    // S107 : entité de domaine, chaque champ constitutif du bail à la création — même pattern
+    // que Quittance (instantané immuable), aucun builder ou objet intermédiaire n'apporterait de
+    // garantie supplémentaire ici.
+    @SuppressWarnings("java:S107")
     public Bail(UUID id, UUID bailleurId, UUID bienId, UUID locataireId,
             BigDecimal loyerHc, BigDecimal provisionCharges,
             LocalDate dateDebut, LocalDate dateFin, Devise devise) {
