@@ -126,6 +126,21 @@ public class Locataire {
         this.dateArchivage = null;
     }
 
+    /** Pseudonymise les données personnelles (ADR-03, RGPD US-70/114). Couvre en un seul appel
+     *  tout l'historique de baux rattaché, puisque bail.locataire_id est une FK réelle (V26). */
+    public void anonymiser() {
+        this.nom = "[anonymisé]";
+        this.prenom = null;
+        this.telephone = null;
+        this.email = null;
+        this.typePieceIdentite = null;
+        this.numeroPieceIdentite = null;
+        this.photo = null;
+        this.contactUrgence = null;
+        this.dateNaissance = null;
+        this.observations = null;
+    }
+
     public UUID getId() {
         return id;
     }

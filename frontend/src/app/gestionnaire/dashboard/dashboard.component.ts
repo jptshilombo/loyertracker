@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { Bail, BailPayload, Bien, Devise, S02ApiService } from '../../core/s02/s02-api.service';
+import { Bail, BailPayload, Bien, Devise, Locataire, S02ApiService } from '../../core/s02/s02-api.service';
 import { AlertesListeComponent } from '../../alertes/alertes-liste.component';
 import { GarantiesBailComponent } from '../../garanties/garanties-bail.component';
 import { HonorairesBienComponent } from '../../honoraires/honoraires-bien.component';
@@ -61,11 +61,14 @@ import { MoneyFormatPipe } from '../../shared/money/money-format.pipe';
           <h2>Nouveau bail · {{ bien.adresse }}</h2>
           <label>
             Locataire
-            <input type="text" formControlName="locataireNom" />
-          </label>
-          <label>
-            Email
-            <input type="email" formControlName="locataireEmail" />
+            <select formControlName="locataireId">
+              <option value="" disabled>Choisir un locataire</option>
+              @for (locataire of locataires(); track locataire.id) {
+                <option [value]="locataire.id">
+                  {{ locataire.nom }}{{ locataire.prenom ? ' ' + locataire.prenom : '' }}
+                </option>
+              }
+            </select>
           </label>
           <div class="fields">
             <label>
@@ -228,6 +231,7 @@ export class GestionnaireDashboardComponent implements OnInit {
   readonly chargement = signal(false);
   readonly biens = signal<Bien[]>([]);
   readonly baux = signal<Bail[]>([]);
+  readonly locataires = signal<Locataire[]>([]);
   readonly bienSelectionne = signal<Bien | null>(null);
   readonly bienSelectionneId = computed(() => this.bienSelectionne()?.id ?? null);
   readonly bailSelectionne = signal<Bail | null>(null);
@@ -237,8 +241,7 @@ export class GestionnaireDashboardComponent implements OnInit {
   }
 
   readonly bailForm = new FormGroup({
-    locataireNom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    locataireEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
+    locataireId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     loyerHc: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     provisionCharges: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dateDebut: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -273,6 +276,10 @@ export class GestionnaireDashboardComponent implements OnInit {
     this.bienSelectionne.set(bien);
     this.bailSelectionne.set(null);
     this.chargerBaux(bien.id);
+    this.api.listerLocatairesDuBien(bien.id).subscribe({
+      next: (locataires) => this.locataires.set(locataires),
+      error: (err: unknown) => this.signalerErreur(err),
+    });
   }
 
   creerBail(): void {
@@ -286,8 +293,7 @@ export class GestionnaireDashboardComponent implements OnInit {
       next: () => {
         this.message.set('Bail créé');
         this.bailForm.reset({
-          locataireNom: '',
-          locataireEmail: '',
+          locataireId: '',
           loyerHc: 0,
           provisionCharges: 0,
           dateDebut: '',
@@ -313,7 +319,6 @@ export class GestionnaireDashboardComponent implements OnInit {
     const form = this.bailForm.getRawValue();
     return {
       ...form,
-      locataireEmail: form.locataireEmail || null,
       dateFin: form.dateFin || null,
     };
   }

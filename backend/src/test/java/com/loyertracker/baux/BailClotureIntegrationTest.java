@@ -54,8 +54,8 @@ class BailClotureIntegrationTest {
     @BeforeEach
     void nettoyerBase() {
         jdbc.execute("""
-                TRUNCATE audit_log, alerte, honoraire, garantie, paiement, affectation, bail, bien,
-                         patrimoine, invitation, bailleur, gestionnaire
+                TRUNCATE audit_log, alerte, honoraire, garantie, paiement, affectation, bail,
+                         locataire, bien, patrimoine, invitation, bailleur, gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -204,13 +204,22 @@ class BailClotureIntegrationTest {
                 .andReturn().getResponse().getContentAsString(), "$.id");
     }
 
+    private String creerLocataire(String keycloakId) throws Exception {
+        return JsonPath.read(mockMvc.perform(post("/api/locataires").with(bailleurJwt(keycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Locataire\",\"email\":\"loc@test.local\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
     private String creerBail(String keycloakId, String bienId, String debut, String fin)
             throws Exception {
+        String locataireId = creerLocataire(keycloakId);
         return JsonPath.read(mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(bailleurJwt(keycloakId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"locataireNom\":\"Locataire\",\"locataireEmail\":\"loc@test.local\","
-                                + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"dateDebut\":\""
+                        .content("{\"locataireId\":\"" + locataireId
+                                + "\",\"loyerHc\":850.00,\"provisionCharges\":0.00,\"dateDebut\":\""
                                 + debut + "\",\"dateFin\":\"" + fin + "\",\"devise\":\"EUR\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString(), "$.id");

@@ -65,8 +65,8 @@ class PublicQuittanceIntegrationTest {
     void nettoyerBase() {
         jdbc.execute("""
                 TRUNCATE quittance, quittance_numerotation, quittance_verification_log,
-                         audit_log, garantie, paiement, affectation, bail, bien, patrimoine,
-                         invitation, bailleur, gestionnaire
+                         audit_log, garantie, paiement, affectation, bail, locataire, bien,
+                         patrimoine, invitation, bailleur, gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -242,10 +242,11 @@ class PublicQuittanceIntegrationTest {
                         .content("{\"adresse\":\"10 rue du Bailleur, 75001 Paris\"}"))
                 .andExpect(status().isOk());
         String bienId = creerBien(bailleur, "5 avenue du Bien " + UUID.randomUUID());
+        String locataireId = creerLocataire(bailleur);
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienId).with(bailleurJwt(bailleur))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"locataireNom\":\"Bob Martin\",\"locataireEmail\":\"bob@test.local\","
-                                + "\"loyerHc\":800.00,\"provisionCharges\":50.00,"
+                        .content("{\"locataireId\":\"" + locataireId
+                                + "\",\"loyerHc\":800.00,\"provisionCharges\":50.00,"
                                 + "\"dateDebut\":\"2026-01-01\",\"dateFin\":\"2026-01-31\"}"))
                 .andExpect(status().isCreated());
         mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(bailleur)))
@@ -258,6 +259,14 @@ class PublicQuittanceIntegrationTest {
     private void inscrireBailleur(String keycloakId) throws Exception {
         mockMvc.perform(post("/api/bailleurs/inscription").with(bailleurJwt(keycloakId)))
                 .andExpect(status().isCreated());
+    }
+
+    private String creerLocataire(String keycloakId) throws Exception {
+        return JsonPath.read(mockMvc.perform(post("/api/locataires").with(bailleurJwt(keycloakId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Bob Martin\",\"email\":\"bob@test.local\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.id");
     }
 
     private String creerBien(String keycloakId, String adresse) throws Exception {

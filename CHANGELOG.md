@@ -7,6 +7,26 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Non publié]
 
+### Ajouts — Bascule Bail → Locataire & RGPD (Sprint C, EP-15, US-113/114)
+
+- **Bail référence désormais un `Locataire` structuré** (migration V26, non additive) : backfill
+  d'un `Locataire` par bail historique (`nom` = valeur intégrale de l'ancien `locataire_nom`,
+  `prenom` non renseigné — RSV-EP15-02), `bail.locataire_id` rendu `NOT NULL`, suppression de
+  `bail.locataire_nom`/`locataire_email`. **Rupture de contrat HTTP intentionnelle** :
+  `POST .../baux` exige désormais `locataireId` (UUID) au lieu de `locataireNom`/`locataireEmail`
+  en texte libre ; la lecture (`GET .../baux`, export RGPD) reste inchangée, dérivée du
+  `Locataire` lié.
+- **Nouveau `GET /api/biens/{bienId}/locataires`** (lecture seule, BAILLEUR et GESTIONNAIRE
+  affecté) : liste les locataires `ACTIVE` du bailleur propriétaire du bien, pour la sélection à
+  la création d'un bail sans ouvrir l'accès global à `/api/locataires` (réservé BAILLEUR).
+- **Effacement RGPD retargeté sur `Locataire`** (`DELETE /api/locataires/{locataireId}/effacement`,
+  remplace `DELETE /api/biens/{bienId}/baux/{bailId}/locataire`) : anonymise en une seule
+  opération tout l'historique de baux rattachés à ce locataire (US-114).
+- Frontend : les formulaires de création de bail (Bailleur et Gestionnaire) remplacent les champs
+  texte libre nom/email par un sélecteur de `Locataire` existant ; le tableau de bord Bailleur
+  ajoute une création rapide de locataire inline.
+- Décisions : `docs/cgpa/05-architecture-conception/adr/ADR-16-gestion-personnes.md` (D2/D3/D6).
+
 ## [1.11.0] — 2026-07-16
 
 ### Ajouts — Fin de bail (EP-13, US-115→118)

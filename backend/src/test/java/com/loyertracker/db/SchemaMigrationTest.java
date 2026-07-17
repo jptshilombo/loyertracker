@@ -64,7 +64,8 @@ class SchemaMigrationTest {
         // + V23 (cycle de vie Gestionnaire : statut global + fonctions cross-tenant — EP-15 Sprint A).
         // + V24 (entité Locataire + bail.locataire_id préparatoire — EP-15 Sprint B).
         // + V25 (clôture/réouverture de bail, purge échéancier, non-régression alertes — EP-13).
-        assertThat(result.migrationsExecuted).isEqualTo(25);
+        // + V26 (bascule Bail -> Locataire, non additive — EP-15 Sprint C).
+        assertThat(result.migrationsExecuted).isEqualTo(26);
         assertThat(result.success).isTrue();
     }
 

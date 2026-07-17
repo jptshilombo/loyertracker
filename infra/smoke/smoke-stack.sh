@@ -85,11 +85,11 @@ token() {
 }
 
 # =============================================================================
-note "0. Sanity : stack healthy, Flyway V1-V25, pool API sous loyertracker_api"
+note "0. Sanity : stack healthy, Flyway V1-V26, pool API sous loyertracker_api"
 docker compose ps --format '{{.Name}} {{.Health}}' | sed 's/^/  /'
 MIG=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
   "SELECT count(*) FROM flyway_schema_history WHERE success")
-[[ "$MIG" == "25" ]] && ok "Flyway : 25 migrations appliquées" || ko "Flyway : $MIG migrations (attendu 25)"
+[[ "$MIG" == "26" ]] && ok "Flyway : 26 migrations appliquées" || ko "Flyway : $MIG migrations (attendu 26)"
 ROLES=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
   "SELECT DISTINCT usename FROM pg_stat_activity WHERE datname='$POSTGRES_DB' AND application_name LIKE 'PostgreSQL JDBC%'")
 echo "$ROLES" | grep -q '^loyertracker_api$' && ok "Pool API connecté sous loyertracker_api" \
@@ -124,11 +124,16 @@ PATRIMOINE1=$(echo "$BODY" | jq -r .id)
 expect_status 201 "POST /api/biens" -X POST "${H_B1[@]}" -H 'Content-Type: application/json' \
   -d "{\"adresse\":\"1 rue du Smoke Test\",\"type\":\"APPARTEMENT\",\"statut\":\"LIBRE\",\"patrimoineId\":\"$PATRIMOINE1\"}" "$BASE/api/biens"
 BIEN1=$(echo "$BODY" | jq -r .id)
+expect_status 201 "POST /api/locataires (Locataire Smoke)" -X POST "${H_B1[@]}" \
+  -H 'Content-Type: application/json' \
+  -d "{\"nom\":\"Locataire Smoke\",\"email\":\"locataire-smoke-$RUN_ID@test.local\"}" \
+  "$BASE/api/locataires"
+LOC1=$(echo "$BODY" | jq -r .id)
 DEBUT=$(date -d "-6 months" +%Y-%m-01)
 FIN=$(date -d "+75 days" +%Y-%m-%d)   # bande PREAVIS ]J+60;J+90]
 expect_status 201 "POST /api/biens/{id}/baux (debut $DEBUT, fin $FIN)" -X POST "${H_B1[@]}" \
   -H 'Content-Type: application/json' \
-  -d "{\"locataireNom\":\"Locataire Smoke\",\"locataireEmail\":\"locataire-smoke@test.local\",\"loyerHc\":800.00,\"provisionCharges\":100.00,\"depotGarantie\":900.00,\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}" \
+  -d "{\"locataireId\":\"$LOC1\",\"loyerHc\":800.00,\"provisionCharges\":100.00,\"depotGarantie\":900.00,\"dateDebut\":\"$DEBUT\",\"dateFin\":\"$FIN\"}" \
   "$BASE/api/biens/$BIEN1/baux"
 
 note "3. Invitation -> acceptation (Admin API réelle) -> JWT gestionnaire"
@@ -228,10 +233,10 @@ expect_status 200 "GET /api/bailleurs/export (bailleur 2, scope isolé)" "${H_B2
 echo "$BODY" | jq -e --arg bid "$BIEN1" '[.biens[].bien.id] | index($bid) == null' >/dev/null \
   && ok "export bailleur 2 ne contient pas le bien tenant 1" || ko "fuite : export bailleur 2 contient le bien tenant 1"
 
-expect_status 403 "DELETE .../locataire par le GESTIONNAIRE -> 403" -X DELETE "${H_G[@]}" \
-  "$BASE/api/biens/$BIEN1/baux/$BAIL1/locataire"
-expect_status 204 "DELETE /api/biens/{bienId}/baux/{bailId}/locataire (effacement, bailleur)" \
-  -X DELETE "${H_B1[@]}" "$BASE/api/biens/$BIEN1/baux/$BAIL1/locataire"
+expect_status 403 "DELETE .../locataires/{id}/effacement par le GESTIONNAIRE -> 403" -X DELETE "${H_G[@]}" \
+  "$BASE/api/locataires/$LOC1/effacement"
+expect_status 204 "DELETE /api/locataires/{id}/effacement (effacement, bailleur)" \
+  -X DELETE "${H_B1[@]}" "$BASE/api/locataires/$LOC1/effacement"
 
 expect_status 200 "GET /api/bailleurs/export (vérification post-effacement)" "${H_B1[@]}" "$BASE/api/bailleurs/export"
 LOC_NOM=$(echo "$BODY" | jq -r --arg bid "$BIEN1" '.biens[] | select(.bien.id==$bid) | .baux[0].bail.locataireNom')

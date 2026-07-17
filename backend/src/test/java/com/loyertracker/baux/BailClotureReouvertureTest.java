@@ -18,7 +18,7 @@ class BailClotureReouvertureTest {
 
     private Bail bail() {
         return new Bail(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "Locataire Test", "loc@test.local", new BigDecimal("750.00"),
+                UUID.randomUUID(), new BigDecimal("750.00"),
                 new BigDecimal("100.00"), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31),
                 Devise.EUR);
     }

@@ -74,8 +74,7 @@ describe('S02ApiService', () => {
 
   it('cree et liste les baux', () => {
     const payload: BailPayload = {
-      locataireNom: 'Locataire',
-      locataireEmail: 'locataire@test.local',
+      locataireId: 'locataire-1',
       loyerHc: 850,
       provisionCharges: 0,
       dateDebut: '2026-06-01',
@@ -87,7 +86,19 @@ describe('S02ApiService', () => {
     let req = http.expectOne('/api/biens/bien-1/baux');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
-    req.flush({ id: 'bail-1', bienId: 'bien-1', ...payload, loyerCc: 850, statut: 'ACTIF' });
+    req.flush({
+      id: 'bail-1',
+      bienId: 'bien-1',
+      locataireNom: 'Locataire',
+      locataireEmail: 'locataire@test.local',
+      loyerHc: payload.loyerHc,
+      provisionCharges: payload.provisionCharges,
+      dateDebut: payload.dateDebut,
+      dateFin: payload.dateFin,
+      devise: payload.devise,
+      loyerCc: 850,
+      statut: 'ACTIF',
+    });
 
     service.listerBaux('bien-1').subscribe();
     req = http.expectOne('/api/biens/bien-1/baux');

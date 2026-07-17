@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +24,10 @@ import com.loyertracker.biens.StatutBien;
 import com.loyertracker.garanties.Garantie;
 import com.loyertracker.garanties.GarantieRepository;
 import com.loyertracker.garanties.StatutGarantie;
+import com.loyertracker.locataires.Locataire;
+import com.loyertracker.locataires.LocataireDto;
+import com.loyertracker.locataires.LocataireRepository;
+import com.loyertracker.locataires.StatutLocataire;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.paiements.StatutPaiement;
 import com.loyertracker.securite.TenantContext;
@@ -37,15 +43,18 @@ public class BailService {
     private final BienRepository biens;
     private final GarantieRepository garanties;
     private final PaiementRepository paiements;
+    private final LocataireRepository locataires;
     private final TenantContext tenant;
     private final AuditService audit;
 
     public BailService(BailRepository baux, BienRepository biens, GarantieRepository garanties,
-            PaiementRepository paiements, TenantContext tenant, AuditService audit) {
+            PaiementRepository paiements, LocataireRepository locataires, TenantContext tenant,
+            AuditService audit) {
         this.baux = baux;
         this.biens = biens;
         this.garanties = garanties;
         this.paiements = paiements;
+        this.locataires = locataires;
         this.tenant = tenant;
         this.audit = audit;
     }
@@ -64,15 +73,25 @@ public class BailService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Un bail actif existe déjà sur ce bien.");
         }
+        // RLS déjà positionnée par tenant.activerDepuisBien ci-dessus : un locataireId
+        // appartenant à un autre bailleur est invisible -> 404, même pattern que
+        // LocataireService.trouver().
+        Locataire locataire = locataires.findById(requete.locataireId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Locataire introuvable."));
+        if (locataire.getStatut() != StatutLocataire.ACTIVE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Impossible de créer un bail pour un locataire archivé.");
+        }
         Devise devise = requete.devise() != null ? requete.devise() : Devise.EUR;
-        Bail bail = new Bail(UUID.randomUUID(), bailleurId, bienId, requete.locataireNom(),
-                requete.locataireEmail(), requete.loyerHc(), requete.provisionCharges(),
+        Bail bail = new Bail(UUID.randomUUID(), bailleurId, bienId, locataire.getId(),
+                requete.loyerHc(), requete.provisionCharges(),
                 requete.dateDebut(), requete.dateFin(), devise);
         try {
             Bail enregistre = baux.saveAndFlush(bail);
             bien.louer();
             // Aucune garantie ne peut encore exister pour un bail qui vient d'être créé.
-            return BailDto.from(enregistre, BigDecimal.ZERO);
+            return BailDto.from(enregistre, BigDecimal.ZERO, locataire);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Un bail actif existe déjà sur ce bien.");
@@ -88,8 +107,27 @@ public class BailService {
     @Transactional(readOnly = true)
     public List<BailDto> historique(UUID bienId) {
         tenant.activerDepuisBien(bienId);
-        return baux.findByBienIdOrderByDateDebutDesc(bienId).stream()
-                .map(bail -> BailDto.from(bail, garanties.sommeMontantDeposeParBail(bail.getId())))
+        List<Bail> bauxDuBien = baux.findByBienIdOrderByDateDebutDesc(bienId);
+        Map<UUID, Locataire> locatairesParId = locataires
+                .findAllById(bauxDuBien.stream().map(Bail::getLocataireId).distinct().toList())
+                .stream().collect(Collectors.toMap(Locataire::getId, l -> l));
+        return bauxDuBien.stream()
+                .map(bail -> BailDto.from(bail, garanties.sommeMontantDeposeParBail(bail.getId()),
+                        locatairesParId.get(bail.getLocataireId())))
+                .toList();
+    }
+
+    /**
+     * Locataires ACTIVE du bailleur propriétaire d'un bien (EP-15 Sprint C) : lecture seule,
+     * scopée au bien, pour permettre au Gestionnaire de choisir un locataire à la création d'un
+     * bail sans lui ouvrir l'accès global à {@code /api/locataires} (réservé BAILLEUR).
+     */
+    @Transactional(readOnly = true)
+    public List<LocataireDto> locatairesDuBien(UUID bienId) {
+        UUID bailleurId = tenant.activerDepuisBien(bienId);
+        return locataires.findByBailleurIdOrderByNomAscPrenomAsc(bailleurId).stream()
+                .filter(l -> l.getStatut() == StatutLocataire.ACTIVE)
+                .map(LocataireDto::from)
                 .toList();
     }
 
@@ -127,7 +165,8 @@ public class BailService {
 
         audit.enregistrer(authentication, bailleurId, "CLOTURER_BAIL", ENTITY_TYPE, bailId);
         BigDecimal montantDepose = garanties.sommeMontantDeposeParBail(bailId);
-        return new ClotureBailDto(BailDto.from(enregistre, montantDepose), avertissements);
+        Locataire locataire = trouverLocataire(enregistre.getLocataireId());
+        return new ClotureBailDto(BailDto.from(enregistre, montantDepose, locataire), avertissements);
     }
 
     @Transactional
@@ -142,7 +181,8 @@ public class BailService {
         try {
             Bail enregistre = baux.saveAndFlush(bail);
             audit.enregistrer(authentication, bailleurId, "ROUVRIR_BAIL", ENTITY_TYPE, bailId);
-            return BailDto.from(enregistre, garanties.sommeMontantDeposeParBail(bailId));
+            Locataire locataire = trouverLocataire(enregistre.getLocataireId());
+            return BailDto.from(enregistre, garanties.sommeMontantDeposeParBail(bailId), locataire);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Un bail actif existe déjà sur ce bien.");
@@ -158,6 +198,12 @@ public class BailService {
     private Bail exigerBailDuBien(UUID bienId, UUID bailId) {
         return baux.findByIdAndBienId(bailId, bienId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bail introuvable."));
+    }
+
+    private Locataire trouverLocataire(UUID locataireId) {
+        return locataires.findById(locataireId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Locataire introuvable."));
     }
 
     private static boolean estViolationUnicite(Throwable t) {

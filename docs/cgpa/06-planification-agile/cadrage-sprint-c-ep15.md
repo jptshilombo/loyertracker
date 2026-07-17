@@ -64,3 +64,20 @@ développement Sprint C ne doit être ouvert avant que les deux jalons suivants 
 Dès ces deux jalons francs, un **GO explicite du PO** sur l'instruction du Sprint C (démarrage du
 codage US-113/US-114) reste requis avant tout travail de développement — ce cadrage ne constitue
 pas cette autorisation.
+
+## 6. GO explicite du PO — 2026-07-17
+
+Les deux jalons posés au §4 sont désormais francs : **Checkpoint T+24 de l'hypercare `1.10.0`
+PASS** (2026-07-16 ~15:01 UTC) et **décision CDO de clôture de la release `1.10.0` — GO**
+(2026-07-16 ~15:20 UTC, `docs/cgpa/09-production/cloture-release-v1.10.0.md`), confirmant un
+cycle de release complet sans anomalie sur V24. Le PO donne le **GO explicite** sur l'instruction
+du Sprint C (2026-07-17) : le codage des US-113/US-114 est autorisé à démarrer, conformément au
+périmètre inchangé rappelé au §2.
+
+**Renumérotation de la migration** : le Plan d'Exécution et ce cadrage désignaient la bascule
+« V25 ». Entretemps, V25 a été consommée par une migration EP-13 (« fin de bail », sans rapport,
+déjà en Production `1.11.0`, cf. `docs/cgpa/09-production/deploiement-technique-v1.11.0-report.md`).
+La bascule Sprint C porte donc désormais le numéro **V26** — aucune décision de fond modifiée,
+même renumérotation déjà pratiquée une fois entre le cadrage initial et le Sprint B (V23→V24/V25).
+
+**Verdict : GO.** Sprint C EP-15 (US-113/US-114) autorisé à démarrer.

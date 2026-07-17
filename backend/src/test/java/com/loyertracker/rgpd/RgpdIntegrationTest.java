@@ -55,7 +55,8 @@ class RgpdIntegrationTest {
     @BeforeEach
     void nettoyerBase() {
         jdbc.execute("""
-                TRUNCATE affectation, bail, bien, patrimoine, invitation, bailleur, gestionnaire
+                TRUNCATE affectation, bail, locataire, bien, patrimoine, invitation, bailleur,
+                         gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -91,7 +92,8 @@ class RgpdIntegrationTest {
         String kcId = "kc-" + UUID.randomUUID();
         inscrireBailleur(kcId);
         String bienId = creerBien(kcId, "12 rue de l'Export");
-        creerBail(kcId, bienId, "Jeanne Durand", "durand@test.local");
+        String locataireId = creerLocataire(kcId, "Jeanne Durand", "durand@test.local");
+        creerBail(kcId, bienId, locataireId);
 
         mockMvc.perform(get("/api/bailleurs/export").with(bailleurJwt(kcId)))
                 .andExpect(status().isOk())
@@ -107,7 +109,8 @@ class RgpdIntegrationTest {
         String kcId = "kc-" + UUID.randomUUID();
         inscrireBailleur(kcId);
         String bienId = creerBien(kcId, "42 rue Devise RGPD");
-        creerBail(kcId, bienId, "Nadia Kalonji", "kalonji@test.local", "USD");
+        String locataireId = creerLocataire(kcId, "Nadia Kalonji", "kalonji@test.local");
+        creerBail(kcId, bienId, locataireId, "USD");
         mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(kcId)))
                 .andExpect(status().isOk());
 
@@ -127,7 +130,8 @@ class RgpdIntegrationTest {
                         .content("{\"adresse\":\"10 rue du Bailleur, 75001 Paris\"}"))
                 .andExpect(status().isOk());
         String bienId = creerBien(kcId, "7 rue de la Quittance");
-        creerBail(kcId, bienId, "Paul Quittancé", "paul@test.local");
+        String locataireId = creerLocataire(kcId, "Paul Quittancé", "paul@test.local");
+        creerBail(kcId, bienId, locataireId);
         mockMvc.perform(post("/api/batch/echeances").with(bailleurJwt(kcId)))
                 .andExpect(status().isOk());
         mockMvc.perform(patch("/api/biens/{b}/paiements/{p}/pointage", bienId, "2026-01")
@@ -172,14 +176,15 @@ class RgpdIntegrationTest {
         String kcId = "kc-" + UUID.randomUUID();
         inscrireBailleur(kcId);
         String bienId = creerBien(kcId, "99 avenue RGPD");
-        String bailId = creerBail(kcId, bienId, "Marc Lefort", "lefort@test.local");
+        String locataireId = creerLocataire(kcId, "Marc Lefort", "lefort@test.local");
+        creerBail(kcId, bienId, locataireId);
 
         // Effacement RGPD
-        mockMvc.perform(delete("/api/biens/{bienId}/baux/{bailId}/locataire", bienId, bailId)
+        mockMvc.perform(delete("/api/locataires/{locataireId}/effacement", locataireId)
                         .with(bailleurJwt(kcId)))
                 .andExpect(status().isNoContent());
 
-        // Vérification via historique du bail
+        // Vérification via historique du bail (locataireNom/locataireEmail dérivés du Locataire lié)
         mockMvc.perform(get("/api/biens/{bienId}/baux", bienId).with(bailleurJwt(kcId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].locataireNom").value("[anonymisé]"))
@@ -193,9 +198,10 @@ class RgpdIntegrationTest {
         String kcId = "kc-" + UUID.randomUUID();
         inscrireBailleur(kcId);
         String bienId = creerBien(kcId, "1 place Anonyme");
-        String bailId = creerBail(kcId, bienId, "Sophie Martin", "martin@test.local");
+        String locataireId = creerLocataire(kcId, "Sophie Martin", "martin@test.local");
+        creerBail(kcId, bienId, locataireId);
 
-        mockMvc.perform(delete("/api/biens/{bienId}/baux/{bailId}/locataire", bienId, bailId)
+        mockMvc.perform(delete("/api/locataires/{locataireId}/effacement", locataireId)
                         .with(bailleurJwt(kcId)))
                 .andExpect(status().isNoContent());
 
@@ -212,26 +218,25 @@ class RgpdIntegrationTest {
         inscrireBailleur(kcA);
         inscrireBailleur(kcB);
         String bienId = creerBien(kcA, "5 rue Privée");
-        String bailId = creerBail(kcA, bienId, "Inconnu", "inconnu@test.local");
+        String locataireId = creerLocataire(kcA, "Inconnu", "inconnu@test.local");
+        creerBail(kcA, bienId, locataireId);
 
-        // bailleurB tente d'effacer le locataire d'un bail bailleurA → RLS masque → 404
-        mockMvc.perform(delete("/api/biens/{bienId}/baux/{bailId}/locataire", bienId, bailId)
+        // bailleurB tente d'effacer le locataire de bailleurA → RLS masque → 404
+        mockMvc.perform(delete("/api/locataires/{locataireId}/effacement", locataireId)
                         .with(bailleurJwt(kcB)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void effacement_gestionnaire_renvoie403() throws Exception {
-        mockMvc.perform(delete("/api/biens/{bienId}/baux/{bailId}/locataire",
-                        UUID.randomUUID(), UUID.randomUUID())
+        mockMvc.perform(delete("/api/locataires/{locataireId}/effacement", UUID.randomUUID())
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_GESTIONNAIRE"))))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void effacement_sansJwt_renvoie401() throws Exception {
-        mockMvc.perform(delete("/api/biens/{bienId}/baux/{bailId}/locataire",
-                        UUID.randomUUID(), UUID.randomUUID()))
+        mockMvc.perform(delete("/api/locataires/{locataireId}/effacement", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -261,19 +266,27 @@ class RgpdIntegrationTest {
                         .andReturn().getResponse().getContentAsString(), "$.id");
     }
 
-    private String creerBail(String keycloakId, String bienId, String locataireNom,
-            String locataireEmail) throws Exception {
-        return creerBail(keycloakId, bienId, locataireNom, locataireEmail, "EUR");
+    private String creerLocataire(String keycloakId, String nom, String email) throws Exception {
+        return JsonPath.read(
+                mockMvc.perform(post("/api/locataires").with(bailleurJwt(keycloakId))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"nom\":\"" + nom + "\",\"email\":\"" + email + "\"}"))
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString(), "$.id");
     }
 
-    private String creerBail(String keycloakId, String bienId, String locataireNom,
-            String locataireEmail, String devise) throws Exception {
+    private String creerBail(String keycloakId, String bienId, String locataireId)
+            throws Exception {
+        return creerBail(keycloakId, bienId, locataireId, "EUR");
+    }
+
+    private String creerBail(String keycloakId, String bienId, String locataireId, String devise)
+            throws Exception {
         return JsonPath.read(
                 mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                                 .with(bailleurJwt(keycloakId))
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"locataireNom\":\"" + locataireNom
-                                        + "\",\"locataireEmail\":\"" + locataireEmail
+                                .content("{\"locataireId\":\"" + locataireId
                                         + "\",\"loyerHc\":850.00,\"provisionCharges\":0.00,"
                                         + "\"dateDebut\":\"2026-01-01\","
                                         + "\"dateFin\":\"2026-12-31\",\"devise\":\"" + devise + "\"}"))

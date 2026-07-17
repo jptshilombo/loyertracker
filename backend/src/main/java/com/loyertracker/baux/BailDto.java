@@ -4,19 +4,25 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.loyertracker.locataires.Locataire;
+
 /**
  * {@code depotGarantie} est une valeur dérivée (ADR-14 §8, V20) : plus jamais stockée sur
  * {@code bail}, calculée par l'appelant (somme des garanties rattachées) et transmise à
- * {@link #from(Bail, BigDecimal)}.
+ * {@link #from(Bail, BigDecimal, Locataire)}.
+ *
+ * <p>{@code locataireNom}/{@code locataireEmail} sont dérivés du {@link Locataire} lié (V26,
+ * EP-15 Sprint C) : le contrat de lecture reste inchangé malgré la bascule de stockage (seule
+ * l'écriture, {@link BailRequest}, exige désormais un {@code locataireId}).</p>
  */
 public record BailDto(UUID id, UUID bienId, String locataireNom, String locataireEmail,
         BigDecimal loyerHc, BigDecimal provisionCharges, BigDecimal loyerCc,
         BigDecimal depotGarantie, LocalDate dateDebut, LocalDate dateFin,
         LocalDate dateClotureEffective, String statut, String devise) {
 
-    public static BailDto from(Bail bail, BigDecimal montantDepose) {
-        return new BailDto(bail.getId(), bail.getBienId(), bail.getLocataireNom(),
-                bail.getLocataireEmail(), bail.getLoyerHc(), bail.getProvisionCharges(),
+    public static BailDto from(Bail bail, BigDecimal montantDepose, Locataire locataire) {
+        return new BailDto(bail.getId(), bail.getBienId(), locataire.getNom(),
+                locataire.getEmail(), bail.getLoyerHc(), bail.getProvisionCharges(),
                 bail.getLoyerCc(), montantDepose,
                 bail.getDateDebut(), bail.getDateFin(), bail.getDateClotureEffective(),
                 bail.getStatut().name(),

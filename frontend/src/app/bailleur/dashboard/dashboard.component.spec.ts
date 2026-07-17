@@ -42,6 +42,8 @@ describe('BailleurDashboardComponent', () => {
     http
       .expectOne('/api/types-biens')
       .flush([{ code: 'APPARTEMENT', libelle: 'Appartement', actif: true }]);
+    // Locataires du bailleur chargés au même moment (EP-15 Sprint C, sélecteur de bail).
+    http.expectOne('/api/locataires').flush([]);
     // Affectations patrimoine chargées après listerPatrimoines (Sprint 4 E2).
     http.expectOne('/api/patrimoines/patrimoine-1/affectations').flush([]);
     // Composants enfants toujours rendus dans le tableau de bord (alertes, audit).
@@ -162,9 +164,10 @@ describe('BailleurDashboardComponent', () => {
       });
       req.flush({ id: 'patrimoine-1', nom: 'Patrimoine Sud', adresse: '12 rue des Lilas, Paris', statut: 'ACTIF' });
 
-      // chargerReferentielsBien recharge patrimoines + types-biens
+      // chargerReferentielsBien recharge patrimoines + types-biens + locataires
       http.expectOne('/api/patrimoines').flush([{ id: 'patrimoine-1', nom: 'Patrimoine Sud', adresse: '12 rue des Lilas, Paris', statut: 'ACTIF' }]);
       http.expectOne('/api/types-biens').flush([{ code: 'APPARTEMENT', libelle: 'Appartement', actif: true }]);
+      http.expectOne('/api/locataires').flush([]);
       http.expectOne('/api/patrimoines/patrimoine-1/affectations').flush([]);
     });
   });

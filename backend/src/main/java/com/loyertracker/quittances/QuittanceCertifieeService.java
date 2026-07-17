@@ -27,6 +27,8 @@ import com.loyertracker.documents.DocumentHtmlBuilder;
 import com.loyertracker.documents.PdfRenderer;
 import com.loyertracker.garanties.GarantieMovement;
 import com.loyertracker.garanties.GarantieMovementRepository;
+import com.loyertracker.locataires.Locataire;
+import com.loyertracker.locataires.LocataireRepository;
 import com.loyertracker.paiements.Paiement;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.paiements.StatutPaiement;
@@ -61,6 +63,7 @@ public class QuittanceCertifieeService {
     private final PatrimoineRepository patrimoines;
     private final GarantieMovementRepository mouvementsGarantie;
     private final QuittanceRepository quittances;
+    private final LocataireRepository locataires;
     private final TokenQuittanceService tokens;
     private final QrCodeQuittance qr;
     private final DocumentHtmlBuilder html;
@@ -74,7 +77,8 @@ public class QuittanceCertifieeService {
     public QuittanceCertifieeService(TenantContext tenant, PaiementRepository paiements,
             BailRepository baux, BienRepository biens, BailleurRepository bailleurs,
             PatrimoineRepository patrimoines, GarantieMovementRepository mouvementsGarantie,
-            QuittanceRepository quittances, TokenQuittanceService tokens, QrCodeQuittance qr,
+            QuittanceRepository quittances, LocataireRepository locataires,
+            TokenQuittanceService tokens, QrCodeQuittance qr,
             DocumentHtmlBuilder html, PdfRenderer pdf, ThemeQuittanceProvider themes,
             ScellementQuittance scellement, AuditService audit, EntityManager em,
             @Value("${quittances.url-base-verification:https://loyertracker.loyerpro.org}")
@@ -87,6 +91,7 @@ public class QuittanceCertifieeService {
         this.patrimoines = patrimoines;
         this.mouvementsGarantie = mouvementsGarantie;
         this.quittances = quittances;
+        this.locataires = locataires;
         this.tokens = tokens;
         this.qr = qr;
         this.html = html;
@@ -220,6 +225,9 @@ public class QuittanceCertifieeService {
         Patrimoine patrimoine = patrimoines.findById(bien.getPatrimoineId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Patrimoine introuvable."));
+        Locataire locataire = locataires.findById(bail.getLocataireId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Locataire introuvable."));
 
         if (bailleur.getAdresse() == null || bailleur.getAdresse().isBlank()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -243,7 +251,7 @@ public class QuittanceCertifieeService {
         DonneesQuittanceCertifiee sansIdentite = new DonneesQuittanceCertifiee(
                 "", 0,
                 (bailleur.getPrenom() + " " + bailleur.getNom()).trim(), bailleur.getAdresse(),
-                bail.getLocataireNom(), patrimoine.getNom(), bien.getAdresse(),
+                locataire.getNom(), patrimoine.getNom(), bien.getAdresse(),
                 periode, YearMonth.parse(periode).format(MOIS_ANNEE),
                 Money.of(bail.getLoyerHc(), devise), Money.of(bail.getProvisionCharges(), devise),
                 Money.of(bail.getLoyerCc(), devise), Money.of(paiement.getMontantRecu(), devise),

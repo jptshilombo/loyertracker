@@ -86,14 +86,19 @@ RBAC, aucune connexion, aucun JWT. Ceci **précise** la décision Gate-1 (`expre
 sujet de données passe d'un champ texte embarqué dans `Bail` à une entité de domaine durable,
 strictement dans le même périmètre RGPD.
 
-### D3 — Modèle de données (V23/V24 additives, V25 non additive)
+### D3 — Modèle de données (V23/V24 additives, V26 non additive)
 
 > **Renumérotation actée le 2026-07-08 (Sprint B)** : la conception initiale de cet ADR
 > prévoyait de regrouper Gestionnaire et Locataire sous un même « V23 ». Le Sprint A ayant
 > livré et déployé **V23 pour le seul Gestionnaire**, le principe Flyway (migrations
 > séquentielles immuables) impose de porter Locataire sur **V24**, et de décaler d'autant la
-> bascule non additive, désormais **V25**. Aucune décision de fond n'est modifiée (le contenu
-> ci-dessous est celui déjà décrit, seuls les numéros de version changent).
+> bascule non additive, désignée **V25** à ce stade. Aucune décision de fond n'est modifiée (le
+> contenu ci-dessous est celui déjà décrit, seuls les numéros de version changent).
+>
+> **Seconde renumérotation actée au GO Sprint C (2026-07-17)** : V25 a entretemps été consommée
+> par une migration EP-13 (« fin de bail », sans rapport avec ce lot, déjà en Production
+> `1.11.0`). La bascule `Bail → Locataire` porte donc désormais le numéro **V26** — de nouveau,
+> aucune décision de fond n'est modifiée, cf. `cadrage-sprint-c-ep15.md` §6.
 
 **V23 (additive, Sprint A, livrée)** — colonnes ajoutées à `gestionnaire` (jusqu'ici plate
 depuis la V1) : `statut` (`ACTIVE`|`SUSPENDU`|`ARCHIVE`, `DEFAULT 'ACTIVE'`), `telephone`,
@@ -111,9 +116,9 @@ pour les comptes existants), `date_suspension NULL`, `date_archivage NULL`, `obs
   (pattern V1/V12/V20/V22).
 - `bail.locataire_id UUID NULL REFERENCES locataire(id)` — nullable en V24 (transition, aucun
   usage applicatif dans ce sprint : `Bail` continue de porter `locataire_nom`/`locataire_email`
-  jusqu'à la bascule V25).
+  jusqu'à la bascule V26).
 
-**V25 (non additive — cutover, Sprint C)**, livrée après bake-in de V24 :
+**V26 (non additive — cutover, Sprint C)**, livrée après bake-in de V24 :
 - Backfill : pour chaque `bail` existant, création d'un `locataire` (`bailleur_id =
   bail.bailleur_id`, `nom = bail.locataire_nom`, `email = bail.locataire_email`) et mise à
   jour de `bail.locataire_id` — **1 Locataire par bail historique, aucune déduplication
@@ -127,9 +132,9 @@ pour les comptes existants), `date_suspension NULL`, `date_archivage NULL`, `obs
   (voir RSV-EP15-02).
 - `bail.locataire_id` passe `NOT NULL` puis **suppression de `bail.locataire_nom` et
   `bail.locataire_email`** (décision PO 2026-07-08). **Migration non additive** : un rollback
-  vers une version antérieure à V25 **n'est pas viable applicativement** une fois les colonnes
+  vers une version antérieure à V26 **n'est pas viable applicativement** une fois les colonnes
   supprimées — seule une restauration de backup le permet (même profil de risque que V20,
-  `RSV-S9-03`). Le Préflight de la release qui embarque V25 devra donc vérifier un backup
+  `RSV-S9-03`). Le Préflight de la release qui embarque V26 devra donc vérifier un backup
   post-migration immédiatement disponible, comme pour toute migration non additive du projet.
 
 ### D4 — Vérification cross-tenant « aucune affectation ACTIVE nulle part » (fonction `SECURITY DEFINER`)
@@ -195,9 +200,11 @@ existants (quittance/garantie/bail-RGPD/honoraire/paiement) : `CREER_GESTIONNAIR
 - `GestionnaireController` est un **nouveau** contrôleur (n'existe pas aujourd'hui) : profil,
   suspension, réactivation, archivage, restauration, historique, recherche, doublons.
 - `LocataireController` est également nouveau (entité inexistante à ce jour).
-- `Bail` change de contrat : `locataireNom`/`locataireEmail` (texte) disparaissent au profit de
-  `locataireId` (V25) — **rupture de contrat HTTP à gérer explicitement** dans la Sprint qui
-  porte V25 (versionnement ou communication du changement, à cadrer au Plan d'Exécution).
+- `Bail` change de contrat **en écriture uniquement** : `locataireNom`/`locataireEmail` (texte)
+  disparaissent de `BailRequest` au profit de `locataireId` (V26) — **rupture de contrat HTTP
+  intentionnelle et assumée à la création de bail**. En lecture, `BailDto` conserve
+  `locataireNom`/`locataireEmail` (dérivés du `Locataire` lié), aucune régression sur les
+  consommateurs existants (historique, export RGPD).
 - `RgpdService`/`Bail.anonymiserLocataire()` sont réécrits (D6) — non-régression à prouver sur
   les tests RGPD existants.
 - Le compte Keycloak du Gestionnaire peut désormais être désactivé par l'application
@@ -242,8 +249,8 @@ biens). Volumétrie `bytea` (photos) faible pour un usage PME, même profil que 
 | ID | Risque | Statut |
 |---|---|---|
 | RSV-EP15-01 | Portée globale du statut/profil Gestionnaire (D1) : un bailleur ayant une relation avec un Gestionnaire partagé peut le suspendre/archiver/modifier son profil, affectant tous les autres bailleurs qui l'emploient, sans préavis pour eux | **Accepté par le PO le 2026-07-08** — mitigation : traçabilité complète (D7), à préciser au Plan d'Exécution (visibilité pour les bailleurs tiers impactés) |
-| RSV-EP15-02 | Le backfill V25 ne peut pas séparer fiablement `nom`/`prenom` depuis l'unique champ historique `bail.locataire_nom` | **Accepté** — `nom` reçoit la valeur intégrale, `prenom` reste vide pour les enregistrements migrés ; correction manuelle possible sans impact fonctionnel |
-| RSV-EP15-03 | V25 (suppression de `bail.locataire_nom`/`locataire_email`) n'est **pas** un rollback applicatif viable — seule une restauration de backup permet un retour arrière | **Accepté** — même profil que `RSV-S9-03` (V20) ; Préflight de la release concernée doit vérifier un backup post-migration immédiatement disponible |
+| RSV-EP15-02 | Le backfill V26 ne peut pas séparer fiablement `nom`/`prenom` depuis l'unique champ historique `bail.locataire_nom` | **Accepté** — `nom` reçoit la valeur intégrale, `prenom` reste vide pour les enregistrements migrés ; correction manuelle possible sans impact fonctionnel |
+| RSV-EP15-03 | V26 (suppression de `bail.locataire_nom`/`locataire_email`) n'est **pas** un rollback applicatif viable — seule une restauration de backup permet un retour arrière | **Accepté** — même profil que `RSV-S9-03` (V20) ; Préflight de la release concernée doit vérifier un backup post-migration immédiatement disponible |
 | RSV-EP15-04 | `BienService.archiver()` ne vérifie aujourd'hui aucune affectation/bail actif avant archivage (asymétrie avec `PatrimoineService.archiver()`) — découverte pendant l'exploration de ce cadrage | **Hors périmètre EP-15** — consigné comme dette technique existante, à corriger dans un lot dédié si le PO le priorise, **non traité silencieusement ici** |
 
 ## Points tranchés au kickoff (PO, 2026-07-08) — aucune décision implicite
@@ -258,10 +265,12 @@ biens). Volumétrie `bytea` (photos) faible pour un usage PME, même profil que 
   applicatif seul viable.
 - **V24 additive** (Sprint B) : nouvelle table `locataire` + `bail.locataire_id` nullable —
   rollback applicatif seul viable (même profil que V21/V22/V23).
-- **V25 non additive** (Sprint C) : cutover + suppression de colonnes — rollback applicatif
+- **V26 non additive** (Sprint C) : cutover + suppression de colonnes — rollback applicatif
   **non viable**, restauration de backup requise (RSV-EP15-03, même profil que V20/RSV-S9-03).
   Livrée dans un sprint distinct après bake-in de V24 en Staging puis Production.
-- Aucun changement sur les modules Patrimoine/Bien/Affectation/Garantie/Paiement/Honoraires/
-  Alertes/Dashboard/Ledger/Money/Documents PDF/QR Code — non-régression à couvrir par la suite
-  de tests existante, aucun endpoint de ces modules n'est modifié par ce lot (seul `Bail`
-  perd `locataireNom`/`locataireEmail` en V25, remplacés par `locataireId`).
+- Modules Patrimoine/Bien/Affectation/Garantie/Paiement/Honoraires/Alertes/Dashboard/Ledger/
+  Money/Documents PDF/QR Code : aucun changement de contrat HTTP, mais les modules Documents
+  (`QuittanceService`) et Quittances certifiées (`QuittanceCertifieeService`) lisent désormais
+  `locataire.getNom()` (via `bail.getLocataireId()`) au lieu de `bail.getLocataireNom()` à
+  l'émission — non-régression à couvrir par la suite de tests existante ; seul `BailRequest`
+  (création de bail) perd `locataireNom`/`locataireEmail` en V26, remplacés par `locataireId`.

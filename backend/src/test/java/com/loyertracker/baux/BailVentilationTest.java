@@ -18,7 +18,7 @@ class BailVentilationTest {
 
     private Bail bail(BigDecimal loyerHc, BigDecimal provisionCharges) {
         return new Bail(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "Locataire Test", "loc@test.local", loyerHc, provisionCharges,
+                UUID.randomUUID(), loyerHc, provisionCharges,
                 LocalDate.of(2026, 1, 1), null, Devise.EUR);
     }
 

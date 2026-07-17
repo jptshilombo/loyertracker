@@ -51,7 +51,8 @@ class S02BiensBauxAffectationsIntegrationTest {
     @BeforeEach
     void nettoyerBase() {
         jdbc.execute("""
-                TRUNCATE affectation, bail, bien, patrimoine, invitation, bailleur, gestionnaire
+                TRUNCATE affectation, bail, locataire, bien, patrimoine, invitation, bailleur,
+                         gestionnaire
                 RESTART IDENTITY CASCADE
                 """);
     }
@@ -103,19 +104,60 @@ class S02BiensBauxAffectationsIntegrationTest {
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(bailleurJwt(bailleur))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bailJson("Locataire A")))
+                        .content(bailJson(bailleur)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statut").value("ACTIF"));
 
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(bailleurJwt(bailleur))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bailJson("Locataire B")))
+                        .content(bailJson(bailleur)))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(get("/api/biens/{bienId}/baux", bienId).with(bailleurJwt(bailleur)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void creationBailAvecLocataireIdInconnuRenvoie404() throws Exception {
+        // US-113/V26 : locataireId doit référencer un Locataire existant du bailleur courant.
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "21 rue Bail Inconnu");
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locataireId\":\"" + UUID.randomUUID()
+                                + "\",\"loyerHc\":850.00,\"provisionCharges\":0.00,"
+                                + "\"dateDebut\":\"2026-06-01\",\"dateFin\":\"2027-05-31\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void creationBailAvecLocataireArchiveRenvoie409() throws Exception {
+        // US-113/V26 : un locataire archivé ne peut plus être sélectionné pour un nouveau bail.
+        String bailleur = "kc-" + UUID.randomUUID();
+        inscrireBailleur(bailleur);
+        String bienId = creerBien(bailleur, "22 rue Bail Archive");
+        String locataireId = JsonPath.read(
+                mockMvc.perform(post("/api/locataires").with(bailleurJwt(bailleur))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"nom\":\"Locataire Archive\"}"))
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString(), "$.id");
+        mockMvc.perform(delete("/api/locataires/{id}", locataireId).with(bailleurJwt(bailleur)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("ARCHIVE"));
+
+        mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
+                        .with(bailleurJwt(bailleur))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"locataireId\":\"" + locataireId
+                                + "\",\"loyerHc\":850.00,\"provisionCharges\":0.00,"
+                                + "\"dateDebut\":\"2026-06-01\",\"dateFin\":\"2027-05-31\"}"))
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -147,7 +189,7 @@ class S02BiensBauxAffectationsIntegrationTest {
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienId)
                         .with(gestionnaireJwt(keycloakId(gestionnaire1)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bailJson("Locataire G")))
+                        .content(bailJson(bailleur)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/affectations/{id}/revocation", affectationId)
@@ -288,7 +330,7 @@ class S02BiensBauxAffectationsIntegrationTest {
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienA)
                         .with(gestionnaireJwt(keycloakId(gestionnaire)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bailJson("Locataire Patrimoine")))
+                        .content(bailJson(bailleur)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/affectations/{id}/revocation", affectationId)
@@ -303,7 +345,7 @@ class S02BiensBauxAffectationsIntegrationTest {
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienB)
                         .with(gestionnaireJwt(keycloakId(gestionnaire)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bailJson("Locataire Apres Revocation")))
+                        .content(bailJson(bailleur)))
                 .andExpect(status().isForbidden());
     }
 
@@ -385,7 +427,7 @@ class S02BiensBauxAffectationsIntegrationTest {
         mockMvc.perform(post("/api/biens/{bienId}/baux", bienExclu)
                         .with(gestionnaireJwt(keycloakId(gestionnaire)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bailJson("Locataire Exclu")))
+                        .content(bailJson(bailleur)))
                 .andExpect(status().isForbidden());
     }
 
@@ -468,8 +510,15 @@ class S02BiensBauxAffectationsIntegrationTest {
                 + "\",\"statut\":\"" + statut + "\",\"patrimoineId\":\"" + patrimoineId + "\"}";
     }
 
-    private static String bailJson(String locataire) {
-        return "{\"locataireNom\":\"" + locataire + "\",\"locataireEmail\":\"locataire@test.local\","
+    /** Crée un locataire (BAILLEUR) puis renvoie le JSON de création de bail correspondant. */
+    private String bailJson(String bailleurKeycloakId) throws Exception {
+        String locataireId = JsonPath.read(
+                mockMvc.perform(post("/api/locataires").with(bailleurJwt(bailleurKeycloakId))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"nom\":\"Locataire\",\"email\":\"locataire@test.local\"}"))
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString(), "$.id");
+        return "{\"locataireId\":\"" + locataireId + "\","
                 + "\"loyerHc\":850.00,\"provisionCharges\":0.00,\"dateDebut\":\"2026-06-01\",\"dateFin\":\"2027-05-31\"}";
     }
 

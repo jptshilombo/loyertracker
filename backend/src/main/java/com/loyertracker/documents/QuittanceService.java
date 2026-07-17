@@ -20,6 +20,8 @@ import com.loyertracker.baux.Devise;
 import com.loyertracker.baux.Money;
 import com.loyertracker.biens.Bien;
 import com.loyertracker.biens.BienRepository;
+import com.loyertracker.locataires.Locataire;
+import com.loyertracker.locataires.LocataireRepository;
 import com.loyertracker.paiements.Paiement;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.paiements.StatutPaiement;
@@ -46,17 +48,19 @@ public class QuittanceService {
     private final BailRepository baux;
     private final BienRepository biens;
     private final BailleurRepository bailleurs;
+    private final LocataireRepository locataires;
     private final DocumentHtmlBuilder html;
     private final PdfRenderer pdf;
 
     public QuittanceService(TenantContext tenant, PaiementRepository paiements, BailRepository baux,
-            BienRepository biens, BailleurRepository bailleurs, DocumentHtmlBuilder html,
-            PdfRenderer pdf) {
+            BienRepository biens, BailleurRepository bailleurs, LocataireRepository locataires,
+            DocumentHtmlBuilder html, PdfRenderer pdf) {
         this.tenant = tenant;
         this.paiements = paiements;
         this.baux = baux;
         this.biens = biens;
         this.bailleurs = bailleurs;
+        this.locataires = locataires;
         this.html = html;
         this.pdf = pdf;
     }
@@ -85,6 +89,8 @@ public class QuittanceService {
                 HttpStatus.NOT_FOUND, "Bien introuvable."));
         Bailleur bailleur = bailleurs.findById(bailleurId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bailleur introuvable."));
+        Locataire locataire = locataires.findById(bail.getLocataireId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Locataire introuvable."));
 
         if (bailleur.getAdresse() == null || bailleur.getAdresse().isBlank()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -97,7 +103,7 @@ public class QuittanceService {
 
         return new DonneesDocument(type,
                 (bailleur.getPrenom() + " " + bailleur.getNom()).trim(), bailleur.getAdresse(),
-                bail.getLocataireNom(), bien.getAdresse(), libellePeriode(periode),
+                locataire.getNom(), bien.getAdresse(), libellePeriode(periode),
                 Money.of(bail.getLoyerHc(), devise), Money.of(bail.getProvisionCharges(), devise),
                 Money.of(bail.getLoyerCc(), devise), Money.of(montant, devise),
                 LocalDate.now(), paiement.getDateExigibilite());
