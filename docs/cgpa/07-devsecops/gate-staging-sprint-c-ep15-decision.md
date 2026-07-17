@@ -81,6 +81,23 @@ S01→S04, isolation cross-tenant, garde-fous AuthN/ports, surface publique quit
 
 Échafaudage `directAccessGrants` révoqué automatiquement par le script (vérifié `false` après).
 
+## Vérification manuelle navigateur (PO, 2026-07-17)
+
+En complément du smoke automatisé, le PO a rejoué le parcours en navigateur réel contre
+`https://loyertracker.staging.loyerpro.org` (connexion Keycloak standard, `bailleur-test`
+activé en permanence sur Staging — contrairement à Production) :
+
+- **Scénario A (Bailleur)** : création d'un bien, création rapide d'un `Locataire` depuis le
+  formulaire de bail (« + Nouveau locataire »), sélection automatique dans le menu déroulant,
+  création du bail avec `locataireId`, nom du locataire correctement affiché dans l'historique.
+- **Scénario C (Gestionnaire)** : menu déroulant « Locataire » correctement peuplé (lecture
+  seule, scopé au bien via `GET /api/biens/{bienId}/locataires`) pour un Gestionnaire affecté.
+
+**Verdict PO : test concluant.** Complète la vérification automatisée (smoke 63/0 + backfill
+vérifié) par une confirmation humaine en conditions réelles sur l'environnement Staging cible,
+au-delà de la vérification navigateur déjà faite en local avant le Gate (cf. entrée
+`project-state.md` du même jour, « Sprint C EP-15 codé et vert »).
+
 ## Nettoyage transactionnel
 
 Scope : toutes les données accumulées sur `bailleur-test@test.local` (compte 100 % synthétique
