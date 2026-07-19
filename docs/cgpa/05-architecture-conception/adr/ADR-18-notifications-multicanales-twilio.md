@@ -2,7 +2,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Statut | **Proposée** — K1→K8 entièrement ouverts, aucune décision PO rendue. Cadrage documentaire uniquement |
+| Statut | **Acceptée — kickoff K1→K8 clos (2026-07-19) et GO explicite du PO sur `plan-execution-ep16-notifications.md` reçu (2026-07-19).** Sprint N (Fondation) autorisé à démarrer ; Sprints N+1/N+2 restent soumis chacun à un GO distinct |
 | Date | 2026-07-19 |
 | Origine | Instruction PO du 2026-07-19 (« formaliser EP-16 notifications multicanales Twilio ») |
 | Décision | **D-NOTIF-001** |
@@ -406,10 +406,11 @@ Aucun mécanisme équivalent n'existe aujourd'hui (§Constats, point 5) — c'es
 entièrement nouvelle. La présence d'un numéro de téléphone **n'est jamais** un consentement
 implicite. `NotificationPreference` distingue coordonnée téléphonique, canal préféré/secours,
 opt-in WhatsApp, opt-in SMS, désinscription, chacun daté (`consent_at`) et sourcé
-(`consent_source`). Qui enregistre le consentement, comment l'utilisateur le retire, l'impact du
-retrait sur les messages transactionnels, et la conservation de la preuve sont des arbitrages PO
-(K3, K7) — non tranchés par cet ADR. Impact à vérifier sur `Gestionnaire`, `Locataire` et
-éventuellement `Bailleur` (aucun n'a de champ téléphone systématiquement renseigné aujourd'hui).
+(`consent_source`). Mode de recueil et rétention tranchés par le PO le 2026-07-19 : formulaire
+natif LoyerTracker (K3, `consent_source = 'FORMULAIRE_LOYERTRACKER'`), rétention des métadonnées de
+livraison alignée sur l'audit métier existant (K7). Impact à vérifier sur `Gestionnaire`,
+`Locataire` et éventuellement `Bailleur` (aucun n'a de champ téléphone systématiquement renseigné
+aujourd'hui).
 
 ## Templates WhatsApp
 
@@ -486,13 +487,19 @@ notifications de l'ordre de quelques dizaines par jour au P0, très loin du seui
   explicitement hors périmètre (`observability-governance.md`).
 - ⚠️ Coût d'exploitation réel (Twilio facturé au message) — nécessite un plafond budgétaire
   opérationnel dès le premier envoi réel, pas seulement au P1.
+- ✅ Kickoff K1→K8 tranché par le PO le 2026-07-19 (quatre recommandations par défaut adoptées —
+  K1, K2, K5, K8 ; quatre décisions propres du PO en l'absence de recommandation — K3, K4, K6, K7)
+  et GO explicite du PO reçu le même jour sur `plan-execution-ep16-notifications.md` — le Sprint N
+  (Fondation) est autorisé à démarrer. Les Sprints N+1/N+2 restent soumis chacun à un GO distinct,
+  après clôture Gate Staging/Production du sprint précédent.
 
 ## Impacts sécurité
 
 RBAC/ReBAC inchangés pour les entités existantes. Nouvelle surface : lecture/écriture des
-préférences de notification (réservée au titulaire et, selon arbitrage K1/K6, au bailleur pour ses
-gestionnaires/locataires) ; nouvel endpoint callback public (whitelisté, vérifié par signature
-Twilio, jamais par JWT). Aucune nouvelle fonction `SECURITY DEFINER` cross-tenant n'est nécessaire
+préférences de notification (réservée au titulaire et, conformément à K1/K6 tranchés le
+2026-07-19, au bailleur pour l'ensemble de son périmètre et au gestionnaire pour les
+biens/baux qui lui sont affectés) ; nouvel endpoint callback public (whitelisté, vérifié par
+signature Twilio, jamais par JWT). Aucune nouvelle fonction `SECURITY DEFINER` cross-tenant n'est nécessaire
 pour les préférences elles-mêmes (RLS standard suffit) ; une fonction dédiée pourrait être
 nécessaire pour le traitement batch multi-bailleur de l'Outbox (à confirmer au Plan d'Exécution).
 
@@ -510,16 +517,86 @@ associés. Détail à trancher au Plan d'Exécution (K7 — rétention).
 | RSV-EP16-01 | Double alimentation de l'Outbox (voie batch et voie transactionnelle) mal isolée, produisant un doublon d'événement pour un même fait métier | Un seul type d'événement par voie, jamais les deux pour le même `event_type` — à vérifier explicitement au Plan d'Exécution et par test dédié | Ouvert — point de conception à verrouiller avant codage |
 | RSV-EP16-02 | Traitement concurrent de l'Outbox par plusieurs threads/instances produisant un double envoi | `FOR UPDATE SKIP LOCKED` + contrainte unique d'idempotence (§4) ; test de concurrence dédié requis | Ouvert — mitigation de conception, à prouver par test |
 | RSV-EP16-03 | Dérive budgétaire si le plafond mensuel n'est pas opérationnel dès le premier envoi réel | Aucune activation Production tant que plafond + compteurs + kill switch ne sont pas opérationnels (cf. §14 du prompt, recommandation reprise au Plan d'Exécution) | Accepté comme condition de Gate Production, non bloquant pour le cadrage |
-| RSV-EP16-04 | Consentement absent ou mal recueilli conduisant à un envoi non désiré (risque réglementaire WhatsApp Business/RGPD) | Aucune activation d'un canal externe sans `opt_in` explicite et daté ; aucun message hors template approuvé | Ouvert — arbitrage PO requis (K3) avant tout Sprint |
+| RSV-EP16-04 | Consentement absent ou mal recueilli conduisant à un envoi non désiré (risque réglementaire WhatsApp Business/RGPD) | Aucune activation d'un canal externe sans `opt_in` explicite et daté ; aucun message hors template approuvé | Accepté par le PO (2026-07-19) — K3 tranché (formulaire LoyerTracker), risque résiduel assumé, mitigation à implémenter au Sprint N+1 |
 | RSV-EP16-05 | Introduction d'un service externe critique non couvert par l'observabilité actuelle | Extension additive de `observability-governance.md` au Plan d'Exécution, avant toute activation Production | Ouvert — à traiter au Plan d'Exécution |
 | RSV-EP16-06 | `NotificationTemplate` référentiel global pourrait s'avérer insuffisant si un bailleur demande une personnalisation de texte | Aucune preuve actuelle de ce besoin (tout texte est aujourd'hui codé en dur, y compris pour les quittances) — accepté comme limitation du P0, réévaluable si demande PO explicite | Accepté (en surveillance) |
 
-## Points restant à trancher (K1→K8)
+## Décisions — kickoff clos le 2026-07-19 (PO)
 
-Voir le rapport final de mission pour la présentation complète avec recommandations (K1 —
-destinataires, K2 — canal principal, K3 — consentement, K4 — stratégie de numéro, K5 — fallback
-SMS, K6 — historique visible, K7 — rétention, K8 — release). Aucun de ces points n'est tranché par
-cet ADR — il documente l'architecture cible et les contraintes, pas les arbitrages produit.
+> **Le PO a tranché K1→K8 le 2026-07-19.** Quatre points disposaient d'une recommandation par
+> défaut dans `plan-execution-ep16-notifications.md` (K1, K2, K5, K8) — **toutes adoptées sans
+> modification**. Les quatre autres (K3, K4, K6, K7) n'avaient **aucune recommandation par
+> défaut** documentée (le Plan renvoyait explicitement à un arbitrage PO sans proposition) — le PO
+> a donné une décision propre pour chacun, reprise ci-dessous. **Aucun GO n'est donné sur le Plan
+> d'Exécution par ce tranchage** : il reste requis, distinctement, avant tout Sprint.
+
+### K1 — Destinataires par événement — **Tranché (PO, 2026-07-19) : recommandation adoptée**
+
+**Décision** : P0 = locataire pour quittance disponible/garantie débitée/loyer en retard ; bailleur
+et gestionnaire pour le suivi opérationnel, selon autorisations et préférences
+(`NotificationPreference`). Dimensionne le fan-out de `NotificationEvent` → `NotificationOutbox`.
+
+### K2 — Canal principal — **Tranché (PO, 2026-07-19) : recommandation adoptée**
+
+**Décision** : `IN_APP` obligatoire (déjà existant, jamais désactivable), `WHATSAPP` canal externe
+principal, `SMS` en secours uniquement (cf. K5).
+
+### K3 — Mode de recueil du consentement — **Tranché (PO, 2026-07-19) : formulaire LoyerTracker**
+
+**Décision** : le consentement (`whatsapp_opt_in`/`sms_opt_in`, `consent_at`, `consent_source =
+'FORMULAIRE_LOYERTRACKER'`) est recueilli via un formulaire natif dans l'application, opt-in
+explicite saisi par ou pour le destinataire — aucune présomption de consentement à partir de la
+seule présence d'un numéro de téléphone.
+
+**Alternatives écartées** : preuve externe saisie par le bailleur (pas de trace vérifiable côté
+LoyerTracker), invitation avec confirmation par lien (réservé pour une itération future si le
+formulaire s'avère insuffisant), OTP (jugé disproportionné pour le P0).
+
+### K4 — Stratégie de numéro Twilio — **Tranché (PO, 2026-07-19) : réutiliser un numéro existant**
+
+**Décision** : réutilisation d'un numéro déjà détenu, sous réserve d'éligibilité Twilio/WhatsApp
+Business au moment du provisionnement réel (Sprint N+1, hors périmètre de ce cadrage). Aucun
+numéro Twilio dédié à provisionner par défaut.
+
+### K5 — Fallback SMS — **Tranché (PO, 2026-07-19) : recommandation adoptée**
+
+**Décision** : pas de fallback SMS automatique au premier pilote — `fallback_channel` reste
+configurable dans le modèle de données mais non activé par défaut (`TWILIO_SMS_ENABLED=false`).
+
+### K6 — Historique visible — **Tranché (PO, 2026-07-19) : bailleur + gestionnaire sur son périmètre**
+
+**Décision** : le bailleur voit l'historique complet de son périmètre ; un gestionnaire ne voit que
+l'historique des notifications liées aux biens/baux qui lui sont affectés — cohérent avec le
+RBAC/RLS déjà en place pour les autres écrans Gestionnaire (aucun accès cross-gestionnaire).
+
+### K7 — Rétention des métadonnées de livraison — **Tranché (PO, 2026-07-19) : alignement sur l'audit métier**
+
+**Décision** : `NotificationDelivery` suit la même politique de rétention que `audit_log`, sans
+durée fixe distincte définie par cet arbitrage — confirme la recommandation partielle déjà écrite
+au Plan d'Exécution.
+
+### K8 — Stratégie de release — **Tranché (PO, 2026-07-19) : recommandation adoptée**
+
+**Décision** : déployer le socle désactivé (`NOTIFICATIONS_EXTERNAL_ENABLED=false` et dérivés),
+valider Staging à chaque Sprint, puis activer progressivement uniquement après validation complète
+du P0 (Sprint N+2 clos en GO).
+
+## Kickoff tranché par le PO le 2026-07-19
+
+| # | Question | Décision | Statut |
+|---|----------|----------|--------|
+| K1 | Destinataires par événement | Locataire (P0) ; bailleur/gestionnaire pour le suivi opérationnel | ✅ Tranché |
+| K2 | Canal principal | IN_APP obligatoire, WHATSAPP principal, SMS secours | ✅ Tranché |
+| K3 | Mode de recueil du consentement | Formulaire LoyerTracker | ✅ Tranché |
+| K4 | Stratégie de numéro | Réutiliser un numéro existant | ✅ Tranché |
+| K5 | Fallback SMS | Aucun fallback automatique au premier pilote | ✅ Tranché |
+| K6 | Historique visible | Bailleur (tout) + gestionnaire (son périmètre) | ✅ Tranché |
+| K7 | Rétention des métadonnées de livraison | Alignement sur l'audit métier existant | ✅ Tranché |
+| K8 | Stratégie de release | Socle désactivé → Staging → activation progressive post-P0 | ✅ Tranché |
+
+**Le kickoff K1→K8 est clos et le PO a donné son GO explicite sur
+`plan-execution-ep16-notifications.md` le 2026-07-19 : le Sprint N (Fondation) est autorisé à
+démarrer.** Les Sprints N+1/N+2 restent soumis chacun à un GO distinct.
 
 ## Compatibilité et migration
 
