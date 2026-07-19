@@ -180,24 +180,24 @@ n'est pas décidée par le PO, sprint par sprint.
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade)
 - [x] Kickoff K1→K8 tranché par le PO (2026-07-19)
 - [x] Plan d'Exécution approuvé (GO explicite du PO, 2026-07-19) — **Sprint N autorisé à démarrer**
-- [ ] Sprint N instruit avec son propre Gate Staging (dont `STG-ISOL-01`) et sa propre décision
-  Gate Production — Sprints N+1/N+2 idem, chacun distinctement
+- [x] Sprint N instruit avec son propre Gate Staging, dont `STG-ISOL-01` — GO,
+  `STAGING_DEPLOYED` sur `sha-e4744d92` le 2026-07-19
+- [ ] Gate Production du Sprint N restant à instruire ; Sprints N+1/N+2 soumis chacun à leur GO
+  explicite et à leurs Gates distincts
 
-## Ce que ce plan autorise et n'autorise **pas**, à ce stade (Sprint N)
+## État après le Gate Staging du Sprint N
 
-Le GO du 2026-07-19 autorise le **codage du Sprint N — Fondation** (US-119/120/121 : modèle de
-données, migration additive **V27**, Outbox transactionnelle, abstraction `NotificationProvider`
-+ `NoopNotificationProvider`/sandbox, feature flags à `false`, tests unitaires/intégration
-RLS/idempotence), strictement dans les bornes déjà fixées par ce Plan (§Sprint N — Fondation) et
-par ADR-18. Restent **exclus, y compris pendant le Sprint N** :
+Le Sprint N — Fondation (US-119/120/121) est codé, fusionné et `STAGING_DEPLOYED` sur
+`sha-e4744d92`. Le Gate Staging ne vaut ni Gate Production du Sprint N, ni GO de démarrage des
+Sprints N+1/N+2. Restent **exclus à ce stade** :
 
 - Toute dépendance Twilio ajoutée à `pom.xml`/`package.json` (réservé au Sprint N+1).
 - Toute création de compte, de credentials ou de template Twilio.
 - Tout envoi SMS ou WhatsApp réel, tout appel réseau Twilio réel.
 - Toute modification de Docker/infrastructure.
-- Tout déploiement, toute release, tout statut `STAGING_READY`/`STAGING_DEPLOYED`/
-  `PRODUCTION_READY`/`PRODUCTION_DEPLOYED` marqué par ce document — soumis au Gate Staging (dont
-  `STG-ISOL-01`) puis à une décision Gate Production distincte, propres au Sprint N.
+- Toute promotion ou activation Production ; `PRODUCTION_READY` et `PRODUCTION_DEPLOYED` restent
+  non atteints jusqu’à une décision Gate Production distincte. Les statuts Staging sont désormais
+  portés par `gate-staging-sprint-n-ep16-decision.md`.
 - Tout démarrage du Sprint N+1 ou N+2 sans un GO explicite du PO propre à chacun — ce GO ne couvre
   que le Sprint N (même principe que les Sprints A/B/C d'EP-15, chacun autorisé séparément).
 
