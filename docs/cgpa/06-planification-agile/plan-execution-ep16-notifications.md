@@ -1,4 +1,4 @@
-# Plan d'Exécution CGPA (proposé) — EP-16 : Notifications multicanales via Twilio
+# Plan d’Exécution CGPA (approuvé) — EP-16 : Notifications multicanales via Twilio
 
 | Champ | Valeur |
 |---|---|
@@ -7,8 +7,8 @@
 | Origine | Instruction PO du 2026-07-19 (« formaliser EP-16 notifications multicanales Twilio ») |
 | Backlog couvert | EP-16 — US-119 → US-126 (`addendum-backlog-ep16-notifications.md`) |
 | ADR | **ADR-18** (Acceptée — kickoff K1→K8 clos et GO Plan reçu, 2026-07-19) |
-| Release cible | À déterminer après GO — indépendant de tout autre lot en cours |
-| Prérequis | GO explicite du PO sur ce Plan **et** tranchage préalable de K1→K8 (ADR-18) ; hypercare de la release `1.12.0` en cours (checkpoint T0 PASS, 2026-07-19) — non bloquant pour ce cadrage documentaire, mais un GO de démarrage de Sprint réel devra être distinct de toute décision de clôture `1.12.0` (règle CGPA explicite : ne jamais confondre clôture de release et autorisation de nouveaux travaux) |
+| Release cible | À déterminer pour les Sprints N+1/N+2 ; Sprint N fusionné mais non déployé |
+| État d’exécution | K1→K8 tranchés et GO explicite reçu le 2026-07-19 ; Sprint N codé puis fusionné via PR #235 (CI complète et Quality Gate SonarQube verts). Gate Staging du Sprint N, dont `STG-ISOL-01`, restant à instruire ; Sprints N+1/N+2 non autorisés à démarrer sans leur GO distinct |
 
 ## Arbitrages PO — K1→K8 tranchés le 2026-07-19
 
@@ -24,11 +24,11 @@
 | K8 | Stratégie de release | Déployer le socle désactivé, valider Staging, puis activer progressivement après validation complète du P0 (recommandation adoptée) | ✅ Tranché |
 
 **Le kickoff K1→K8 est clos** (détail des décisions et alternatives écartées :
-`ADR-18-notifications-multicanales-twilio.md` §Décisions). Quatre points disposaient d'une
-recommandation par défaut (K1, K2, K5, K8, toutes adoptées sans modification) ; quatre n'en avaient
-aucune (K3, K4, K6, K7), tranchés directement par le PO. **Ce tranchage n'autorise pas encore de
-codage, migration ou déploiement** — seul un GO explicite du PO sur ce Plan d'Exécution le
-permettra.
+`ADR-18-notifications-multicanales-twilio.md` §Décisions). Quatre points disposaient d’une
+recommandation par défaut (K1, K2, K5, K8, toutes adoptées sans modification) ; quatre n’en avaient
+aucune (K3, K4, K6, K7), tranchés directement par le PO. Le GO explicite reçu ensuite sur ce Plan
+a autorisé uniquement le Sprint N, désormais fusionné via PR #235 ; il **n’autorise toujours ni le
+Sprint N+1, ni le Sprint N+2, ni aucun déploiement**.
 
 ## Vue d'ensemble
 
@@ -65,9 +65,9 @@ projet.
 | Stories | US-119 (préférences/consentement), US-120 (modèle Notification + Outbox), US-121 (abstraction fournisseur) |
 | Livrables | Migration additive **V27** (numéro à reconfirmer, sous réserve d'absence de collision au démarrage réel) : `notification_preference`, `notification_event`, `notification_outbox`, `notification_delivery`, `notification_template` (RLS `bailleur_isolation` sur les quatre premières, référentiel global sans RLS sur la dernière) ; extension de `generer_alertes()` (voie A) ; écriture inline dans `QuittanceCertifieeService`/`GarantieService`/`PaiementService`/`BailService` (voie B) ; interface `NotificationProvider` + implémentation `NoopNotificationProvider`/sandbox ; feature flags `NOTIFICATIONS_EXTERNAL_ENABLED=false` etc. ; tests unitaires + intégration RLS/idempotence |
 | Hors périmètre | Tout appel réseau Twilio réel ; toute création de compte/credentials Twilio ; tout envoi WhatsApp/SMS |
-| Dépendances | K1/K3 tranchés (2026-07-19) — GO explicite du PO sur ce Plan encore requis |
-| Risques | RSV-EP16-01, RSV-EP16-02 (à couvrir par tests de concurrence dédiés dès ce sprint) |
-| Critères GO (fin de sprint) | ✅ `mvn verify` vert, tests RLS cross-tenant sur les 4 nouvelles tables scopées ✅ test de concurrence Outbox (`FOR UPDATE SKIP LOCKED` + contrainte unique) prouvé ✅ rollback métier ⇒ aucune ligne Outbox persistée (test dédié) ✅ succès métier + fournisseur indisponible ⇒ Outbox en attente, aucune erreur applicative ✅ démarrage sans configuration Twilio ⇒ sûr, in-app inchangé ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) |
+| Dépendances | K1/K3 tranchés et GO explicite reçus le 2026-07-19 ; code fusionné via PR #235. Gate Staging du Sprint N, dont `STG-ISOL-01`, restant à instruire |
+| Risques | RSV-EP16-01/02 couverts côté code par les tests dédiés de rollback, idempotence et concurrence ; preuve Staging restant requise |
+| Critères GO (fin de sprint) | ✅ `mvn verify`, RLS cross-tenant, concurrence Outbox, idempotence, rollback métier, démarrage sans Twilio, non-régression in-app et CI complète ; ⏳ Gate Staging, dont `STG-ISOL-01`, restant à instruire |
 
 ## Sprint N+1 — WhatsApp P0
 
@@ -106,10 +106,10 @@ provisionné uniquement après GO explicite sur le Sprint N+2 clos (K8).
 `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` (ou `TWILIO_API_KEY`/`TWILIO_API_SECRET` si une clé
 restreinte est disponible pour le mode Twilio retenu), `TWILIO_WHATSAPP_FROM`, `TWILIO_SMS_FROM`,
 `TWILIO_STATUS_CALLBACK_BASE_URL` — secrets distincts par environnement (dev/staging/prod), jamais
-versionnés, convention `${VAR}`/`${VAR:}` déjà en place. `.env.example` sera mis à jour **au
-Sprint N** (au moment de l'implémentation réelle, pas avant), avec des placeholders `CHANGE_ME`
-sans valeur réelle — cohérent avec le précédent `QUITTANCE_HMAC_SECRET` (EP-14), jamais documenté
-avant son implémentation effective.
+versionnés, convention `${VAR}`/`${VAR:}` déjà en place. Dès le Sprint N, `.env.example` documente
+uniquement les quatre feature flags non secrets et leurs valeurs sûres par défaut. Les variables
+de credentials Twilio ne seront ajoutées avec des placeholders `CHANGE_ME` qu’au Sprint N+1,
+au moment de l’intégration réelle du fournisseur ; aucune valeur réelle ne sera versionnée.
 
 ## Stratégie Staging
 
@@ -138,7 +138,7 @@ NOTIFICATION_DRY_RUN=true
 Tous à `false`/`true` (DRY_RUN) par défaut à chaque environnement tant qu'une activation explicite
 n'est pas décidée par le PO, sprint par sprint.
 
-## Tests prévus (détail par catégorie, non codés dans cette mission)
+## Tests par sprint (socle Sprint N codé ; intégrations Twilio N+1/N+2 planifiées)
 
 - **Unitaires** : transitions d'état Outbox/Delivery, idempotence, classification des erreurs
   (temporaire/permanente), politique de retry, fallback, consentement, rendu des variables de
@@ -158,7 +158,7 @@ n'est pas décidée par le PO, sprint par sprint.
 
 | Artefact | Échéance |
 |---|---|
-| ADR-18 proposée (K1→K8 à trancher) | ✅ 2026-07-19 |
+| ADR-18 acceptée (K1→K8 tranchés) | ✅ 2026-07-19 |
 | Addendum EB (BF-106→111) | ✅ Produit avec ce plan |
 | Addendum CDC (EF-113→124, RM-114→123, ENF-94→97) | ✅ Produit avec ce plan |
 | Addendum backlog EP-16 (US-119→126) | ✅ Produit avec ce plan |

@@ -3,10 +3,10 @@
 | Champ | Valeur |
 |-------|--------|
 | Document de référence | `product-backlog.md`, `addendum-backlog-ep13-fin-de-bail.md`, `addendum-backlog-ep15-personnes.md` — **non modifiés** |
-| Statut | **Proposé** — cadrage documentaire ; K1→K8 (ADR-18) **entièrement ouverts**, aucun GO possible avant tranchage PO |
+| Statut | **Approuvé et en cours d’exécution** — K1→K8 tranchés, ADR-18 acceptée et Plan d’Exécution approuvé le 2026-07-19 ; Sprint N (US-119→121) fusionné via PR #235, Sprints N+1/N+2 non démarrés et soumis chacun à un GO distinct |
 | Date | 2026-07-19 |
 | Décision liée | `ADR-18-notifications-multicanales-twilio.md` |
-| Plan d'exécution | `plan-execution-ep16-notifications.md` (proposé, non approuvé) |
+| Plan d’exécution | `plan-execution-ep16-notifications.md` (**approuvé le 2026-07-19**) |
 
 > **Numérotation — collision détectée et corrigée.** US-01→118 sont déjà occupées. Le prompt de
 > mission suggérait de repartir à US-115 (en se fondant sur US-113/114, plus haut numéro visible
@@ -22,7 +22,7 @@
 
 | ID | Epic | Jalons | Priorité |
 |----|------|--------|----------|
-| EP-16 | **Notifications multicanales via Twilio** — extension des alertes in-app existantes par un canal externe (WhatsApp, secours SMS), sans n8n, sans dépendance directe du domaine métier envers Twilio | Non planifié — cadrage seul à ce stade | Must |
+| EP-16 | **Notifications multicanales via Twilio** — extension des alertes in-app existantes par un canal externe (WhatsApp, secours SMS), sans n8n, sans dépendance directe du domaine métier envers Twilio | Sprint N fusionné via PR #235 ; N+1/N+2 en attente de leurs GO distincts | Must |
 
 ### US-119 — Préférences, coordonnées et consentement
 
@@ -169,16 +169,18 @@ supervisée.
 
 ## Dépendances & risques (synthèse)
 
-- **K1→K8 (ADR-18)** : **aucun tranché** à ce stade — huit points ouverts, aucun GO possible avant
-  arbitrage PO (voir rapport de mission pour la présentation complète).
-- **RSV-EP16-01/02** (isolation des deux voies d'alimentation de l'Outbox, traitement concurrent) :
-  points de conception à verrouiller dès US-120, avant tout codage des US suivantes.
+- **K1→K8 (ADR-18)** : **tous tranchés par le PO le 2026-07-19** ; ADR-18 acceptée et Plan
+  d’Exécution approuvé. Le GO reçu couvre uniquement le Sprint N.
+- **RSV-EP16-01/02** (isolation des deux voies d’alimentation de l’Outbox, traitement concurrent) :
+  couverts côté Sprint N par les tests de rollback, idempotence et concurrence ; preuve Staging encore requise.
 - **RSV-EP16-03** (dérive budgétaire) : dépend de US-124/US-126 — aucune activation Production tant
   que le plafond n'est pas opérationnel.
-- **RSV-EP16-04** (consentement) : dépend directement de K3 — bloquant pour US-122/124.
+- **RSV-EP16-04** (consentement) : K3 tranché et modèle de consentement livré au Sprint N ; recueil via
+  formulaire et activation externe restent bloqués jusqu’aux Sprints N+1/N+2.
 - **RSV-EP16-05** (observabilité) : dépend de US-126 et de l'extension additive de
   `observability-governance.md`.
 - **RSV-EP16-06** (référentiel de templates global) : accepté comme limitation du P0, en
   surveillance.
-- Aucun Sprint ne peut démarrer avant un GO explicite du PO sur `plan-execution-ep16-notifications.md`,
-  lui-même conditionné au tranchage préalable de K1→K8.
+- Le Sprint N est fusionné sur `main` via la PR #235. Les Sprints N+1 et N+2 restent soumis chacun
+  à un GO explicite distinct, après les Gates Staging (dont `STG-ISOL-01`) et Production du sprint
+  précédent conformément au Plan d’Exécution.
