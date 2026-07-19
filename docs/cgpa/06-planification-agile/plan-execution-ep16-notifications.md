@@ -3,28 +3,32 @@
 | Champ | Valeur |
 |---|---|
 | Date | 2026-07-19 |
-| Statut | **Proposé — non approuvé.** K1→K8 (ADR-18) entièrement ouverts ; aucun GO possible avant tranchage PO |
+| Statut | **Approuvé — GO explicite du PO reçu le 2026-07-19.** Sprint N (Fondation) autorisé à démarrer. Sprints N+1/N+2 restent soumis chacun à un GO distinct, après clôture Gate Staging/Production du sprint précédent |
 | Origine | Instruction PO du 2026-07-19 (« formaliser EP-16 notifications multicanales Twilio ») |
 | Backlog couvert | EP-16 — US-119 → US-126 (`addendum-backlog-ep16-notifications.md`) |
-| ADR | **ADR-18** (Proposée — K1→K8 ouverts, 2026-07-19) |
+| ADR | **ADR-18** (Acceptée — kickoff K1→K8 clos et GO Plan reçu, 2026-07-19) |
 | Release cible | À déterminer après GO — indépendant de tout autre lot en cours |
 | Prérequis | GO explicite du PO sur ce Plan **et** tranchage préalable de K1→K8 (ADR-18) ; hypercare de la release `1.12.0` en cours (checkpoint T0 PASS, 2026-07-19) — non bloquant pour ce cadrage documentaire, mais un GO de démarrage de Sprint réel devra être distinct de toute décision de clôture `1.12.0` (règle CGPA explicite : ne jamais confondre clôture de release et autorisation de nouveaux travaux) |
 
-## Arbitrages PO requis avant tout GO (K1→K8)
+## Arbitrages PO — K1→K8 tranchés le 2026-07-19
 
-| # | Question | Recommandation | Statut |
-|---|----------|-----------------|--------|
-| K1 | Destinataires par événement | P0 : locataire pour quittance/garantie/retard ; bailleur et gestionnaire pour suivi opérationnel, selon autorisations et préférences | ⏳ Ouvert |
-| K2 | Canal principal | IN_APP obligatoire, WHATSAPP principal, SMS secours | ⏳ Ouvert |
-| K3 | Mode de recueil du consentement | Aucune recommandation par défaut — arbitrage PO requis (formulaire LoyerTracker / preuve externe saisie par le bailleur / invitation / OTP) | ⏳ Ouvert |
-| K4 | Stratégie de numéro | Aucune recommandation par défaut — réutiliser le numéro existant, ajouter un numéro dédié, ou exiger une vérification préalable | ⏳ Ouvert |
-| K5 | Fallback SMS | Pas de fallback automatique au premier pilote | ⏳ Ouvert |
-| K6 | Historique visible | Aucune recommandation par défaut — à trancher (bailleur seul ? gestionnaire sur son propre historique ?) | ⏳ Ouvert |
-| K7 | Rétention des métadonnées de livraison | Alignement sur l'audit métier (pas de durée fixe recommandée sans confirmation PO) | ⏳ Ouvert |
-| K8 | Stratégie de release | Déployer le socle désactivé, valider Staging, puis activer progressivement après validation complète du P0 | ⏳ Ouvert |
+| # | Question | Décision PO (2026-07-19) | Statut |
+|---|----------|--------------------------|--------|
+| K1 | Destinataires par événement | P0 : locataire pour quittance/garantie/retard ; bailleur et gestionnaire pour suivi opérationnel, selon autorisations et préférences (recommandation adoptée) | ✅ Tranché |
+| K2 | Canal principal | IN_APP obligatoire, WHATSAPP principal, SMS secours (recommandation adoptée) | ✅ Tranché |
+| K3 | Mode de recueil du consentement | Formulaire natif LoyerTracker, opt-in explicite (aucune recommandation par défaut n'existait — décision propre du PO) | ✅ Tranché |
+| K4 | Stratégie de numéro | Réutiliser un numéro existant (aucune recommandation par défaut n'existait — décision propre du PO) | ✅ Tranché |
+| K5 | Fallback SMS | Pas de fallback automatique au premier pilote (recommandation adoptée) | ✅ Tranché |
+| K6 | Historique visible | Bailleur : tout son périmètre ; gestionnaire : son propre périmètre affecté uniquement (aucune recommandation par défaut n'existait — décision propre du PO) | ✅ Tranché |
+| K7 | Rétention des métadonnées de livraison | Alignement strict sur l'audit métier existant, sans durée fixe distincte (recommandation partielle confirmée) | ✅ Tranché |
+| K8 | Stratégie de release | Déployer le socle désactivé, valider Staging, puis activer progressivement après validation complète du P0 (recommandation adoptée) | ✅ Tranché |
 
-**Aucun de ces huit points n'est tranché.** Ce Plan documente l'exécution envisageable une fois
-ces arbitrages rendus — il n'autorise à ce stade ni codage, ni migration, ni déploiement.
+**Le kickoff K1→K8 est clos** (détail des décisions et alternatives écartées :
+`ADR-18-notifications-multicanales-twilio.md` §Décisions). Quatre points disposaient d'une
+recommandation par défaut (K1, K2, K5, K8, toutes adoptées sans modification) ; quatre n'en avaient
+aucune (K3, K4, K6, K7), tranchés directement par le PO. **Ce tranchage n'autorise pas encore de
+codage, migration ou déploiement** — seul un GO explicite du PO sur ce Plan d'Exécution le
+permettra.
 
 ## Vue d'ensemble
 
@@ -61,7 +65,7 @@ projet.
 | Stories | US-119 (préférences/consentement), US-120 (modèle Notification + Outbox), US-121 (abstraction fournisseur) |
 | Livrables | Migration additive **V27** (numéro à reconfirmer, sous réserve d'absence de collision au démarrage réel) : `notification_preference`, `notification_event`, `notification_outbox`, `notification_delivery`, `notification_template` (RLS `bailleur_isolation` sur les quatre premières, référentiel global sans RLS sur la dernière) ; extension de `generer_alertes()` (voie A) ; écriture inline dans `QuittanceCertifieeService`/`GarantieService`/`PaiementService`/`BailService` (voie B) ; interface `NotificationProvider` + implémentation `NoopNotificationProvider`/sandbox ; feature flags `NOTIFICATIONS_EXTERNAL_ENABLED=false` etc. ; tests unitaires + intégration RLS/idempotence |
 | Hors périmètre | Tout appel réseau Twilio réel ; toute création de compte/credentials Twilio ; tout envoi WhatsApp/SMS |
-| Dépendances | Arbitrage K1 (destinataires, pour dimensionner le fan-out) et K3 (consentement, pour la sémantique de `NotificationPreference`) |
+| Dépendances | K1/K3 tranchés (2026-07-19) — GO explicite du PO sur ce Plan encore requis |
 | Risques | RSV-EP16-01, RSV-EP16-02 (à couvrir par tests de concurrence dédiés dès ce sprint) |
 | Critères GO (fin de sprint) | ✅ `mvn verify` vert, tests RLS cross-tenant sur les 4 nouvelles tables scopées ✅ test de concurrence Outbox (`FOR UPDATE SKIP LOCKED` + contrainte unique) prouvé ✅ rollback métier ⇒ aucune ligne Outbox persistée (test dédié) ✅ succès métier + fournisseur indisponible ⇒ Outbox en attente, aucune erreur applicative ✅ démarrage sans configuration Twilio ⇒ sûr, in-app inchangé ✅ CI complète verte ✅ Gate Staging (dont `STG-ISOL-01`) |
 
@@ -73,7 +77,7 @@ projet.
 | Stories | US-122 (WhatsApp transactionnel P0 : `QUITTANCE_DISPONIBLE`, `LOYER_EN_RETARD`, `GARANTIE_DEBITEE`), US-123 (callbacks, suivi, retries) |
 | Livrables | `TwilioNotificationProvider` (implémentation réelle, credentials Sandbox) ; templates P0 formalisés côté `NotificationTemplate` (soumission réelle à l'approbation Twilio hors périmètre de cette mission, mais le mécanisme de statut d'approbation doit être opérationnel) ; endpoint callback public + vérification de signature ; `NotificationDispatcher` opérationnel ; tests d'intégration dédiés (callback valide/invalide/dupliqué, dead-letter) |
 | Hors périmètre | Tout envoi vers un numéro Twilio de Production ; tout fallback SMS (US-124, sprint suivant) |
-| Dépendances | Sprint N clos en GO ; arbitrage K3/K4 tranchés (consentement, stratégie de numéro) |
+| Dépendances | Sprint N clos en GO ; K3/K4 tranchés (2026-07-19) |
 | Risques | RSV-EP16-04, RSV-EP16-06 |
 | Critères GO (fin de sprint) | ✅ Callback signature invalide rejeté sans effet de bord (test dédié) ✅ callback dupliqué sans transition supplémentaire ✅ template non approuvé ⇒ `DEAD`, aucun envoi ✅ vérification manuelle en Sandbox du parcours complet (quittance disponible → WhatsApp reçu → lien de vérification valide) ✅ CI complète verte ✅ Gate Staging |
 
@@ -85,7 +89,7 @@ projet.
 | Stories | US-124 (SMS fallback contrôlé), US-125 (interface préférences/historique), US-126 (observabilité/sécurité/exploitation) |
 | Livrables | Politique de fallback (feature flag dédié) ; UI préférences/historique (nouveau, aucun écran existant à étendre — cf. analyse d'impact §6) ; métriques `notification.*` + alertes Alertmanager `component: notifications` ; extension additive de `observability-governance.md` ; runbook d'exploitation (incident Twilio, reprise manuelle, rotation secrets) ; plafond budgétaire opérationnel |
 | Hors périmètre | Auto-gestion des préférences par le `Locataire` lui-même (aucun compte applicatif existant — hors périmètre P0, cf. K1/K4) |
-| Dépendances | Sprint N+1 clos en GO ; arbitrage K5/K6/K7/K8 tranchés |
+| Dépendances | Sprint N+1 clos en GO ; K5/K6/K7/K8 tranchés (2026-07-19) |
 | Risques | RSV-EP16-03, RSV-EP16-05 |
 | Critères GO (fin de sprint) | ✅ Fallback SMS jamais déclenché sans opt-in + politique explicite (test dédié) ✅ plafond budgétaire testé (dépassement simulé ⇒ arrêt/limitation) ✅ isolation cross-tenant de l'historique (test dédié) ✅ `observability-governance.md` étendu ✅ runbook rédigé et revu ✅ CI complète verte ✅ Gate Staging → **Gate Production distinct, sous condition K8** |
 
@@ -159,7 +163,7 @@ n'est pas décidée par le PO, sprint par sprint.
 | Addendum CDC (EF-113→124, RM-114→123, ENF-94→97) | ✅ Produit avec ce plan |
 | Addendum backlog EP-16 (US-119→126) | ✅ Produit avec ce plan |
 | Analyse d'impact EP-16 | ✅ Produite avec ce plan |
-| Kickoff K1→K8 tranché par le PO | À faire avant tout GO |
+| Kickoff K1→K8 tranché par le PO | ✅ 2026-07-19 |
 | `CHANGELOG.md` `[Non publié]` au fil de chaque sprint | À la fusion `main` |
 | `docs/project-state.md` / `staging-state.md` / `prod-state.md` | Chaque Gate |
 | `docs/cgpa/observability-governance.md` (extension additive) | Avant Gate Production du Sprint N+2 |
@@ -174,22 +178,28 @@ n'est pas décidée par le PO, sprint par sprint.
   US-115→118 déjà occupées (EP-13), repris à US-119→126 ; EP-16/ADR-18/D-NOTIF-001/EF-113+/
   RM-114+/ENF-94+ libres, vérifiés sans collision
 - [x] Impact Staging/Production/Release Management analysé (aucun déploiement à ce stade)
-- [ ] Kickoff K1→K8 tranché par le PO
-- [ ] Plan d'Exécution approuvé (GO explicite du PO)
+- [x] Kickoff K1→K8 tranché par le PO (2026-07-19)
+- [x] Plan d'Exécution approuvé (GO explicite du PO, 2026-07-19) — **Sprint N autorisé à démarrer**
 - [ ] Sprint N instruit avec son propre Gate Staging (dont `STG-ISOL-01`) et sa propre décision
   Gate Production — Sprints N+1/N+2 idem, chacun distinctement
 
-## Ce que ce plan n'autorise **pas** en l'état
+## Ce que ce plan autorise et n'autorise **pas**, à ce stade (Sprint N)
 
-- Aucun codage applicatif, aucune migration Flyway, aucune modification d'entité.
-- Aucune dépendance Twilio ajoutée à `pom.xml`/`package.json`.
-- Aucune création de compte, de credentials ou de template Twilio.
-- Aucun envoi SMS ou WhatsApp réel.
-- Aucune modification de Docker/infrastructure.
-- Aucun déploiement, aucune release, aucun statut `STAGING_READY`/`STAGING_DEPLOYED`/
-  `PRODUCTION_READY`/`PRODUCTION_DEPLOYED` marqué par ce document.
-- Aucun démarrage de Sprint sans GO explicite du PO sur ce Plan **et** tranchage préalable de
-  K1→K8.
+Le GO du 2026-07-19 autorise le **codage du Sprint N — Fondation** (US-119/120/121 : modèle de
+données, migration additive **V27**, Outbox transactionnelle, abstraction `NotificationProvider`
++ `NoopNotificationProvider`/sandbox, feature flags à `false`, tests unitaires/intégration
+RLS/idempotence), strictement dans les bornes déjà fixées par ce Plan (§Sprint N — Fondation) et
+par ADR-18. Restent **exclus, y compris pendant le Sprint N** :
+
+- Toute dépendance Twilio ajoutée à `pom.xml`/`package.json` (réservé au Sprint N+1).
+- Toute création de compte, de credentials ou de template Twilio.
+- Tout envoi SMS ou WhatsApp réel, tout appel réseau Twilio réel.
+- Toute modification de Docker/infrastructure.
+- Tout déploiement, toute release, tout statut `STAGING_READY`/`STAGING_DEPLOYED`/
+  `PRODUCTION_READY`/`PRODUCTION_DEPLOYED` marqué par ce document — soumis au Gate Staging (dont
+  `STG-ISOL-01`) puis à une décision Gate Production distincte, propres au Sprint N.
+- Tout démarrage du Sprint N+1 ou N+2 sans un GO explicite du PO propre à chacun — ce GO ne couvre
+  que le Sprint N (même principe que les Sprints A/B/C d'EP-15, chacun autorisé séparément).
 
 ## Estimation globale
 
