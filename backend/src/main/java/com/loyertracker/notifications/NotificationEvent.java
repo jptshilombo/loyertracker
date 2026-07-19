@@ -46,7 +46,6 @@ public class NotificationEvent {
     private OffsetDateTime dateCreation;
 
     protected NotificationEvent() {
-        // requis par JPA ; écriture exclusivement via SQL natif (NotificationOutboxService)
     }
 
     public UUID getId() { return id; }

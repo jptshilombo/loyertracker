@@ -18,6 +18,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class NotificationPreferenceService {
 
+    /** Commande de remplacement complet des coordonnées, canaux et consentements (US-119, K3). */
+    public record DefinitionPreference(
+            String phoneE164,
+            CanalNotification preferredChannel,
+            CanalNotification fallbackChannel,
+            boolean whatsappOptIn,
+            boolean smsOptIn,
+            String consentSource,
+            String language) {
+    }
+
     private final NotificationPreferenceRepository preferences;
 
     public NotificationPreferenceService(NotificationPreferenceRepository preferences) {
@@ -27,15 +38,14 @@ public class NotificationPreferenceService {
     /** Crée ou remplace intégralement la préférence d'un destinataire (recueil du consentement, K3). */
     @Transactional
     public NotificationPreference definir(UUID bailleurId, TypeDestinataire recipientType,
-            UUID recipientId, String phoneE164, CanalNotification preferredChannel,
-            CanalNotification fallbackChannel, boolean whatsappOptIn, boolean smsOptIn,
-            String consentSource, String language) {
+            UUID recipientId, DefinitionPreference definition) {
         NotificationPreference preference = preferences
                 .findByBailleurIdAndRecipientTypeAndRecipientId(bailleurId, recipientType, recipientId)
                 .orElseGet(() -> preferences
                         .save(new NotificationPreference(bailleurId, recipientType, recipientId)));
-        preference.definir(phoneE164, preferredChannel, fallbackChannel, whatsappOptIn, smsOptIn,
-                consentSource, language);
+        preference.definir(definition.phoneE164(), definition.preferredChannel(),
+                definition.fallbackChannel(), definition.whatsappOptIn(), definition.smsOptIn(),
+                definition.consentSource(), definition.language());
         return preference;
     }
 
