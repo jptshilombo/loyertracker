@@ -6,6 +6,80 @@
 
 
 
+## 0M. Déploiement Production `1.12.0` — 2026-07-19 (Sprint C EP-15)
+
+> **`PRODUCTION_DEPLOYED` atteint le 2026-07-19 ~11:57 UTC.** Gate Production GO
+> (`gate-production-sprint-c-ep15-decision.md`), Préflight renforcé PASS
+> (`preflight-backup-v1.12.0-report.md`), déploiement technique PASS
+> (`deploiement-technique-v1.12.0-report.md`), validation finale (smoke Production **63 PASS / 0
+> FAIL au premier passage**, `validation-finale-v1.12.0-report.md`) — toutes complétées dans la
+> même session. Migration **V26 non additive** (RSV-EP15-03) : backfill vérifié sur données réelles
+> **8/8 baux avec `locataire_id`, 0 orphelin** ; **second backup post-migration produit et vérifié**
+> (`loyertracker-20260719-115220.dump`, 799 entrées `pg_restore --list`) conformément à la
+> condition bloquante du Gate/Préflight — ce dump est désormais le point de restauration de
+> référence, un rollback applicatif seul n'étant plus viable après V26. Nouvelle baseline
+> `locataire` : 8 (un par bail historique, backfill V26). Hypercare (T0/T+12/T+24) et clôture de
+> release restent des étapes distinctes.
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.12.0` — Sprint C EP-15 (Bascule Bail → Locataire, US-113/114) |
+| Tag / digests | `sha-359f4d63` ; API `sha256:ea040492bb5ad6b6a72b84665e22cd47a66d79c293b874fca481d5a276afe1c8` ; Web `sha256:e70ebc7ba7d71406edaec6f890c2f57f06ae9d7c855680e0fba01914b4251968` |
+| Rollback | `sha-cba13f52` (`1.11.0`) — viable uniquement **avant** application de V26 ; après, restauration du backup post-migration requise (RSV-EP15-03) |
+| Déploiement | `api` + `nginx` recréés ciblés ; PostgreSQL, Keycloak et monitoring inchangés |
+| Flyway | V26 appliquée, 26/26 ; table `locataire`, `bail.locataire_id NOT NULL`, `locataire_nom`/`locataire_email` supprimées |
+| Backfill V26 | 8/8 baux avec `locataire_id`, 0 orphelin, `prenom` vide comme prévu (RSV-EP15-02) |
+| Smoke | **63 PASS / 0 FAIL au premier passage**, nettoyage transactionnel sans résidu |
+| Données | baseline : 3 bailleurs, 2 patrimoines, 8 biens, 8 baux, 8 garanties, 1 gestionnaire, **8 locataires** (nouvelle baseline V26), 6 quittances |
+| Services | 8/8 actifs, 4/4 healthy, `restart=0` |
+| Observabilité | Prometheus 5/5 ; Alertmanager 0 alerte ; 0 ligne 5xx ; site public 200 |
+| État CGPA | **`PRODUCTION_DEPLOYED` — 2026-07-19** |
+
+Rapports : `docs/cgpa/09-production/gate-production-sprint-c-ep15-decision.md`,
+`docs/cgpa/09-production/preflight-backup-v1.12.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.12.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.12.0-report.md`.
+
+Réserves ouvertes après ce déploiement : RSV-EP15-01/02/04 non bloquantes (héritées, déjà
+tranchées) ; **`RSV-STG-01`** (héritée, sans rapport avec `1.12.0`).
+
+## 0L. Déploiement Production `1.11.0` — 2026-07-16 (régularisé a posteriori le 2026-07-19)
+
+> **Écart de traçabilité comblé.** Le Préflight `1.11.0` du 2026-07-16 concluait explicitement
+> `PRODUCTION_DEPLOYED` non atteint. Le déploiement technique a en réalité eu lieu dans la foulée
+> (preuves : image construite 2026-07-16T16:13:04Z, `.env.bak-pre-1.11.0` horodaté 17:53,
+> commit `cba13f5` 17:06:46+0100), mais aucun rapport de déploiement technique ni de validation
+> finale n'a été rédigé à l'époque, et le Sprint C EP-15 a démarré le lendemain sans que ce
+> chaînon soit refermé. La reprise de session du 2026-07-19 a détecté l'écart par contrôles
+> lecture seule (Production trouvée sur `sha-cba13f52`, Flyway 25/25, contredisant la doc), puis
+> régularisé : constats techniques confirmés + smoke de validation finale rejoué en conditions
+> réelles (**62 PASS / 0 FAIL**), nettoyage transactionnel complet, ré-désactivation de
+> `bailleur-test`/`directAccessGrants` vérifiée. Détail : `deploiement-technique-v1.11.0-report.md`,
+> `validation-finale-v1.11.0-report.md`. Hypercare T0/T+12/T+24 n'a pas pu être rejouée
+> rétroactivement (hôte intentionnellement éteint entre les sessions) ; le contrôle du 2026-07-19
+> (J+3, 0 alerte/0 5xx/`restart=0`) est accepté comme preuve de stabilité substitutive — réserve
+> de gouvernance dédiée consignée et fermée dans `project-state.md` §13.
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.11.0` — EP-13, Sprint unique Fin de bail (US-115→118, ADR-17) |
+| Tag / digests | `sha-cba13f52` ; API `sha256:ea040492bb5ad6b6a72b84665e22cd47a66d79c293b874fca481d5a276afe1c8` ; Web `sha256:e70ebc7ba7d71406edaec6f890c2f57f06ae9d7c855680e0fba01914b4251968` |
+| Rollback | `sha-c9200a51` (`1.10.0`), V25 additive, backup Préflight vérifié |
+| Déploiement | `api` + `nginx` recréés ciblés (reconstitué) ; PostgreSQL, Keycloak et monitoring inchangés |
+| Flyway | V25 appliquée, 25/25 ; `bail.date_cloture_effective` + `generer_alertes()` filtrée `ACTIF` confirmées |
+| Smoke | **62 PASS / 0 FAIL au premier passage** (rejoué le 2026-07-19), nettoyage transactionnel sans résidu |
+| Données | baseline identique au Préflight : 3 bailleurs, 2 patrimoines, 8 biens, 8 baux, 8 garanties, 1 gestionnaire, 0 locataire, 6 quittances |
+| Services | 8/8 actifs, 4/4 healthy, `restart=0` (vérifié le 2026-07-19) |
+| Observabilité | Prometheus 5/5 ; Alertmanager 0 alerte ; 0 ligne 5xx ; site public 200 |
+| État CGPA | **`PRODUCTION_DEPLOYED` confirmé rétroactivement (2026-07-19)** — pas de clôture CDO formelle (hypercare continue non observable), écart de traçabilité fermé |
+
+Rapports : `docs/cgpa/09-production/gate-production-ep13-fin-de-bail-decision.md`,
+`docs/cgpa/09-production/preflight-backup-v1.11.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.11.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.11.0-report.md`.
+
+Réserves ouvertes après ce déploiement : **`RSV-STG-01`** (héritée, sans rapport avec `1.11.0`).
+
 ## 0K. Déploiement Production `1.10.0` — 2026-07-15
 
 > **RELEASE `1.10.0` CLÔTURÉE — CDO GO (2026-07-16 ~15:20 UTC —
