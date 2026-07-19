@@ -3,6 +3,7 @@ package com.loyertracker.garanties;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,11 @@ import com.loyertracker.audit.AuditService;
 import com.loyertracker.baux.Bail;
 import com.loyertracker.baux.BailRepository;
 import com.loyertracker.honoraires.HonoraireService;
+import com.loyertracker.notifications.Destinataire;
+import com.loyertracker.notifications.NotificationOutboxService;
+import com.loyertracker.notifications.TypeAgregatNotification;
+import com.loyertracker.notifications.TypeDestinataire;
+import com.loyertracker.notifications.TypeEvenementNotification;
 import com.loyertracker.paiements.Paiement;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.paiements.StatutPaiement;
@@ -42,10 +48,11 @@ public class GarantieService {
     private final TenantContext tenant;
     private final AuditService audit;
     private final HonoraireService honoraires;
+    private final NotificationOutboxService notifications;
 
     public GarantieService(GarantieRepository garanties, GarantieMovementRepository mouvements,
             BailRepository baux, PaiementRepository paiements, TenantContext tenant,
-            AuditService audit, HonoraireService honoraires) {
+            AuditService audit, HonoraireService honoraires, NotificationOutboxService notifications) {
         this.garanties = garanties;
         this.mouvements = mouvements;
         this.baux = baux;
@@ -53,6 +60,7 @@ public class GarantieService {
         this.tenant = tenant;
         this.audit = audit;
         this.honoraires = honoraires;
+        this.notifications = notifications;
     }
 
     @Transactional(readOnly = true)
@@ -175,6 +183,13 @@ public class GarantieService {
         audit.enregistrer(authentication, bailleurId, "RETENUE_LOYER_GARANTIE", "paiement",
                 paiement.getId());
         honoraires.recalculerPourBien(bienId);
+        // Voie B (ADR-18 §2) : le locataire dont le loyer impayé vient d'être couvert par sa garantie
+        // (bail déjà vérifié existant par exigerBailDuBien ci-dessus, locataireId NOT NULL depuis V26).
+        UUID locataireId = baux.findById(bailId).orElseThrow().getLocataireId();
+        notifications.emettre(bailleurId, TypeEvenementNotification.GARANTIE_DEBITEE,
+                TypeAgregatNotification.GARANTIE, enregistre.getId(),
+                Map.of("bailId", bailId.toString(), "montant", requete.montant().toString()),
+                List.of(new Destinataire(TypeDestinataire.LOCATAIRE, locataireId)));
         return GarantieDto.from(enregistre);
     }
 

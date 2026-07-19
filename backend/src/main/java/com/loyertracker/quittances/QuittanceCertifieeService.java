@@ -3,7 +3,9 @@ package com.loyertracker.quittances;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +31,11 @@ import com.loyertracker.garanties.GarantieMovement;
 import com.loyertracker.garanties.GarantieMovementRepository;
 import com.loyertracker.locataires.Locataire;
 import com.loyertracker.locataires.LocataireRepository;
+import com.loyertracker.notifications.Destinataire;
+import com.loyertracker.notifications.NotificationOutboxService;
+import com.loyertracker.notifications.TypeAgregatNotification;
+import com.loyertracker.notifications.TypeDestinataire;
+import com.loyertracker.notifications.TypeEvenementNotification;
 import com.loyertracker.paiements.Paiement;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.paiements.StatutPaiement;
@@ -71,6 +78,7 @@ public class QuittanceCertifieeService {
     private final ThemeQuittanceProvider themes;
     private final ScellementQuittance scellement;
     private final AuditService audit;
+    private final NotificationOutboxService notifications;
     private final EntityManager em;
     private final String urlBaseVerification;
 
@@ -80,7 +88,8 @@ public class QuittanceCertifieeService {
             QuittanceRepository quittances, LocataireRepository locataires,
             TokenQuittanceService tokens, QrCodeQuittance qr,
             DocumentHtmlBuilder html, PdfRenderer pdf, ThemeQuittanceProvider themes,
-            ScellementQuittance scellement, AuditService audit, EntityManager em,
+            ScellementQuittance scellement, AuditService audit,
+            NotificationOutboxService notifications, EntityManager em,
             @Value("${quittances.url-base-verification:https://loyertracker.loyerpro.org}")
             String urlBaseVerification) {
         this.tenant = tenant;
@@ -99,6 +108,7 @@ public class QuittanceCertifieeService {
         this.themes = themes;
         this.scellement = scellement;
         this.audit = audit;
+        this.notifications = notifications;
         this.em = em;
         this.urlBaseVerification = urlBaseVerification;
     }
@@ -166,6 +176,12 @@ public class QuittanceCertifieeService {
 
         audit.enregistrer(authentication, bailleurId,
                 version == 1 ? "EMETTRE_QUITTANCE" : "REEMETTRE_QUITTANCE", "quittance", id);
+        // Voie B (ADR-18 §2) : uniquement sur le chemin qui émet réellement un nouvel exemplaire —
+        // le retour anticipé « idempotent » ci-dessus (loyer inchangé) ne relance jamais cet appel.
+        notifications.emettre(bailleurId, TypeEvenementNotification.QUITTANCE_DISPONIBLE,
+                TypeAgregatNotification.QUITTANCE, id,
+                Map.of("bienId", bienId.toString(), "periode", periode, "numero", numero),
+                destinataireLocataire(paiement.getBailId()));
         return exemplaire;
     }
 
@@ -209,6 +225,15 @@ public class QuittanceCertifieeService {
                 .setParameter("annee", annee)
                 .getSingleResult();
         return "QT-%d-%06d".formatted(annee, prochain.intValue());
+    }
+
+    /**
+     * Destinataire de l'avis de quittance disponible (K1) : le locataire du bail concerné (bail
+     * déjà vérifié existant par {@link #assembler} avant cet appel).
+     */
+    private List<Destinataire> destinataireLocataire(UUID bailId) {
+        UUID locataireId = baux.findById(bailId).orElseThrow().getLocataireId();
+        return List.of(new Destinataire(TypeDestinataire.LOCATAIRE, locataireId));
     }
 
     private DonneesAssemblees assembler(UUID bailleurId, Paiement paiement, UUID bienId,

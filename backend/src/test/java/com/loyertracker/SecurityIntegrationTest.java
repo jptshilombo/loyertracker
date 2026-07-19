@@ -28,6 +28,8 @@ import com.loyertracker.documents.QuittanceService;
 import com.loyertracker.quittances.QuittanceCertifieeService;
 import com.loyertracker.garanties.GarantieService;
 import com.loyertracker.honoraires.HonoraireService;
+import com.loyertracker.notifications.NotificationOutboxService;
+import com.loyertracker.notifications.NotificationPreferenceService;
 import com.loyertracker.paiements.PaiementService;
 import com.loyertracker.patrimoine.PatrimoineService;
 import com.loyertracker.patrimoine.TypeBienService;
@@ -104,6 +106,12 @@ class SecurityIntegrationTest {
     // Entité Locataire (V24, EP-15 Sprint B) : dépend de repositories JPA, neutralisée comme les autres.
     @MockitoBean
     com.loyertracker.locataires.LocataireService locataireService;
+    // Notifications (V27, EP-16 Sprint N) : dépendent de l'EntityManager/repositories JPA,
+    // neutralisées comme les autres pour ce test de contrat sans BDD.
+    @MockitoBean
+    NotificationOutboxService notificationOutboxService;
+    @MockitoBean
+    NotificationPreferenceService notificationPreferenceService;
 
     @Test
     void health_estPublic() throws Exception {

@@ -16,6 +16,11 @@ import com.loyertracker.baux.Bail;
 import com.loyertracker.baux.BailRepository;
 import com.loyertracker.baux.Devise;
 import com.loyertracker.honoraires.HonoraireService;
+import com.loyertracker.notifications.Destinataire;
+import com.loyertracker.notifications.NotificationOutboxService;
+import com.loyertracker.notifications.TypeAgregatNotification;
+import com.loyertracker.notifications.TypeDestinataire;
+import com.loyertracker.notifications.TypeEvenementNotification;
 import com.loyertracker.securite.TenantContext;
 
 /**
@@ -30,14 +35,16 @@ public class PaiementService {
     private final TenantContext tenant;
     private final AuditService audit;
     private final HonoraireService honoraires;
+    private final NotificationOutboxService notifications;
 
     public PaiementService(PaiementRepository paiements, BailRepository baux, TenantContext tenant,
-            AuditService audit, HonoraireService honoraires) {
+            AuditService audit, HonoraireService honoraires, NotificationOutboxService notifications) {
         this.paiements = paiements;
         this.baux = baux;
         this.tenant = tenant;
         this.audit = audit;
         this.honoraires = honoraires;
+        this.notifications = notifications;
     }
 
     @Transactional(readOnly = true)
@@ -77,7 +84,14 @@ public class PaiementService {
         // L'encaissement modifie l'assiette des honoraires POURCENTAGE du bien : recalcul synchrone
         // (US-40, EF-51). Le gel à PAYE protège les honoraires déjà validés. Même transaction/tenant.
         honoraires.recalculerPourBien(bienId);
-        Devise devise = baux.findById(enregistre.getBailId()).map(Bail::getDevise).orElse(null);
-        return PaiementDto.from(enregistre, devise);
+        Bail bail = baux.findById(enregistre.getBailId()).orElseThrow();
+        if (enregistre.getStatut() == StatutPaiement.RECU) {
+            // Voie B (ADR-18 §2) : uniquement quand le loyer est intégralement reçu (PARTIEL exclu).
+            notifications.emettre(bailleurId, TypeEvenementNotification.PAIEMENT_RECU,
+                    TypeAgregatNotification.PAIEMENT, enregistre.getId(),
+                    Map.of("bienId", bienId.toString(), "periode", periode),
+                    List.of(new Destinataire(TypeDestinataire.LOCATAIRE, bail.getLocataireId())));
+        }
+        return PaiementDto.from(enregistre, bail.getDevise());
     }
 }

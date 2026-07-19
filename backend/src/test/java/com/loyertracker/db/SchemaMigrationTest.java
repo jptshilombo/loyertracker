@@ -65,7 +65,9 @@ class SchemaMigrationTest {
         // + V24 (entité Locataire + bail.locataire_id préparatoire — EP-15 Sprint B).
         // + V25 (clôture/réouverture de bail, purge échéancier, non-régression alertes — EP-13).
         // + V26 (bascule Bail -> Locataire, non additive — EP-15 Sprint C).
-        assertThat(result.migrationsExecuted).isEqualTo(26);
+        // + V27 (notification_preference/event/outbox/delivery/template + extension
+        //   generer_alertes() voie A — EP-16 Sprint N, Fondation).
+        assertThat(result.migrationsExecuted).isEqualTo(27);
         assertThat(result.success).isTrue();
     }
 
@@ -80,7 +82,8 @@ class SchemaMigrationTest {
             "bailleur", "gestionnaire", "invitation", "bien", "bail", "affectation",
             "paiement", "garantie", "honoraire", "alerte", "audit_log", "patrimoine", "type_bien",
             "quittance", "quittance_numerotation", "quittance_verification_log",
-            "locataire", "flyway_schema_history"
+            "locataire", "notification_preference", "notification_event", "notification_outbox",
+            "notification_delivery", "notification_template", "flyway_schema_history"
         };
         try (Connection c = connect()) {
             for (String table : tables) {
@@ -125,6 +128,97 @@ class SchemaMigrationTest {
             assertThat(rs.next()).isTrue();
             assertThat(rs.getBoolean("relrowsecurity")).as("ENABLE RLS").isTrue();
             assertThat(rs.getBoolean("relforcerowsecurity")).as("FORCE RLS").isTrue();
+        }
+    }
+
+    @Test
+    void rlsActiveEtForceeSurLesQuatreTablesNotificationsScopees() throws SQLException {
+        // EP-16 Sprint N (V27) : notification_preference/event/outbox/delivery sous RLS
+        // bailleur_isolation standard ; notification_template (référentiel global) volontairement
+        // exclu, même patron que type_bien.
+        String[] tables = {
+            "notification_preference", "notification_event", "notification_outbox",
+            "notification_delivery"
+        };
+        try (Connection c = connect()) {
+            for (String table : tables) {
+                try (PreparedStatement ps = c.prepareStatement(
+                        "SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname = ?")) {
+                    ps.setString(1, table);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        assertThat(rs.next()).as("table %s existe", table).isTrue();
+                        assertThat(rs.getBoolean("relrowsecurity")).as("ENABLE RLS sur %s", table).isTrue();
+                        assertThat(rs.getBoolean("relforcerowsecurity")).as("FORCE RLS sur %s", table)
+                                .isTrue();
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void notificationTemplateEstUnReferentielGlobalSansRls() throws SQLException {
+        try (Connection c = connect();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery(
+                     "SELECT relrowsecurity, relforcerowsecurity "
+                             + "FROM pg_class WHERE relname = 'notification_template'")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getBoolean("relrowsecurity")).as("pas de RLS, référentiel global").isFalse();
+        }
+    }
+
+    @Test
+    void rlsCloisonneNotificationPreferenceParBailleur() throws SQLException {
+        UUID bailleurA = UUID.randomUUID();
+        UUID bailleurB = UUID.randomUUID();
+
+        try (Connection c = connect()) {
+            c.setAutoCommit(false);
+            seedBailleurEtBien(c, bailleurA, "notif-a@test.local", "1 rue A");
+            seedBailleurEtBien(c, bailleurB, "notif-b@test.local", "2 rue B");
+            seedNotificationPreference(c, bailleurA);
+            seedNotificationPreference(c, bailleurB);
+
+            try (Statement s = c.createStatement()) {
+                s.execute("DROP ROLE IF EXISTS app_user_notif");
+                s.execute("CREATE ROLE app_user_notif NOLOGIN");
+                s.execute("GRANT USAGE ON SCHEMA public TO app_user_notif");
+                s.execute("GRANT SELECT ON notification_preference TO app_user_notif");
+            }
+
+            assertThat(countPreferencesVues(c, "app_user_notif", bailleurA)).isEqualTo(1);
+            assertThat(countPreferencesVues(c, "app_user_notif", bailleurB)).isEqualTo(1);
+            assertThat(countPreferencesVues(c, "app_user_notif", null)).isZero();
+
+            c.rollback();
+        }
+    }
+
+    private void seedNotificationPreference(Connection c, UUID bailleurId) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO notification_preference (id, bailleur_id, recipient_type, recipient_id, "
+                        + "preferred_channel) VALUES (gen_random_uuid(), ?, 'BAILLEUR', ?, 'WHATSAPP')")) {
+            ps.setObject(1, bailleurId);
+            ps.setObject(2, bailleurId);
+            ps.executeUpdate();
+        }
+    }
+
+    private int countPreferencesVues(Connection c, String role, UUID bailleurCourant) throws SQLException {
+        try (Statement s = c.createStatement()) {
+            if (bailleurCourant != null) {
+                positionnerTenant(c, bailleurCourant);
+            } else {
+                s.execute("RESET app.current_bailleur_id");
+            }
+            s.execute("SET ROLE " + role);
+            try (ResultSet rs = s.executeQuery("SELECT count(*) FROM notification_preference")) {
+                rs.next();
+                int count = rs.getInt(1);
+                s.execute("RESET ROLE");
+                return count;
+            }
         }
     }
 

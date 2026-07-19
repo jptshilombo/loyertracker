@@ -28,6 +28,11 @@ import com.loyertracker.locataires.Locataire;
 import com.loyertracker.locataires.LocataireDto;
 import com.loyertracker.locataires.LocataireRepository;
 import com.loyertracker.locataires.StatutLocataire;
+import com.loyertracker.notifications.Destinataire;
+import com.loyertracker.notifications.NotificationOutboxService;
+import com.loyertracker.notifications.TypeAgregatNotification;
+import com.loyertracker.notifications.TypeDestinataire;
+import com.loyertracker.notifications.TypeEvenementNotification;
 import com.loyertracker.paiements.PaiementRepository;
 import com.loyertracker.paiements.StatutPaiement;
 import com.loyertracker.securite.TenantContext;
@@ -46,10 +51,11 @@ public class BailService {
     private final LocataireRepository locataires;
     private final TenantContext tenant;
     private final AuditService audit;
+    private final NotificationOutboxService notifications;
 
     public BailService(BailRepository baux, BienRepository biens, GarantieRepository garanties,
             PaiementRepository paiements, LocataireRepository locataires, TenantContext tenant,
-            AuditService audit) {
+            AuditService audit, NotificationOutboxService notifications) {
         this.baux = baux;
         this.biens = biens;
         this.garanties = garanties;
@@ -57,6 +63,7 @@ public class BailService {
         this.locataires = locataires;
         this.tenant = tenant;
         this.audit = audit;
+        this.notifications = notifications;
     }
 
     @Transactional
@@ -90,6 +97,11 @@ public class BailService {
         try {
             Bail enregistre = baux.saveAndFlush(bail);
             bien.louer();
+            // Voie B (ADR-18 §2) : le locataire vient d'être rattaché à ce nouveau bail.
+            notifications.emettre(bailleurId, TypeEvenementNotification.BAIL_CREE,
+                    TypeAgregatNotification.BAIL, enregistre.getId(),
+                    Map.of("bienId", bienId.toString()),
+                    List.of(new Destinataire(TypeDestinataire.LOCATAIRE, locataire.getId())));
             // Aucune garantie ne peut encore exister pour un bail qui vient d'être créé.
             return BailDto.from(enregistre, BigDecimal.ZERO, locataire);
         } catch (DataIntegrityViolationException e) {
@@ -164,6 +176,10 @@ public class BailService {
         paiements.deleteByBailIdAndStatutAndPeriodeGreaterThan(bailId, StatutPaiement.A_VENIR, moisCloture);
 
         audit.enregistrer(authentication, bailleurId, "CLOTURER_BAIL", ENTITY_TYPE, bailId);
+        // Voie B (ADR-18 §2) : informer le locataire de la clôture de son bail.
+        notifications.emettre(bailleurId, TypeEvenementNotification.BAIL_CLOS,
+                TypeAgregatNotification.BAIL, bailId, Map.of("bienId", bienId.toString()),
+                List.of(new Destinataire(TypeDestinataire.LOCATAIRE, enregistre.getLocataireId())));
         BigDecimal montantDepose = garanties.sommeMontantDeposeParBail(bailId);
         Locataire locataire = trouverLocataire(enregistre.getLocataireId());
         return new ClotureBailDto(BailDto.from(enregistre, montantDepose, locataire), avertissements);
