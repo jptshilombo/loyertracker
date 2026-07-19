@@ -5,6 +5,25 @@ Toutes les évolutions notables de ce projet sont consignées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet adhère au
 [Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.3).
 
+## [Non publié]
+
+### Ajouts — Fondation des notifications multicanales (Sprint N, EP-16, US-119/120/121)
+
+- Migration additive V27 : tables `notification_preference`, `notification_event`,
+  `notification_outbox`, `notification_delivery` et `notification_template`. RLS
+  `bailleur_isolation` en mode `ENABLE` + `FORCE` sur les quatre tables tenant-scopées ; le
+  référentiel `notification_template` reste global.
+- Outbox transactionnelle idempotente avec réclamation concurrente
+  `FOR UPDATE SKIP LOCKED`, sans appel réseau dans les transactions métier.
+- Événements alimentés par le batch d'alertes et par les opérations métier quittance, garantie,
+  paiement et bail ; le compteur historique des alertes reste inchangé.
+- Abstraction `NotificationProvider` avec `NoopNotificationProvider` comme seul fournisseur
+  disponible dans ce sprint. Aucun SDK, credential, template ou appel Twilio n'est inclus.
+- Feature flags à valeurs sûres par défaut : notifications externes, WhatsApp et SMS désactivés ;
+  dry-run activé. Aucun envoi externe n'est possible sans consentement et sans sprint ultérieur.
+- Gate Staging : `STG-ISOL-01` PASS, Flyway 27/27, smoke 63 PASS / 0 FAIL, 24 événements
+  persistés et 0 préférence / 0 Outbox / 0 Delivery.
+
 ## [1.12.0] — 2026-07-19
 
 ### Ajouts — Bascule Bail → Locataire & RGPD (Sprint C, EP-15, US-113/114)

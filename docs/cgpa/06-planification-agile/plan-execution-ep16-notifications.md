@@ -7,8 +7,8 @@
 | Origine | Instruction PO du 2026-07-19 (« formaliser EP-16 notifications multicanales Twilio ») |
 | Backlog couvert | EP-16 — US-119 → US-126 (`addendum-backlog-ep16-notifications.md`) |
 | ADR | **ADR-18** (Acceptée — kickoff K1→K8 clos et GO Plan reçu, 2026-07-19) |
-| Release cible | À déterminer pour les Sprints N+1/N+2 ; Sprint N fusionné mais non déployé |
-| État d’exécution | K1→K8 tranchés et GO explicite reçu le 2026-07-19 ; Sprint N codé puis fusionné via PR #235 (CI complète et Quality Gate SonarQube verts). Gate Staging du Sprint N, dont `STG-ISOL-01`, restant à instruire ; Sprints N+1/N+2 non autorisés à démarrer sans leur GO distinct |
+| Release cible | Sprint N : `1.13.0` proposée ; Sprints N+1/N+2 à déterminer |
+| État d’exécution | Sprint N codé, fusionné, `STAGING_DEPLOYED`, puis Gate Production **GO sous réserve — `PRODUCTION_READY`** le 2026-07-19. Le Préflight/déploiement reste interdit avant clôture de l'hypercare `1.12.0` ; Sprints N+1/N+2 non autorisés sans leur GO distinct |
 
 ## Arbitrages PO — K1→K8 tranchés le 2026-07-19
 
@@ -63,11 +63,11 @@ projet.
 |---|---|
 | Objectif | Modèle de données, Outbox transactionnelle, abstraction fournisseur — **aucun envoi réel possible**, implémentation fournisseur en sandbox/fausse implémentation uniquement |
 | Stories | US-119 (préférences/consentement), US-120 (modèle Notification + Outbox), US-121 (abstraction fournisseur) |
-| Livrables | Migration additive **V27** (numéro à reconfirmer, sous réserve d'absence de collision au démarrage réel) : `notification_preference`, `notification_event`, `notification_outbox`, `notification_delivery`, `notification_template` (RLS `bailleur_isolation` sur les quatre premières, référentiel global sans RLS sur la dernière) ; extension de `generer_alertes()` (voie A) ; écriture inline dans `QuittanceCertifieeService`/`GarantieService`/`PaiementService`/`BailService` (voie B) ; interface `NotificationProvider` + implémentation `NoopNotificationProvider`/sandbox ; feature flags `NOTIFICATIONS_EXTERNAL_ENABLED=false` etc. ; tests unitaires + intégration RLS/idempotence |
+| Livrables | Migration additive **V27** appliquée en Staging : `notification_preference`, `notification_event`, `notification_outbox`, `notification_delivery`, `notification_template` (RLS `bailleur_isolation` sur les quatre premières, référentiel global sans RLS sur la dernière) ; extension de `generer_alertes()` (voie A) ; écriture inline dans `QuittanceCertifieeService`/`GarantieService`/`PaiementService`/`BailService` (voie B) ; interface `NotificationProvider` + implémentation `NoopNotificationProvider`/sandbox ; feature flags `NOTIFICATIONS_EXTERNAL_ENABLED=false` etc. ; tests unitaires + intégration RLS/idempotence |
 | Hors périmètre | Tout appel réseau Twilio réel ; toute création de compte/credentials Twilio ; tout envoi WhatsApp/SMS |
-| Dépendances | K1/K3 tranchés et GO explicite reçus le 2026-07-19 ; code fusionné via PR #235. Gate Staging du Sprint N, dont `STG-ISOL-01`, restant à instruire |
-| Risques | RSV-EP16-01/02 couverts côté code par les tests dédiés de rollback, idempotence et concurrence ; preuve Staging restant requise |
-| Critères GO (fin de sprint) | ✅ `mvn verify`, RLS cross-tenant, concurrence Outbox, idempotence, rollback métier, démarrage sans Twilio, non-régression in-app et CI complète ; ⏳ Gate Staging, dont `STG-ISOL-01`, restant à instruire |
+| Dépendances | K1/K3 tranchés et GO explicite reçus le 2026-07-19 ; code fusionné via PR #235 ; Gate Staging et Gate Production du Sprint N instruits en GO |
+| Risques | RSV-EP16-01/02 couverts par les tests dédiés de rollback, idempotence et concurrence, puis confirmés par les preuves Staging |
+| Critères GO (fin de sprint) | ✅ `mvn verify`, RLS cross-tenant, concurrence Outbox, idempotence, rollback métier, démarrage sans Twilio, non-régression in-app, CI complète, Gate Staging `STG-ISOL-01` PASS et Gate Production GO sous réserve |
 
 ## Sprint N+1 — WhatsApp P0
 
@@ -164,7 +164,7 @@ n'est pas décidée par le PO, sprint par sprint.
 | Addendum backlog EP-16 (US-119→126) | ✅ Produit avec ce plan |
 | Analyse d'impact EP-16 | ✅ Produite avec ce plan |
 | Kickoff K1→K8 tranché par le PO | ✅ 2026-07-19 |
-| `CHANGELOG.md` `[Non publié]` au fil de chaque sprint | À la fusion `main` |
+| `CHANGELOG.md` `[Non publié]` au fil de chaque sprint | ✅ Sprint N documenté avant Gate Production |
 | `docs/project-state.md` / `staging-state.md` / `prod-state.md` | Chaque Gate |
 | `docs/cgpa/observability-governance.md` (extension additive) | Avant Gate Production du Sprint N+2 |
 
@@ -182,22 +182,25 @@ n'est pas décidée par le PO, sprint par sprint.
 - [x] Plan d'Exécution approuvé (GO explicite du PO, 2026-07-19) — **Sprint N autorisé à démarrer**
 - [x] Sprint N instruit avec son propre Gate Staging, dont `STG-ISOL-01` — GO,
   `STAGING_DEPLOYED` sur `sha-e4744d92` le 2026-07-19
-- [ ] Gate Production du Sprint N restant à instruire ; Sprints N+1/N+2 soumis chacun à leur GO
-  explicite et à leurs Gates distincts
+- [x] Gate Production du Sprint N — GO sous réserve, `PRODUCTION_READY` le 2026-07-19 ; réserve
+  bloquante avant Préflight : clôture CDO de l'hypercare `1.12.0`
+- [ ] Sprints N+1/N+2 soumis chacun à leur GO explicite et à leurs Gates distincts
 
-## État après le Gate Staging du Sprint N
+## État après le Gate Production du Sprint N
 
 Le Sprint N — Fondation (US-119/120/121) est codé, fusionné et `STAGING_DEPLOYED` sur
-`sha-e4744d92`. Le Gate Staging ne vaut ni Gate Production du Sprint N, ni GO de démarrage des
-Sprints N+1/N+2. Restent **exclus à ce stade** :
+`sha-e4744d92`. Le Gate Production du 2026-07-19 prononce **GO sous réserve —
+`PRODUCTION_READY`** pour la version `1.13.0` proposée. Il autorise uniquement un Préflight
+ultérieur, après clôture CDO de l'hypercare `1.12.0`, et ne vaut ni déploiement Production ni GO
+de démarrage des Sprints N+1/N+2. Restent **exclus à ce stade** :
 
 - Toute dépendance Twilio ajoutée à `pom.xml`/`package.json` (réservé au Sprint N+1).
 - Toute création de compte, de credentials ou de template Twilio.
 - Tout envoi SMS ou WhatsApp réel, tout appel réseau Twilio réel.
 - Toute modification de Docker/infrastructure.
-- Toute promotion ou activation Production ; `PRODUCTION_READY` et `PRODUCTION_DEPLOYED` restent
-  non atteints jusqu’à une décision Gate Production distincte. Les statuts Staging sont désormais
-  portés par `gate-staging-sprint-n-ep16-decision.md`.
+- Tout Préflight ou déploiement avant la clôture formelle de `1.12.0`. L'activation externe reste
+  interdite jusqu'à la clôture en GO du Sprint N+2. `PRODUCTION_READY` est atteint ;
+  `PRODUCTION_DEPLOYED` ne l'est pas.
 - Tout démarrage du Sprint N+1 ou N+2 sans un GO explicite du PO propre à chacun — ce GO ne couvre
   que le Sprint N (même principe que les Sprints A/B/C d'EP-15, chacun autorisé séparément).
 
