@@ -4,8 +4,8 @@
 |---|---|
 | `PRODUCTION_DEPLOYED` | 2026-07-19 ~10:51 UTC (déploiement technique `api`/`nginx`) — voir correction méthodologique ci-dessous |
 | T0 | 2026-07-19 ~11:27 UTC — **PASS** |
-| T+12 | 2026-07-19 ~22:51 UTC ± 30 min |
-| T+24 | 2026-07-20 ~10:51 UTC ± 30 min |
+| T+12 | 2026-07-19 ~22:51 UTC ± 30 min — **PASS sous surveillance (rattrapage combiné ~2026-07-22 18:06 UTC)** |
+| T+24 | 2026-07-20 ~10:51 UTC ± 30 min — **PASS sous surveillance (rattrapage combiné ~2026-07-22 18:06 UTC)** |
 | Tag surveillé | `sha-359f4d63` |
 | Rollback | `sha-cba13f52` **non viable seul** après V26 (non additive, RSV-EP15-03) — restauration du backup post-migration `loyertracker-20260719-115220.dump` requise |
 
@@ -62,3 +62,43 @@ contrôle.
 
 **Décision T0 : PASS — hypercare active.** La clôture reste interdite avant T+12, T+24 et la
 décision CDO finale. Prochain checkpoint cible : T+12 le 2026-07-19 ~22:51 UTC ± 30 min.
+
+## Checkpoint combiné T+12/T+24 — rattrapage 2026-07-22 ~18:06 UTC (cibles 2026-07-19 ~22:51 UTC / 2026-07-20 ~10:51 UTC)
+
+**Statut : PASS sous surveillance**
+
+Instruction PO du 2026-07-22 : exécuter le checkpoint hypercare `1.12.0` en retard. Comme
+pour le pattern `1.7.0`→`1.9.0` (produit non annoncé publiquement, aucun trafic réel),
+`loyertracker-prod-server` a été **volontairement éteint** entre les opérations : les deux
+fenêtres cibles T+12 et T+24 sont tombées hôte éteint. `aws ec2 describe-instances` confirme
+l'instance `running` avec `LaunchTime` `2026-07-22T16:57:41Z` ; `uptime` sur l'hôte donnait
+`up 8 minutes` au moment du contrôle (~2026-07-22 18:06 UTC), soit un redémarrage effectué peu
+avant cette session. **Contrairement à `1.10.0` (hôte resté allumé en continu), `restart=0` ne
+couvre donc PAS rétroactivement les fenêtres T+12/T+24 cibles elles-mêmes** — seul l'état constaté
+à cet instant est vérifié, ce qui qualifie ce checkpoint « PASS sous surveillance » plutôt qu'un
+PASS inconditionnel, à l'identique de la clôture `1.9.0`.
+
+| Contrôle | Résultat |
+|---|---|
+| Instance EC2 | `running`, `LaunchTime` `2026-07-22T16:57:41Z` (redémarrage récent, hôte resté éteint depuis le déploiement) |
+| Stack | 8/8 actifs, 4/4 healthy, `RestartCount=0` sur les 8 conteneurs depuis ce redémarrage (`StartedAt` `2026-07-22T16:58:00Z`) |
+| Tag / digests | `sha-359f4d63` inchangé ; API `sha256:ea040492bb5a…` confirmé, Web `sha256:e70ebc7ba7d7…` confirmé — zéro dérive |
+| Flyway | 26/26, aucun échec |
+| Backfill V26 | 8/8 baux avec `locataire_id`, 0 orphelin ; colonnes `locataire_nom`/`locataire_email` toujours absentes ; 8 `locataire` (baseline inchangée) |
+| Keycloak | `bailleur-test@test.local` `enabled=false` ; `directAccessGrantsEnabled=false` sur `loyertracker-spa` |
+| Santé | `/healthz` 200, site public `https://loyertracker.loyerpro.org` 200 |
+| Prometheus | 5/5 cibles `up` |
+| Alertmanager | 0 alerte active |
+| Pool Hikari | `hikaricp_connections_pending` = 0 |
+| Logs Nginx (5 min post-démarrage) | 0 ligne 5xx |
+| Logs API (5 min post-démarrage) | 0 entrée `ERROR` |
+| Capacité | disque 30 Gio libres (21 %) ; mémoire ~1,2 Gio disponible ; charge 0,38/0,30/0,23 |
+
+**Verdict combiné T+12/T+24 : PASS sous surveillance.** Aucun critère de suspension observé à
+l'instant du contrôle : tag/digests inchangés depuis le déploiement du 2026-07-19, Flyway 26/26,
+backfill V26 stable, `bailleur-test`/`directAccessGrants` toujours désactivés, 0 5xx, 0 `ERROR`,
+observabilité 5/5 sans alerte. L'écart de fenêtre (aucune télémétrie continue pendant les ~3 jours
+où l'hôte est resté éteint) est qualifié **sans impact** : absence de trafic réel par construction
+(produit non annoncé), digests conteneurs identiques à ceux du T0, aucun redéploiement effectué
+entre les deux contrôles. **Hypercare `1.12.0` complète : T0 PASS, T+12/T+24 PASS sous
+surveillance.** La clôture de release (décision CDO) reste une étape distincte.
