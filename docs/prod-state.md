@@ -43,6 +43,15 @@ Rapports : `docs/cgpa/09-production/gate-production-sprint-c-ep15-decision.md`,
 Réserves ouvertes après ce déploiement : RSV-EP15-01/02/04 non bloquantes (héritées, déjà
 tranchées) ; **`RSV-STG-01`** (héritée, sans rapport avec `1.12.0`).
 
+> **Hypercare et clôture (2026-07-22).** T0 PASS (2026-07-19 ~11:27 UTC). Hôte volontairement
+> éteint entre les opérations (produit non annoncé, pattern `1.7.0`→`1.9.0`) : T+12/T+24 tombées
+> hôte éteint, checkpoint combiné exécuté en rattrapage le 2026-07-22 ~18:06 UTC sur instruction
+> PO — **PASS sous surveillance** (tag/digests inchangés, Flyway 26/26, backfill V26 8/8 stable,
+> 0 5xx, 0 `ERROR`, Prometheus 5/5, 0 alerte). **Décision CDO : GO — RELEASE `1.12.0` CLÔTURÉE**
+> (2026-07-22). Détail : `plan-etape-hypercare-v1.12.0.md`, `cloture-release-v1.12.0.md`. Cette
+> clôture lève la réserve bloquante du Gate Production EP-16 Sprint N ; le Préflight `1.13.0`
+> reste une étape distincte non encore instruite.
+
 ## 0L. Déploiement Production `1.11.0` — 2026-07-16 (régularisé a posteriori le 2026-07-19)
 
 > **Écart de traçabilité comblé.** Le Préflight `1.11.0` du 2026-07-16 concluait explicitement
