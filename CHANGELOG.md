@@ -5,7 +5,7 @@ Toutes les évolutions notables de ce projet sont consignées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet adhère au
 [Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.3).
 
-## [Non publié]
+## [1.13.0] — 2026-07-22
 
 ### Ajouts — Fondation des notifications multicanales (Sprint N, EP-16, US-119/120/121)
 
