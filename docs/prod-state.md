@@ -47,6 +47,18 @@ le pattern hôte-éteint, arbitrage PO à venir sur fréquence vs. disponibilit�
 (héritée, sans rapport). Hypercare (T0/T+12/T+24) et clôture de release restent des étapes
 distinctes.
 
+> **Hypercare T0 (2026-07-23 ~16:37 UTC) — PASS.** Le contrôle T0 a détecté et corrigé un résidu
+> de nettoyage de la validation finale : 8 lignes `notification_event` (RUN_ID `1784823157`, non
+> incluses dans le contrôle post-nettoyage d'origine faute d'avoir anticipé qu'une table nouvelle
+> V27 serait alimentée en écriture inline par le smoke) — supprimées, table confirmée à 0 ligne.
+> **Sans impact fonctionnel** (aucune ligne Outbox/Delivery dépendante, aucun canal externe actif).
+> Contrôle sinon conforme : tag/digests inchangés, Flyway 27/27, 0 5xx, 0 `ERROR`, Prometheus 5/5,
+> Hikari pending 0, `bailleur-test`/`directAccessGrants` toujours désactivés. Alerte
+> `BackupHeartbeatMissing` toujours active (non bloquante, inchangée depuis la validation finale).
+> Détail : `docs/cgpa/09-production/plan-etape-hypercare-v1.13.0.md`. **Prochains checkpoints
+> cibles : T+12 le 2026-07-24 ~04:13 UTC, T+24 le 2026-07-24 ~16:13 UTC — probablement en
+> rattrapage vu le pattern hôte-éteint, sur instruction PO explicite distincte.**
+
 ## 0M. Déploiement Production `1.12.0` — 2026-07-19 (Sprint C EP-15)
 
 > **`PRODUCTION_DEPLOYED` atteint le 2026-07-19 ~11:57 UTC.** Gate Production GO
