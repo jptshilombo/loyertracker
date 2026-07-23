@@ -6,17 +6,22 @@
 
 
 
-## 0N. Déploiement technique Production `1.13.0` — 2026-07-22 (EP-16 Sprint N)
+## 0N. Déploiement Production `1.13.0` — 2026-07-22/23 (EP-16 Sprint N)
 
-> **Déploiement technique PASS (~18:14–18:15 UTC).** Gate Production GO sous réserve
+> **`PRODUCTION_DEPLOYED` atteint le 2026-07-23 ~16:13 UTC.** Gate Production GO sous réserve
 > (`gate-production-sprint-n-ep16-decision.md`), réserve bloquante levée par la clôture `1.12.0`
 > du même jour, Préflight PASS (`preflight-backup-v1.13.0-report.md`), déploiement technique PASS
-> (`deploiement-technique-v1.13.0-report.md`) : `api`+`nginx` seuls recréés sur `sha-e4744d92`,
-> digests confirmés identiques au Gate/Préflight, migration **V27 additive** appliquée (27/27,
-> cinq tables `notification_*`, RLS `ENABLE`+`FORCE` sur les quatre tables tenant-scopées),
-> 8/8 actifs 4/4 healthy, 0 5xx, 0 `ERROR`, Prometheus 5/5, 0 alerte. **`PRODUCTION_DEPLOYED` non
-> encore atteint** : la validation finale (smoke Production, réactivation temporaire autorisée de
-> `bailleur-test`) reste une étape distincte nécessitant une autorisation PO explicite dédiée.
+> (`deploiement-technique-v1.13.0-report.md`), validation finale (smoke Production **63 PASS / 0
+> FAIL au premier passage**, `validation-finale-v1.13.0-report.md`) : `api`+`nginx` seuls recréés
+> sur `sha-e4744d92`, digests confirmés identiques au Gate/Préflight, migration **V27 additive**
+> appliquée (27/27, cinq tables `notification_*`, RLS `ENABLE`+`FORCE` sur les quatre tables
+> tenant-scopées, toutes à 0 ligne — aucune surface applicative encore livrée). **Anomalie
+> constatée et corrigée au contrôle d'entrée de la validation finale** : `bailleur-test` trouvé
+> `enabled=true` (probable réimport de realm au redémarrage complet de l'hôte du 2026-07-23
+> ~15:45 UTC), sans rapport avec V27 — redésactivé en fin de run. **Alerte `BackupHeartbeatMissing`
+> réapparue** après ce même redémarrage (cron 02h15 non exécuté, hôte éteint à cette heure) —
+> pattern d'exploitation connu, non bloquant, sans rapport avec `1.13.0`. Rollback `sha-359f4d63`
+> viable même après V27 (additive).
 
 | Contrôle | Résultat |
 |---|---|
@@ -25,14 +30,22 @@
 | Rollback | `sha-359f4d63` (`1.12.0`) — viable même après application de V27 (additive) |
 | Déploiement | `api` + `nginx` recréés ciblés ; PostgreSQL, Keycloak et monitoring inchangés |
 | Flyway | V27 appliquée, 27/27 ; cinq tables `notification_*`, RLS confirmée |
-| Compteurs V27 | 0 préférence, 0 événement, 0 Outbox, 0 Delivery, 0 template — aucune activité applicative depuis le redéploiement |
+| Compteurs V27 | 0 préférence, 0 événement, 0 Outbox, 0 Delivery, 0 template avant et après le smoke |
+| Smoke | **63 PASS / 0 FAIL au premier passage**, nettoyage transactionnel sans résidu |
+| Données | baseline inchangée : 3 bailleurs, 2 patrimoines, 8 biens, 8 baux, 8 garanties, 1 gestionnaire, 8 locataires, 7 quittances |
 | Services | 8/8 actifs, 4/4 healthy, `RestartCount=0` (api/nginx recréés ; postgres/keycloak inchangés) |
-| Observabilité | Prometheus 5/5 ; Alertmanager 0 alerte ; 0 ligne 5xx ; site public 200 |
-| État CGPA | **Déploiement technique PASS — `PRODUCTION_DEPLOYED` non atteint** |
+| Observabilité | Prometheus 5/5 ; **Alertmanager 1 alerte** (`BackupHeartbeatMissing`, non bloquante — voir note) ; 0 ligne 5xx ; site public 200 |
+| État CGPA | **`PRODUCTION_DEPLOYED` — 2026-07-23** |
 
 Rapports : `docs/cgpa/09-production/gate-production-sprint-n-ep16-decision.md`,
 `docs/cgpa/09-production/preflight-backup-v1.13.0-report.md`,
-`docs/cgpa/09-production/deploiement-technique-v1.13.0-report.md`.
+`docs/cgpa/09-production/deploiement-technique-v1.13.0-report.md`,
+`docs/cgpa/09-production/validation-finale-v1.13.0-report.md`.
+
+Réserves ouvertes après ce déploiement : `BackupHeartbeatMissing` non bloquante (cron manqué par
+le pattern hôte-éteint, arbitrage PO à venir sur fréquence vs. disponibilité) ; `RSV-STG-01`
+(héritée, sans rapport). Hypercare (T0/T+12/T+24) et clôture de release restent des étapes
+distinctes.
 
 ## 0M. Déploiement Production `1.12.0` — 2026-07-19 (Sprint C EP-15)
 
