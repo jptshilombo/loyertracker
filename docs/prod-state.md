@@ -6,6 +6,34 @@
 
 
 
+## 0N. Déploiement technique Production `1.13.0` — 2026-07-22 (EP-16 Sprint N)
+
+> **Déploiement technique PASS (~18:14–18:15 UTC).** Gate Production GO sous réserve
+> (`gate-production-sprint-n-ep16-decision.md`), réserve bloquante levée par la clôture `1.12.0`
+> du même jour, Préflight PASS (`preflight-backup-v1.13.0-report.md`), déploiement technique PASS
+> (`deploiement-technique-v1.13.0-report.md`) : `api`+`nginx` seuls recréés sur `sha-e4744d92`,
+> digests confirmés identiques au Gate/Préflight, migration **V27 additive** appliquée (27/27,
+> cinq tables `notification_*`, RLS `ENABLE`+`FORCE` sur les quatre tables tenant-scopées),
+> 8/8 actifs 4/4 healthy, 0 5xx, 0 `ERROR`, Prometheus 5/5, 0 alerte. **`PRODUCTION_DEPLOYED` non
+> encore atteint** : la validation finale (smoke Production, réactivation temporaire autorisée de
+> `bailleur-test`) reste une étape distincte nécessitant une autorisation PO explicite dédiée.
+
+| Contrôle | Résultat |
+|---|---|
+| Release | `1.13.0` — EP-16 Sprint N (Fondation notifications, US-119/120/121) |
+| Tag / digests | `sha-e4744d92` ; API `sha256:9e9a331d3a7ee8a65e17235ead3f60c4b916d46086d9d3dd2d0c263ddabfe815` ; Web `sha256:c797934a8d5e629a6e532c50790dad78495a5e1aa5e7d42273e7fc6ccd00d41b` |
+| Rollback | `sha-359f4d63` (`1.12.0`) — viable même après application de V27 (additive) |
+| Déploiement | `api` + `nginx` recréés ciblés ; PostgreSQL, Keycloak et monitoring inchangés |
+| Flyway | V27 appliquée, 27/27 ; cinq tables `notification_*`, RLS confirmée |
+| Compteurs V27 | 0 préférence, 0 événement, 0 Outbox, 0 Delivery, 0 template — aucune activité applicative depuis le redéploiement |
+| Services | 8/8 actifs, 4/4 healthy, `RestartCount=0` (api/nginx recréés ; postgres/keycloak inchangés) |
+| Observabilité | Prometheus 5/5 ; Alertmanager 0 alerte ; 0 ligne 5xx ; site public 200 |
+| État CGPA | **Déploiement technique PASS — `PRODUCTION_DEPLOYED` non atteint** |
+
+Rapports : `docs/cgpa/09-production/gate-production-sprint-n-ep16-decision.md`,
+`docs/cgpa/09-production/preflight-backup-v1.13.0-report.md`,
+`docs/cgpa/09-production/deploiement-technique-v1.13.0-report.md`.
+
 ## 0M. Déploiement Production `1.12.0` — 2026-07-19 (Sprint C EP-15)
 
 > **`PRODUCTION_DEPLOYED` atteint le 2026-07-19 ~11:57 UTC.** Gate Production GO
