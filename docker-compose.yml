@@ -107,6 +107,16 @@ services:
       QUITTANCE_HMAC_SECRET: ${QUITTANCE_HMAC_SECRET:-}
       QUITTANCE_TOKEN_KID: ${QUITTANCE_TOKEN_KID:-1}
       QUITTANCE_VERIFY_BASE_URL: ${QUITTANCE_VERIFY_BASE_URL:-https://localhost}
+      # Notifications multicanales (EP-16, ADR-18) : socle désactivé par défaut (K8). Vide/false
+      # en dev = TwilioNotificationProvider non instancié, NoopNotificationProvider actif.
+      NOTIFICATIONS_EXTERNAL_ENABLED: ${NOTIFICATIONS_EXTERNAL_ENABLED:-false}
+      TWILIO_WHATSAPP_ENABLED: ${TWILIO_WHATSAPP_ENABLED:-false}
+      TWILIO_SMS_ENABLED: ${TWILIO_SMS_ENABLED:-false}
+      NOTIFICATION_DRY_RUN: ${NOTIFICATION_DRY_RUN:-true}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      TWILIO_STATUS_CALLBACK_BASE_URL: ${TWILIO_STATUS_CALLBACK_BASE_URL:-https://localhost}
     depends_on:
       postgres:
         condition: service_healthy

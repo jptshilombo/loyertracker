@@ -112,6 +112,12 @@ class SecurityIntegrationTest {
     NotificationOutboxService notificationOutboxService;
     @MockitoBean
     NotificationPreferenceService notificationPreferenceService;
+    // Notifications (V28, EP-16 Sprint N+1) : dépendent de l'EntityManager/repositories JPA,
+    // neutralisées comme les autres pour ce test de contrat sans BDD.
+    @MockitoBean
+    com.loyertracker.notifications.NotificationDispatcher notificationDispatcher;
+    @MockitoBean
+    com.loyertracker.notifications.NotificationDeliveryService notificationDeliveryService;
 
     @Test
     void health_estPublic() throws Exception {

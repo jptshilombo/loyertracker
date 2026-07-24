@@ -121,6 +121,18 @@ services:
       QUITTANCE_HMAC_SECRET: ${QUITTANCE_HMAC_SECRET:-}
       QUITTANCE_TOKEN_KID: ${QUITTANCE_TOKEN_KID:-1}
       QUITTANCE_VERIFY_BASE_URL: ${QUITTANCE_VERIFY_BASE_URL:-https://loyertracker.staging.loyerpro.org}
+      # Notifications multicanales (EP-16, ADR-18) : socle désactivé par défaut (K8). Sprint N+1
+      # (US-122/123) est le premier à nécessiter un secret Twilio Sandbox réel sur cet hôte
+      # mutualisé — à renseigner dans le .env de l'hôte AVANT toute activation (même discipline
+      # que QUITTANCE_HMAC_SECRET), jamais en clair dans les logs (incident set -x, Gate EP-13).
+      NOTIFICATIONS_EXTERNAL_ENABLED: ${NOTIFICATIONS_EXTERNAL_ENABLED:-false}
+      TWILIO_WHATSAPP_ENABLED: ${TWILIO_WHATSAPP_ENABLED:-false}
+      TWILIO_SMS_ENABLED: ${TWILIO_SMS_ENABLED:-false}
+      NOTIFICATION_DRY_RUN: ${NOTIFICATION_DRY_RUN:-true}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      TWILIO_STATUS_CALLBACK_BASE_URL: ${TWILIO_STATUS_CALLBACK_BASE_URL:-https://loyertracker.staging.loyerpro.org}
     depends_on:
       postgres:
         condition: service_healthy

@@ -106,10 +106,10 @@ app:
       # au-delà de FIN_BAIL) déclenche une alerte PREAVIS. Arbitrage PO : 3 mois = 90 jours.
       jours: ${APP_ALERTES_PREAVIS_JOURS:90}
   notifications:
-    # EP-16/ADR-18 (Sprint N — Fondation) : socle désactivé par défaut (K8) tant qu'aucune
-    # activation explicite n'est décidée par le PO, sprint par sprint. Aucune dépendance Twilio à
-    # ce stade — seul NoopNotificationProvider existe (US-121), ces indicateurs ne sont pas
-    # encore lus par du code applicatif (Dispatcher/TwilioNotificationProvider : Sprint N+1).
+    # EP-16/ADR-18 : socle désactivé par défaut (K8) tant qu'aucune activation explicite n'est
+    # décidée par le PO, sprint par sprint. `whatsapp.enabled` pilote directement (Sprint N+1,
+    # @ConditionalOnProperty) quel NotificationProvider est actif : NoopNotificationProvider si
+    # false (défaut, tous environnements), TwilioNotificationProvider si true — jamais les deux.
     external:
       enabled: ${NOTIFICATIONS_EXTERNAL_ENABLED:false}
     whatsapp:
@@ -117,6 +117,20 @@ app:
     sms:
       enabled: ${TWILIO_SMS_ENABLED:false}
     dry-run: ${NOTIFICATION_DRY_RUN:true}
+    dispatch:
+      # Sondage de l'Outbox (patron polling worker, distinct des crons quotidiens alertes/échéances).
+      interval-ms: ${NOTIFICATION_DISPATCH_INTERVAL_MS:15000}
+      limite-par-bailleur: ${NOTIFICATION_DISPATCH_LIMITE:50}
+      max-tentatives: ${NOTIFICATION_DISPATCH_MAX_TENTATIVES:5}
+
+twilio:
+  # EP-16 Sprint N+1 (US-122/123) : premier sprint nécessitant des credentials Twilio réels — en
+  # Sandbox WhatsApp exclusivement (ADR-18, K4). Vides par défaut : TwilioNotificationProvider
+  # n'est même pas instancié tant que app.notifications.whatsapp.enabled reste à false.
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  whatsapp-from: ${TWILIO_WHATSAPP_FROM:}
+  status-callback-base-url: ${TWILIO_STATUS_CALLBACK_BASE_URL:https://loyertracker.loyerpro.org}
 
 # Admin API Keycloak — création de compte gestionnaire (US-12, ADR-10, R6). Client confidentiel
 # dédié `loyertracker-admin` (service account, distinct du resource-server bearer-only

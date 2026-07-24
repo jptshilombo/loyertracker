@@ -59,6 +59,11 @@ public class SecurityConfig {
                 // lecture via fonctions SECURITY DEFINER, réponses indifférenciées.
                 .requestMatchers(HttpMethod.GET, "/api/public/receipts/*",
                         "/api/public/receipts/*/download").permitAll()
+                // Callback de statut Twilio (US-123, EP-16 Sprint N+1, ADR-18 §Sécurité) : aucun
+                // compte, aucun Bearer — seule la signature X-Twilio-Signature fait foi (vérifiée
+                // applicativement, TwilioCallbackController). Rate-limité par le préfixe
+                // /api/public/ existant (infra/nginx/nginx.conf).
+                .requestMatchers(HttpMethod.POST, "/api/public/notifications/callback").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();

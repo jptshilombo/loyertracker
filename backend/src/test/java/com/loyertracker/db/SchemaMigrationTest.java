@@ -67,7 +67,9 @@ class SchemaMigrationTest {
         // + V26 (bascule Bail -> Locataire, non additive — EP-15 Sprint C).
         // + V27 (notification_preference/event/outbox/delivery/template + extension
         //   generer_alertes() voie A — EP-16 Sprint N, Fondation).
-        assertThat(result.migrationsExecuted).isEqualTo(27);
+        // + V28 (seed templates P0 WhatsApp + notification_bailleurs_en_attente()/
+        //   notification_delivery_appliquer_statut() SECURITY DEFINER — EP-16 Sprint N+1).
+        assertThat(result.migrationsExecuted).isEqualTo(28);
         assertThat(result.success).isTrue();
     }
 
