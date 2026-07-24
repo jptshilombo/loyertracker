@@ -5,6 +5,31 @@ Toutes les évolutions notables de ce projet sont consignées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet adhère au
 [Semantic Versioning](https://semver.org/lang/fr/) (D-REL-002, CGPA v5.3).
 
+## [Non publié]
+
+### Ajouts — WhatsApp P0 en Sandbox Twilio (Sprint N+1, EP-16, US-122/123)
+
+- Migration additive V28 : seed des trois templates P0 (`QUITTANCE_DISPONIBLE`,
+  `LOYER_EN_RETARD`, `GARANTIE_DEBITEE`, canal WhatsApp, `fr`) et deux fonctions
+  `SECURITY DEFINER` (`notification_bailleurs_en_attente()`,
+  `notification_delivery_appliquer_statut()`), même patron que
+  `lire_quittance_publique`/`journaliser_evenement_quittance` (V22).
+- `TwilioNotificationProvider` (implémentation réelle de `NotificationProvider`, canal WhatsApp
+  uniquement, appel direct de l'API REST Messages de Twilio) — actif uniquement si
+  `TWILIO_WHATSAPP_ENABLED=true` (exclusion mutuelle avec `NoopNotificationProvider`, toujours
+  actif par défaut).
+- `NotificationDispatcher` : consomme l'Outbox par bailleur (réclamation `FOR UPDATE SKIP
+  LOCKED` déjà en place), résout préférence/template, invoque le fournisseur actif, journalise
+  la livraison (`NotificationDelivery`). Backoff exponentiel puis `DEAD` au-delà de 5 tentatives ;
+  `DEAD` immédiat si préférence introuvable/inéligible ou template non approuvé.
+- Callback de statut Twilio public (`POST /api/public/notifications/callback`), signature
+  `X-Twilio-Signature` vérifiée avant tout traitement, application idempotente (progression
+  uniquement, jamais en arrière).
+- Déclenchement du dispatch par sondage périodique (`NotificationDispatchScheduler`) et
+  manuellement (`POST /api/batch/notifications`, exploitation/tests).
+- Aucune activation Production : socle désactivé par défaut (K8) dans tous les environnements ;
+  Sandbox Twilio exclusivement (ADR-18, K4).
+
 ## [1.13.0] — 2026-07-22
 
 ### Ajouts — Fondation des notifications multicanales (Sprint N, EP-16, US-119/120/121)

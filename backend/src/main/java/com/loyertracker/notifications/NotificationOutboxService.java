@@ -107,4 +107,50 @@ public class NotificationOutboxService {
                 .getResultList();
         return ids.stream().map(id -> (UUID) id).toList();
     }
+
+    /** Remise à jour après remise réussie au fournisseur (US-123, {@code NotificationDispatcher}). */
+    @Transactional
+    public void marquerTraite(UUID outboxId) {
+        em.createNativeQuery("""
+                UPDATE notification_outbox
+                SET statut = 'PROCESSED', processed_at = now(), attempt_count = attempt_count + 1
+                WHERE id = :id
+                """)
+                .setParameter("id", outboxId)
+                .executeUpdate();
+    }
+
+    /** Échec définitif immédiat (template non approuvé, préférence disparue/inéligible) : aucune tentative supplémentaire. */
+    @Transactional
+    public void marquerDead(UUID outboxId, String errorCode) {
+        em.createNativeQuery("""
+                UPDATE notification_outbox
+                SET statut = 'DEAD', attempt_count = attempt_count + 1, last_error_code = :err
+                WHERE id = :id
+                """)
+                .setParameter("id", outboxId)
+                .setParameter("err", errorCode)
+                .executeUpdate();
+    }
+
+    /**
+     * Échec transitoire du fournisseur (RSV-EP16-01) : nouvelle tentative après un backoff
+     * exponentiel (1 min × 2^tentative), ou {@code DEAD} au-delà de {@code maxTentatives}.
+     */
+    @Transactional
+    public void marquerEchecTransitoire(UUID outboxId, String errorCode, int maxTentatives) {
+        em.createNativeQuery("""
+                UPDATE notification_outbox
+                SET attempt_count   = attempt_count + 1,
+                    last_error_code = :err,
+                    statut = CASE WHEN attempt_count + 1 >= :max THEN 'DEAD' ELSE 'RETRY' END,
+                    next_attempt_at = CASE WHEN attempt_count + 1 >= :max THEN next_attempt_at
+                                           ELSE now() + (make_interval(mins => 1) * power(2, attempt_count)) END
+                WHERE id = :id
+                """)
+                .setParameter("id", outboxId)
+                .setParameter("err", errorCode)
+                .setParameter("max", maxTentatives)
+                .executeUpdate();
+    }
 }

@@ -25,6 +25,8 @@ public class BatchMetrics {
     /** Identifiants de job (= label {@code job} de la métrique). */
     public static final String JOB_LOYERS = "loyers";
     public static final String JOB_ALERTES = "alertes";
+    /** EP-16 Sprint N+1 (US-123) : dispatch de l'Outbox de notifications externes. */
+    public static final String JOB_NOTIFICATIONS = "notifications";
 
     private static final String METRIC = "loyertracker.batch.last.success.epoch";
 
@@ -39,6 +41,7 @@ public class BatchMetrics {
     void registerKnownJobs() {
         gauge(JOB_LOYERS);
         gauge(JOB_ALERTES);
+        gauge(JOB_NOTIFICATIONS);
     }
 
     /** Enregistre l'instant courant comme dernière exécution réussie du {@code job}. */

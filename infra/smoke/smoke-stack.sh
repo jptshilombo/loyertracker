@@ -85,11 +85,11 @@ token() {
 }
 
 # =============================================================================
-note "0. Sanity : stack healthy, Flyway V1-V27, pool API sous loyertracker_api"
+note "0. Sanity : stack healthy, Flyway V1-V28, pool API sous loyertracker_api"
 docker compose ps --format '{{.Name}} {{.Health}}' | sed 's/^/  /'
 MIG=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
   "SELECT count(*) FROM flyway_schema_history WHERE success")
-[[ "$MIG" == "27" ]] && ok "Flyway : 27 migrations appliquées" || ko "Flyway : $MIG migrations (attendu 27)"
+[[ "$MIG" == "28" ]] && ok "Flyway : 28 migrations appliquées" || ko "Flyway : $MIG migrations (attendu 28)"
 ROLES=$(docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
   "SELECT DISTINCT usename FROM pg_stat_activity WHERE datname='$POSTGRES_DB' AND application_name LIKE 'PostgreSQL JDBC%'")
 echo "$ROLES" | grep -q '^loyertracker_api$' && ok "Pool API connecté sous loyertracker_api" \
