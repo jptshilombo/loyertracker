@@ -3,12 +3,12 @@
 | Champ | Valeur |
 |---|---|
 | Date | 2026-07-19 |
-| Statut | **Approuvé — GO explicite du PO reçu le 2026-07-19.** Sprint N (Fondation) autorisé à démarrer. Sprints N+1/N+2 restent soumis chacun à un GO distinct, après clôture Gate Staging/Production du sprint précédent |
-| Origine | Instruction PO du 2026-07-19 (« formaliser EP-16 notifications multicanales Twilio ») |
+| Statut | **Approuvé — GO explicite du PO reçu le 2026-07-19 (Sprint N) et le 2026-07-24 (Sprint N+1).** Sprint N (Fondation) livré, déployé et clôturé (`1.13.0`). **Sprint N+1 (WhatsApp P0) autorisé à démarrer depuis le 2026-07-24.** Sprint N+2 reste soumis à son propre GO distinct, après clôture Gate Staging/Production du Sprint N+1 |
+| Origine | Instruction PO du 2026-07-19 (« formaliser EP-16 notifications multicanales Twilio ») ; GO Sprint N+1 : instruction PO du 2026-07-24 (« GO explicite pour le Sprint N+1 ») |
 | Backlog couvert | EP-16 — US-119 → US-126 (`addendum-backlog-ep16-notifications.md`) |
 | ADR | **ADR-18** (Acceptée — kickoff K1→K8 clos et GO Plan reçu, 2026-07-19) |
-| Release cible | Sprint N : `1.13.0` proposée ; Sprints N+1/N+2 à déterminer |
-| État d’exécution | Sprint N codé, fusionné, `STAGING_DEPLOYED`, puis Gate Production **GO sous réserve — `PRODUCTION_READY`** le 2026-07-19. Le Préflight/déploiement reste interdit avant clôture de l'hypercare `1.12.0` ; Sprints N+1/N+2 non autorisés sans leur GO distinct |
+| Release cible | Sprint N : `1.13.0` (clôturée) ; Sprint N+1 : à déterminer (proposée `1.14.0`) ; Sprint N+2 : à déterminer |
+| État d’exécution | Sprint N codé, fusionné, `STAGING_DEPLOYED`, Gate Production GO sous réserve, **`PRODUCTION_DEPLOYED` le 2026-07-23, release `1.13.0` clôturée le 2026-07-24** (`cloture-release-v1.13.0.md`). **GO explicite du PO reçu le 2026-07-24 pour le démarrage du Sprint N+1** (US-122/123, WhatsApp P0 Twilio Sandbox) — codage autorisé à démarrer ; Gate Staging/Production du Sprint N+1 et GO du Sprint N+2 restent des étapes distinctes non encore instruites |
 
 ## Arbitrages PO — K1→K8 tranchés le 2026-07-19
 
@@ -184,7 +184,9 @@ n'est pas décidée par le PO, sprint par sprint.
   `STAGING_DEPLOYED` sur `sha-e4744d92` le 2026-07-19
 - [x] Gate Production du Sprint N — GO sous réserve, `PRODUCTION_READY` le 2026-07-19 ; réserve
   bloquante avant Préflight : clôture CDO de l'hypercare `1.12.0`
-- [ ] Sprints N+1/N+2 soumis chacun à leur GO explicite et à leurs Gates distincts
+- [x] Sprint N+1 : GO explicite du PO reçu le 2026-07-24 (« GO explicite pour le Sprint N+1 »), après clôture de la release `1.13.0` (Sprint N) le même jour — codage autorisé à démarrer
+- [ ] Sprint N+1 instruit avec son propre Gate Staging (dont `STG-ISOL-01`) puis Gate Production distinct
+- [ ] Sprint N+2 soumis à son propre GO explicite et à ses Gates distincts
 
 ## État après le Gate Production du Sprint N
 
