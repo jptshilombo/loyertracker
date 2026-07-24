@@ -88,13 +88,18 @@ public class TwilioNotificationProvider implements NotificationProvider {
      * Rendu minimal des variables dans le corps du message (US-122). Le contenu réel du template
      * P0 est administré via {@code NotificationTemplate} ({@code providerTemplateId}) ; en
      * l'absence d'intégration Content API réelle (hors périmètre), le corps est reconstruit ici à
-     * partir du code du template et des variables résolues par l'événement d'origine.
+     * partir du code du template et des variables résolues par l'événement d'origine. La variable
+     * {@code lienVerification} (réutilisation sans modification du lien HMAC des quittances,
+     * EP-14), quand présente, est isolée sur sa propre ligne pour rester cliquable dans WhatsApp.
      */
     private String rendre(String templateCode, Map<String, String> variables) {
+        String lien = variables.get("lienVerification");
         String corpsVariables = variables.entrySet().stream()
+                .filter(e -> !"lienVerification".equals(e.getKey()))
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.joining(", "));
-        return "[" + templateCode + "] " + corpsVariables;
+        String entete = "[" + templateCode + "] " + corpsVariables;
+        return lien == null ? entete : entete + "\n" + lien;
     }
 
     private record TwilioMessageResponse(String sid, String status) {
