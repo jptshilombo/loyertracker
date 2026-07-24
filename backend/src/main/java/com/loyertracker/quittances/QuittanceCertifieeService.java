@@ -180,7 +180,8 @@ public class QuittanceCertifieeService {
         // le retour anticipé « idempotent » ci-dessus (loyer inchangé) ne relance jamais cet appel.
         notifications.emettre(bailleurId, TypeEvenementNotification.QUITTANCE_DISPONIBLE,
                 TypeAgregatNotification.QUITTANCE, id,
-                Map.of("bienId", bienId.toString(), "periode", periode, "numero", numero),
+                Map.of("bienId", bienId.toString(), "periode", periode, "numero", numero,
+                        "lienVerification", url),
                 destinataireLocataire(paiement.getBailId()));
         return exemplaire;
     }

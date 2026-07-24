@@ -7,7 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -127,6 +129,30 @@ class NotificationDispatchIntegrationTest {
         assertThat(statutOutbox(outboxId)).isEqualTo("PROCESSED");
         assertThat(compter("SELECT count(*) FROM notification_delivery WHERE provider_message_id = 'SID123'"))
                 .isEqualTo(1);
+    }
+
+    // --- Lien de vérification transmis au fournisseur (critère GO explicite) --------------
+
+    @Test
+    void lienDeVerificationDuPayloadEstTransmisAuFournisseur() {
+        UUID bailleurId = seedBailleur();
+        String lien = "https://loyertracker.loyerpro.org/verify/receipt/"
+                + UUID.randomUUID() + "?token=abc&v=1";
+        UUID eventId = seedEvent(bailleurId, "QUITTANCE_DISPONIBLE", """
+                {"bienId":"b1","periode":"2026-01","numero":"QT-2026-000001","lienVerification":"%s"}
+                """.formatted(lien));
+        UUID recipientId = UUID.randomUUID();
+        seedPreference(bailleurId, recipientId);
+        seedOutboxPending(bailleurId, eventId, recipientId, "QUITTANCE_DISPONIBLE");
+
+        List<String> variablesRecues = new ArrayList<>();
+        NotificationDispatcher dispatcher = dispatcherAvec(demande -> {
+            variablesRecues.add(demande.variables().get("lienVerification"));
+            return new ResultatEnvoi(true, "SID-LIEN", null);
+        });
+        dispatcher.traiterLot(50);
+
+        assertThat(variablesRecues).containsExactly(lien);
     }
 
     // --- Template non approuvé : critère GO explicite --------------------------------------
@@ -300,11 +326,15 @@ class NotificationDispatchIntegrationTest {
     }
 
     private UUID seedEvent(UUID bailleurId, String eventType) {
+        return seedEvent(bailleurId, eventType, "{\"periode\":\"2026-01\"}");
+    }
+
+    private UUID seedEvent(UUID bailleurId, String eventType, String payloadJson) {
         return UUID.fromString(jdbc.queryForObject("""
                 INSERT INTO notification_event (bailleur_id, event_type, aggregate_type, aggregate_id, payload_minimal)
-                VALUES (?, ?, 'BAIL', gen_random_uuid(), '{"periode":"2026-01"}'::jsonb)
+                VALUES (?, ?, 'BAIL', gen_random_uuid(), CAST(? AS jsonb))
                 RETURNING id
-                """, String.class, bailleurId, eventType));
+                """, String.class, bailleurId, eventType, payloadJson));
     }
 
     private void seedPreference(UUID bailleurId, UUID recipientId) {
